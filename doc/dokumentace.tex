@@ -1,0 +1,161 @@
+% !TeX spellcheck = cs_CZ
+\documentclass[ 12pt, a4paper]{article}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{indentfirst}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage{amsmath} 
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\newenvironment{conditions}
+{\par\vspace{\abovedisplayskip}\noindent\begin{tabular}{>{$}l<{$} @{${}={}$} l}}
+	{\end{tabular}\par\vspace{\belowdisplayskip}}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+
+\colorlet{punct}{red!60!black}
+\definecolor{background}{HTML}{EEEEEE}
+\definecolor{delim}{RGB}{20,105,176}
+\colorlet{numb}{magenta!60!black}
+
+\lstdefinelanguage{json}{
+	basicstyle=\normalfont\ttfamily,
+	numbers=left,
+	numberstyle=\scriptsize,
+	stepnumber=1,
+	numbersep=8pt,
+	showstringspaces=false,
+	breaklines=true,
+	frame=lines,
+	backgroundcolor=\color{background},
+	literate=
+	{:}{{{\color{punct}{:}}}}{1}
+	{,}{{{\color{punct}{,}}}}{1}
+	{\{}{{{\color{delim}{\{}}}}{1}
+	{\}}{{{\color{delim}{\}}}}}{1}
+	{[}{{{\color{delim}{[}}}}{1}
+	{]}{{{\color{delim}{]}}}}{1},
+}
+
+\lstset{frame=tb,
+	language=json,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=none,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=3
+}
+
+
+\begin{document}
+\def\code#1{\texttt{#1}}
+
+\pagenumbering{gobble} %bez cisel
+%
+%Titulni strana
+\centerline{\includegraphics[width=12cm]{logo.png}}
+\vspace*{50px}
+\begin{center}
+	{\LARGE\bf\noindent KIV/OS \\ Simulace operačního systému}\\
+	\vspace*{40px}  
+	
+	Tomáš Ott\\
+	\texttt{ottt@students.zcu.cz}\\ 
+	(A21N0062P)\\
+	\vspace*{10px}  
+	
+	Petr Kocián\\
+	\texttt{ottt@students.zcu.cz}\\ 
+	(A21N0032P)\\
+	\vspace*{10px}  
+	
+	Matěj Zeman\\
+	\texttt{zemanm98@students.zcu.cz}\\ 
+	(A21N0080P)\\
+	
+	\vspace*{\fill}  
+	\hspace*{\fill} \today \\
+\end{center}
+\newpage
+%Obsah
+\tableofcontents
+\newpage
+
+\pagenumbering{arabic}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Zadání}
+
+\begin{itemize}
+	\item Vytvořte virtuální stroj, který bude simulovat OS
+	\item Součástí bude shell s gramatikou cmd, tj. včetně exit
+	\item Vytvoříte ekvivalenty standardních příkazů a programů
+	
+	\begin{itemize}
+		\item echo, cd, dir, md, rd, type, find /v "" /c , sort, tasklist, shutdown
+		\begin{itemize}
+			\item cd a dir musí umět relativní cesty
+			\item dir musí umět /S
+			\item echo musí umět @echo on a off
+			\item type musí umět vypsat jak stdin, tak musí umět vypsat soubor
+		\end{itemize}
+		\item Dále vytvoříte programy rgen a freq
+		\item rgen bude vypisovat náhodně vygenerovaná čísla v plovoucí čárce na stdout, dokud mu nepřijde EOF, ETX, nebo EOT
+		\item freq bude číst z stdin a sestaví frekvenční tabulku bytů, kterou pak vypíše pro všechny byty s frekvencí větší než 0 ve formátu: “0x\%hhx : \%d”
+	\end{itemize}
+	\item Implementujte roury a přesměrování
+	\item Nebudete přistupovat na souborový systém, ale použijete simulovaný disk se souborovým systémem FAT12
+	\begin{itemize}
+		\item Součástí zadání je obraz diskety FreeDOS 1.2, vůči kterému budou prováděny testy při hodnocení semestrální práce
+		\item V DOSBoxu ho lze připojit příkazem: imgmount d fdos1\_2\_floppy.img -size 512,63,16,1
+	\end{itemize}
+\end{itemize}
+
+
+Při zpracování tohoto zadání použijte a dále pracujte s kostrou tohoto řešení, kterou najdete v archívu os\_simulator.zip. Součástí archívu, ve složce compiled, je soubory checker.exe a test.exe. Soubor checker.exe je validátor semestrálních prací. Soubor test.exe generuje možný testovací vstup pro vaši semestrální práci.
+
+Vaše vypracování si před odevzdáním zkontrolujte programem checker.exe. V souboru checker.ini si upravte položku Setup\_Environment\_Command, v sekci General, tak, aby obsahovala cestu dle vaší instalace Visual Studia. Např. vzorové odevzdání otestujete příkazem ''compiled\\vzorove odevzdani.zip", spuštěného v kořenovém adresáři rozbaleného archívu. Odevzdávaný archív nemá obsahovat žádné soubory navíc a program musí úspěšně proběhnout.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Analýza problému}\label{struktura}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Popis implementace}\label{prikazy}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Závěr} \label{diskuze}
+
+\end{document}
