@@ -1,5 +1,27 @@
 vzorove odevzdani.zip
 
+compiled/boot.exe
+compiled/boot.ilk
+compiled/boot.pdb
+compiled/kernel.dll
+compiled/kernel.ilk
+compiled/kernel.pdb
+compiled/user.dll
+compiled/user.exp
+compiled/user.ilk
+compiled/user.lib
+compiled/user.pdb
+
+msvc/boot/.vs/
+msvc/boot/x64/
+msvc/kernel/.vs/
+msvc/kernel/x64/
+msvc/user/.vs/
+msvc/user/x64/
+msvc/kernel/kernel.vcxproj.user
+msvc/user/user.vcxproj.user
+
+
 
 doc/dokumentace.aux
 doc/dokumentace.log
