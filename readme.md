@@ -13,36 +13,36 @@ Tvorba filesystemu
 
 
 * idt.h/cpp - interrupt descriptor table, tabulku preruseni. Tabulka uz je vyplnena nebo ji musime nejak vyplnit?
-* disk.h/cpp - cteni ze vstupu klavesnice uzivatele => volani preruseni. Asi nic zajimaveho/podstatneho?
+* disk.h/cpp - Čtení/Zápis sektorů na disku a další srajdy. Určitě se použije
 * cmos.h/cpp - nejaka pocatecni konfigurace systemu a disku? CMOS pamet. Nebudeme editovat?
-* keyboard.h/cpp -
-* Simplelni.h - WTF is this. 3445 radek poradneho naseru. Nic pro nas?
-* vga.h/cpp - zobrazovaci techniky. V nasem pripade pouze vypis znakuuu
+* keyboard.h/cpp - handling bufferu klavesnice. Asi nic k editovani pro nas?
+* SimpleIni.h - Knihovna pro cteni .ini souboru. Takovy soubor mame v compiled/checker.ini
+* vga.h/cpp - zobrazovaci techniky. V nasem pripade pouze vypis znakuuu i guess
 
 
 Projekt **kernel**
 ==========
 Jadro systemu:
 
-* roury a presmerovani
-* prikaz tasklist (vsechny procesy)
-* prikaz echo (echo musi umet @echo on a off)
+1. roury a presmerovani
+2. prikaz tasklist (vsechny procesy)
+3. prikaz echo (echo musi umet @echo on a off)
+4. program rgen
+5. program freq
 
-* program rgen
-* program freq
 
-* handles.h/cpp -
-* io.h/cpp -
-* kernel.h/cpp -
+* handles.h/cpp - handlery na pristupy ke knihovnam a k dalsim bs?
+* io.h/cpp - "Read_Line_From_Console": volani VGA handleru a dalsi handling chyb, celkove zpracovani vstupu/vystupu uzivatele
+* kernel.h/cpp - Inicializace/shutdown jadra, handling systemoveho volani, Bootstrap loader (Bootloader) => zavedeni programu systemu(pro nas user.dll), spusteni shellu
 
 Projekt **user**
 ==========
 Userspace
 
 ??????? pravdepodobne ma delat vsechny prikazy?
-* prikazy: cd, dir, md, type(typ predaneho souboru), search /v "" /c (hledani stringu v souboru/souborech), sort (serazeni radek vstupu podle abecedy(mozna i jinak?)),
-* Absolutni a relativni cesty
-* dir s parametrem /s => zobrazeni vsech souboru ve slozce a vsech dalsich v podslozkach
+1. prikazy: cd, dir, md, type(typ predaneho souboru), search /v "" /c (hledani stringu v souboru/souborech), sort (serazeni radek vstupu podle abecedy(mozna i jinak?)),
+2. Absolutni a relativni cesty
+3. dir s parametrem /s => zobrazeni vsech souboru ve slozce a vsech dalsich v podslozkach
 
 
 * shell.h/cpp - veskera implementace prikazu a definice shellu + parsing prikazu
