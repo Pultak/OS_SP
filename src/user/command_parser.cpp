@@ -2,7 +2,7 @@
 
 #include "command_parser.h"
 
-/* Function to remove leading spaces from a command */
+/* Function to remove leading spaces from a command/line */
 void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
 {
 	//return if pointer is null
@@ -32,6 +32,21 @@ void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
 	}
 }
 
+int CountCommands(char* line)
+{
+	int count = 1;
+	int index = 0;
+	while (line[index])
+	{
+		if (line[index] == '|' || line[index] == '<' || line[index] == '>')
+		{
+			count++;
+		}
+		index++;
+	}
+	return count;
+}
+
 int FindPipeOrRedirect(char* line)
 {
 	int index = 0;
@@ -44,4 +59,20 @@ int FindPipeOrRedirect(char* line)
 		index++;
 	}
 	return index;
+}
+
+void ProcessCommand(char* command)
+{
+	//check for string of letters only
+}
+
+void ProcessLine(char* line)
+{
+	//check how many |<>, then loop through each command
+	int nr_cmds = CountCommands(line);
+
+	for (int i = 0; i < nr_cmds; i++)
+	{
+		ProcessCommand();
+	}
 }
