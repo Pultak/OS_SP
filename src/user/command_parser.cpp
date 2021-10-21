@@ -69,7 +69,21 @@ void ProcessCommand(char* command)
 		return;
 	}
 	RemoveLeadingWhitespace(command);
-	std::cout << "cmd: " << command << "\n";
+	int index = 0;
+	char command_result[9];
+	while (command[index] >= 65 && command[index] <= 90 || command[index] >= 97 && command[index] <= 122)
+	{
+		if (index >= 8)
+		{
+			std::cout << "ERROR" << "\n";
+			break;
+		}
+		command_result[index] = command[index];
+		index++;
+	}
+	command_result[index] = 0;
+
+	std::cout << "cmd: " << command_result << "\n";
 }
 
 void ProcessLine(char* line)
