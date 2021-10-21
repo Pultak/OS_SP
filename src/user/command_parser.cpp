@@ -1,6 +1,7 @@
 #pragma once
 
 #include "command_parser.h"
+#include <iostream>
 
 /* Function to remove leading spaces from a command/line */
 void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
@@ -47,9 +48,8 @@ int CountCommands(char* line)
 	return count;
 }
 
-int FindPipeOrRedirect(char* line)
+int FindPipeOrRedirect(int index, char* line)
 {
-	int index = 0;
 	while (line[index])
 	{
 		if (line[index] == '|' || line[index] == '<' || line[index] == '>')
@@ -64,15 +64,48 @@ int FindPipeOrRedirect(char* line)
 void ProcessCommand(char* command)
 {
 	//check for string of letters only
+	if (command[0] == 0)
+	{
+		return;
+	}
+	RemoveLeadingWhitespace(command);
+	std::cout << "cmd: " << command << "\n";
 }
 
 void ProcessLine(char* line)
 {
-	//check how many |<>, then loop through each command
-	int nr_cmds = CountCommands(line);
+	int index_line = 0;
+	int index_end_cmd = 0;
+	int index_cmd = 0;
+	char command[256];
+	std::cout << "\n";
 
-	for (int i = 0; i < nr_cmds; i++)
+	//loop through commands until EOL
+	while(line[index_line])
 	{
-		ProcessCommand();
+		index_cmd = 0;
+		index_end_cmd = FindPipeOrRedirect(index_line, line);
+		std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
+		
+
+		//copy chars from line to command
+		while(index_line <index_end_cmd && line[index_line])
+		{
+			command[index_cmd] = line[index_line];
+			index_cmd++;
+			index_line++;
+		}
+
+		std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
+
+		//null terminate command
+		command[index_cmd] = 0;
+		//skip the |<> if not EOL
+		if (line[index_line])
+		{
+			index_line++;
+		}
+
+		ProcessCommand(command);
 	}
 }
