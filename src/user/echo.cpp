@@ -5,6 +5,8 @@ bool echo_on = true;
 
 char* echo_prot(char* input)
 {
+	//std::cout << "ECHO\n";
+	//std::cout << input << "\n";
 	//no input, print echo status
 	if (input[0] == 0)
 	{
@@ -18,12 +20,16 @@ char* echo_prot(char* input)
 		}
 		return 0;
 	}
-	if (strcmp(input, "on"))
+	if ((input[0] == 'o' || input[0] == 'O') && (input[1] == 'n' || input[1] == 'N'))
 	{
+		std::cout << "ECHO turning on.\n";
+
 		echo_on = true;
 	}
-	else if (strcmp(input, "off"))
+	else if ((input[0] == 'o' || input[0] == 'O') && (input[1] == 'f' || input[1] == 'F') && (input[2] == 'f' || input[2] == 'F'))
 	{
+		std::cout << "ECHO turning off.\n";
+
 		echo_on = false;
 	}
 	else

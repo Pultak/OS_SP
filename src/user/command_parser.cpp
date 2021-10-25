@@ -1,6 +1,7 @@
 #pragma once
 
 #include "command_parser.h"
+#include "echo.h"
 #include <iostream>
 
 /* Function to remove leading spaces from a command/line */
@@ -48,6 +49,14 @@ int CountCommands(char* line)
 	return count;
 }
 
+static void MatchCommand(char* command, char* arg)
+{
+	if (strcmp(command, "echo") == 0)
+	{
+		echo_prot(arg);
+	}
+}
+
 int FindPipeOrRedirect(int index, char* line)
 {
 	while (line[index])
@@ -61,29 +70,58 @@ int FindPipeOrRedirect(int index, char* line)
 	return index;
 }
 
-void ProcessCommand(char* command)
+static char* ProcessCommand(char* command)
 {
-	//check for string of letters only
 	if (command[0] == 0)
 	{
-		return;
+		return 0;
 	}
 	RemoveLeadingWhitespace(command);
 	int index = 0;
+	int index_arg = 0;
 	char command_result[9];
+	char argument_result[256];
+	//load command into command_result - check for string of letters only
 	while (command[index] >= 65 && command[index] <= 90 || command[index] >= 97 && command[index] <= 122)
 	{
+		//longest command is 8 chars
 		if (index >= 8)
 		{
-			std::cout << "ERROR" << "\n";
+			std::cout << "ERROR: command too long" << "\n";
 			break;
 		}
 		command_result[index] = command[index];
 		index++;
 	}
+	//if input command has only letters, the argument is missing
+	if (command[index] == 0)
+	{
+		std::cout << "No argument" << "\n";
+	}
+	//command has to be followed by a space or a dot
+	else if (!(command[index] == ' ' || command[index] == '.'))
+	{
+		std::cout << "ERROR: command not recognized" << "\n";
+	}
+	//null terminate command result
 	command_result[index] = 0;
+	
+	//load argument into argument_result
+	while (command[index])
+	{
+		argument_result[index_arg] = command[index];
+		index++;
+		index_arg++;
+	}
 
+	//null terminate argument result
+	argument_result[index_arg] = 0;
+	RemoveLeadingWhitespace(argument_result);
+	MatchCommand(command_result, argument_result);
 	std::cout << "cmd: " << command_result << "\n";
+	std::cout << "arg: " << argument_result << "\n";
+	return command_result;
+
 }
 
 void ProcessLine(char* line)
@@ -91,15 +129,18 @@ void ProcessLine(char* line)
 	int index_line = 0;
 	int index_end_cmd = 0;
 	int index_cmd = 0;
+	int index_arg = 0;
 	char command[256];
+
 	std::cout << "\n";
 
 	//loop through commands until EOL
 	while(line[index_line])
 	{
 		index_cmd = 0;
+
 		index_end_cmd = FindPipeOrRedirect(index_line, line);
-		std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
+		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
 		
 
 		//copy chars from line to command
@@ -110,7 +151,7 @@ void ProcessLine(char* line)
 			index_line++;
 		}
 
-		std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
+		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
 
 		//null terminate command
 		command[index_cmd] = 0;
@@ -121,5 +162,6 @@ void ProcessLine(char* line)
 		}
 
 		ProcessCommand(command);
+
 	}
 }
