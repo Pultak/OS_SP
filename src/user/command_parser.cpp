@@ -34,6 +34,30 @@ void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
 	}
 }
 
+void RemoveTrailingWhitespace(char* line)
+{
+	//return if pointer is null
+	if (line == nullptr)
+	{
+		return;
+	}
+	char* buffer = line;
+	int index_line = 0;
+	//find end of line
+	while (line[index_line])
+	{
+		index_line++;
+	}
+	//skip null
+	index_line--;
+
+	//remove spaces
+	while (line[index_line] == ' ') {
+		line[index_line] = 0;
+		index_line--;
+	}
+}
+
 int CountCommands(char* line)
 {
 	int count = 1;
