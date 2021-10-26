@@ -26,7 +26,6 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 			if ((counter > 0) && (counter == buffer_size)) counter--;
 			buffer[counter] = 0;	//udelame z precteneho vstup null-terminated retezec
 
-			RemoveLeadingWhitespace(buffer);
 			ProcessLine(buffer);
 
 			const char* new_line = "\n";

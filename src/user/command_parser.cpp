@@ -4,6 +4,13 @@
 #include "echo.h"
 #include <iostream>
 
+/* Function to remove unnecessary whitespace from C string */
+void RemoveWhitespace(char* line)
+{
+	RemoveLeadingWhitespace(line);
+	RemoveTrailingWhitespace(line);
+}
+
 /* Function to remove leading spaces from a command/line */
 void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
 {
@@ -34,6 +41,7 @@ void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
 	}
 }
 
+/* Function to remove trailing spaces from a command/line */
 void RemoveTrailingWhitespace(char* line)
 {
 	//return if pointer is null
@@ -101,6 +109,7 @@ static char* ProcessCommand(char* command)
 		return 0;
 	}
 	RemoveLeadingWhitespace(command);
+	RemoveTrailingWhitespace(command);
 	int index = 0;
 	int index_arg = 0;
 	char command_result[9];
@@ -117,12 +126,13 @@ static char* ProcessCommand(char* command)
 		command_result[index] = command[index];
 		index++;
 	}
-	//if input command has only letters, the argument is missing
+	//if input ends after command - no argument - should be handled for each command differently
 	if (command[index] == 0)
 	{
 		std::cout << "No argument" << "\n";
+		
 	}
-	//command has to be followed by a space or a dot
+	//command has to be followed by a space or a dot - really only these two cases? could also be handled separately for each command
 	else if (!(command[index] == ' ' || command[index] == '.'))
 	{
 		std::cout << "ERROR: command not recognized" << "\n";

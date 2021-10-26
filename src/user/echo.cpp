@@ -20,13 +20,13 @@ char* echo_prot(char* input)
 		}
 		return 0;
 	}
-	if ((input[0] == 'o' || input[0] == 'O') && (input[1] == 'n' || input[1] == 'N'))
+	if ((input[0] == 'o' || input[0] == 'O') && (input[1] == 'n' || input[1] == 'N') && (input[2] == 0))
 	{
 		std::cout << "ECHO turning on.\n";
 
 		echo_on = true;
 	}
-	else if ((input[0] == 'o' || input[0] == 'O') && (input[1] == 'f' || input[1] == 'F') && (input[2] == 'f' || input[2] == 'F'))
+	else if ((input[0] == 'o' || input[0] == 'O') && (input[1] == 'f' || input[1] == 'F') && (input[2] == 'f' || input[2] == 'F') && (input[3] == 0))
 	{
 		std::cout << "ECHO turning off.\n";
 
