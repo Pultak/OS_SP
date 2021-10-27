@@ -4,13 +4,6 @@
 #include "echo.h"
 #include <iostream>
 
-/* Function to remove unnecessary whitespace from C string */
-static void RemoveWhitespace(char* line)
-{
-	RemoveLeadingWhitespace(line);
-	RemoveTrailingWhitespace(line);
-}
-
 /* Function to remove leading spaces from a command/line */
 static void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
 {
@@ -64,6 +57,13 @@ static void RemoveTrailingWhitespace(char* line)
 		line[index_line] = 0;
 		index_line--;
 	}
+}
+
+/* Function to remove unnecessary whitespace from C string */
+static void RemoveWhitespace(char* line)
+{
+	RemoveLeadingWhitespace(line);
+	RemoveTrailingWhitespace(line);
 }
 
 /* Counts number of commands based on number of |<> */
@@ -133,7 +133,6 @@ static char* ProcessCommand(char* command)
 	if (command[index] == 0)
 	{
 		std::cout << "No argument" << "\n";
-		
 	}
 	//command has to be followed by a space or a dot - really only these two cases? could also be handled separately for each command
 	else if (!(command[index] == ' ' || command[index] == '.'))
