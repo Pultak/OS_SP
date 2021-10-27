@@ -66,6 +66,7 @@ static void RemoveTrailingWhitespace(char* line)
 	}
 }
 
+/* Counts number of commands based on number of |<> */
 static int CountCommands(char* line)
 {
 	int count = 1;
@@ -81,6 +82,7 @@ static int CountCommands(char* line)
 	return count;
 }
 
+/* Executes a command - input: char* command, char* argument */
 static void ExecuteCommand(char* command, char* arg)
 {
 	if (strcmp(command, "echo") == 0)
@@ -89,6 +91,7 @@ static void ExecuteCommand(char* command, char* arg)
 	}
 }
 
+/* Finds position of the next |<> */
 static int FindPipeOrRedirect(int index, char* line)
 {
 	while (line[index])
@@ -102,6 +105,7 @@ static int FindPipeOrRedirect(int index, char* line)
 	return index;
 }
 
+/* Processes a single command - bounded by |<> */
 static char* ProcessCommand(char* command)
 {
 	if (command[0] == 0)
@@ -157,6 +161,7 @@ static char* ProcessCommand(char* command)
 
 }
 
+/* Processes a whole line of input */
 void ProcessLine(char* line)
 {
 	int index_line = 0;
