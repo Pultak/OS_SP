@@ -5,14 +5,14 @@
 #include <iostream>
 
 /* Function to remove unnecessary whitespace from C string */
-void RemoveWhitespace(char* line)
+static void RemoveWhitespace(char* line)
 {
 	RemoveLeadingWhitespace(line);
 	RemoveTrailingWhitespace(line);
 }
 
 /* Function to remove leading spaces from a command/line */
-void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
+static void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
 {
 	//return if pointer is null
 	if (line == nullptr)
@@ -42,7 +42,7 @@ void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
 }
 
 /* Function to remove trailing spaces from a command/line */
-void RemoveTrailingWhitespace(char* line)
+static void RemoveTrailingWhitespace(char* line)
 {
 	//return if pointer is null
 	if (line == nullptr)
@@ -66,7 +66,7 @@ void RemoveTrailingWhitespace(char* line)
 	}
 }
 
-int CountCommands(char* line)
+static int CountCommands(char* line)
 {
 	int count = 1;
 	int index = 0;
@@ -81,7 +81,7 @@ int CountCommands(char* line)
 	return count;
 }
 
-static void MatchCommand(char* command, char* arg)
+static void ExecuteCommand(char* command, char* arg)
 {
 	if (strcmp(command, "echo") == 0)
 	{
@@ -89,7 +89,7 @@ static void MatchCommand(char* command, char* arg)
 	}
 }
 
-int FindPipeOrRedirect(int index, char* line)
+static int FindPipeOrRedirect(int index, char* line)
 {
 	while (line[index])
 	{
@@ -108,8 +108,7 @@ static char* ProcessCommand(char* command)
 	{
 		return 0;
 	}
-	RemoveLeadingWhitespace(command);
-	RemoveTrailingWhitespace(command);
+	RemoveWhitespace(command);
 	int index = 0;
 	int index_arg = 0;
 	char command_result[9];
@@ -151,7 +150,7 @@ static char* ProcessCommand(char* command)
 	//null terminate argument result
 	argument_result[index_arg] = 0;
 	RemoveLeadingWhitespace(argument_result);
-	MatchCommand(command_result, argument_result);
+	ExecuteCommand(command_result, argument_result);
 	std::cout << "cmd: " << command_result << "\n";
 	std::cout << "arg: " << argument_result << "\n";
 	return command_result;
