@@ -34,6 +34,7 @@ void freq_prot(const kiv_hal::TRegisters& regs)
 				if (c == 'q')
 				{
 					flag_continue = false;
+					break;
 				}
 				if (c >= 0)
 				{

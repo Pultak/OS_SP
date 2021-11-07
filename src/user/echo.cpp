@@ -18,7 +18,6 @@ void echo_prot(char* input)
 		{
 			std::cout << "ECHO is off.\n";
 		}
-		return 0;
 	}
 	if ((input[0] == 'o' || input[0] == 'O') && (input[1] == 'n' || input[1] == 'N') && (input[2] == 0))
 	{
@@ -36,5 +35,4 @@ void echo_prot(char* input)
 	{
 		std::cout << input << "\n";
 	}
-	return 0;
 }
