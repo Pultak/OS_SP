@@ -1,8 +1,7 @@
 #pragma once
 
 #include "kernel.h"
-#include "io.h"
-#include <Windows.h>
+
 
 HMODULE User_Programs;
 
@@ -22,7 +21,9 @@ void __stdcall Sys_Call(kiv_hal::TRegisters &regs) {
 		case kiv_os::NOS_Service_Major::File_System:		
 			Handle_IO(regs);
 			break;
-
+		case kiv_os::NOS_Service_Major::Process:
+			Process::Handle_Process(regs, User_Programs);
+			break;
 	}
 
 }
