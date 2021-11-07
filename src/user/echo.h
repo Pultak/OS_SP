@@ -1,3 +1,3 @@
 #pragma once
 
-char* echo_prot(char* input);
+void echo_prot(char* input);

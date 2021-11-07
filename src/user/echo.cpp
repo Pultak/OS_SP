@@ -3,7 +3,7 @@
 
 bool echo_on = true;
 
-char* echo_prot(char* input)
+void echo_prot(char* input)
 {
 	//std::cout << "ECHO\n";
 	//std::cout << input << "\n";

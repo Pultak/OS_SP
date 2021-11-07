@@ -6,6 +6,8 @@
 #include <array>
 #include <iostream>
 
+//comments missing
+
 void freq_prot(const kiv_hal::TRegisters& regs)
 {
 	const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
@@ -28,6 +30,7 @@ void freq_prot(const kiv_hal::TRegisters& regs)
 			for (int i = 0; i < counter; i++)
 			{
 				char c = buffer[i];
+				//change to EOT later, q only for testing
 				if (c == 'q')
 				{
 					flag_continue = false;
@@ -40,6 +43,7 @@ void freq_prot(const kiv_hal::TRegisters& regs)
 		}
 	}
 
+	//change the format of the output
 	for (int i = 0; i < 128; i++) {
 		int ch = chars.at(i);
 		char c = i;
