@@ -33,19 +33,44 @@ bool kiv_os_rtl::Write_File(const kiv_os::THandle file_handle, const char *buffe
 }
 
 bool kiv_os_rtl::Set_Working_Dir(const char* dir) {
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Set_Working_Dir));
+	regs.rdx.x = reinterpret_cast<decltype(regs.rdx.x)>(dir);
 
+	const bool result = kiv_os::Sys_Call(regs);
+	return result;
 }
 
 bool kiv_os_rtl::Get_Working_Dir(char* buffer, const size_t buffer_size, size_t& chars_written) {
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Get_Working_Dir));
+	regs.rdx.x = reinterpret_cast<decltype(regs.rdx.x)>(buffer);
+	regs.rcx.r = buffer_size;
 
+	const bool result = kiv_os::Sys_Call(regs);
+	read = regs.rax.r;
+	return result;
 }
 
 bool kiv_os_rtl::Open_File(char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle &file_handle_ret) {
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Open_File));
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(file_name);
+	regs.rcx.r = static_cast<regs.rcx.r>(file_open);
+	regs.rdi.r = static_cast<regs.rcx.r>(file_attribute);
 
+	const bool result = kiv_os::Sys_Call(regs);
+	file_handle_ret = regs.rax.r;
+	return result;
 }
 
 bool kiv_os_rtl::Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint16_t &position_ret){
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Open_File));
+	regs.rdx.x = static_cast<decltype(regs.rdx.x)>(file_handle);
+	regs.rdi.r = static_cast<regs.rdi.r>(position);
+	regs.rcx.l = static_cast<regs.rcx.l>(file_seek_pos);
+	regs.rcx.h = static_cast<regs.rcx.h>(file_seek_op);
 
+	const bool result = kiv_os::Sys_Call(regs);
+	position_ret = regs.rax.r;
+	return result;
 }
 
 bool kiv_os_rtl::Close_Handle(kiv_os::THandle handle) {
