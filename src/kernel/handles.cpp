@@ -37,6 +37,6 @@ HANDLE Resolve_kiv_os_Handle(const kiv_os::THandle hnd) {
 
 bool Remove_Handle(const kiv_os::THandle hnd) {
 	std::lock_guard<std::mutex> guard(Handles_Guard);
-
+	printf(" tady asi ne ne? ");
 	return Handles.erase(hnd) == 1;
 }

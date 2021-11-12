@@ -1,5 +1,4 @@
 #include "shell.h"
-
 #include "rtl.h"
 
 size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
@@ -28,6 +27,12 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 			kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);
 			kiv_os_rtl::Write_File(std_out, buffer, strlen(buffer), counter);	//a vypiseme ho
 			kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);	
+			if (strcmp(buffer, "cd") == 0) {
+				kiv_os_rtl::Set_Working_Dir("C:\\");
+			}
+			else if (strcmp(buffer, "md") == 0) {
+				kiv_os_rtl::md(regs);
+			}
 		}
 		else
 			break;	//EOF

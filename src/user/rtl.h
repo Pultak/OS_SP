@@ -17,4 +17,12 @@ namespace kiv_os_rtl {
 	//vraci true, kdyz vse OK
 	//vraci true, kdyz vse OK
 
+	bool Set_Working_Dir(const char* path);
+
+	bool Get_Working_Dir(const char* buffer, size_t buffer_size, size_t& read);
+
+	bool md(const kiv_hal::TRegisters& regs);
+	
+	bool Open_Filesystem(const char* file_name, kiv_os::NOpen_File flags, uint8_t attributes, kiv_os::THandle& handle, kiv_os::NOS_Error& error);
+
 }
