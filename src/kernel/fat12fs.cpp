@@ -40,7 +40,6 @@ kiv_os::NOS_Error FAT::open(const char* name, kiv_os::NOpen_File flags, uint8_t 
     target_cluster = dir_item.first_cluster;
     
     if (target_cluster == -1) {
-        printf(" tak jak tpc ");
         if (flags == kiv_os::NOpen_File::fmOpen_Always) {
             return kiv_os::NOS_Error::File_Not_Found;
         }
