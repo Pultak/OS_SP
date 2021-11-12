@@ -116,36 +116,66 @@ bool kiv_os_rtl::Create_Pipe(kiv_os::THandle *file_handles) {
 }
 
 bool kiv_os_rtl::Create_Process(char* process_name, char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle &process_handle_ret) {
-	return 0;
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Clone));
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(process_name);
+	regs.rdi.r = reinterpret_cast<decltype(regs.rdx.x)>(argument);
+	regs.rbx.e = (stdin_handle << 16) | stdout_handle;
 
+	const bool result = kiv_os::Sys_Call(regs);
+	process_handle_ret = regs.rax.r;
+	return result;
 }
 
 bool kiv_os_rtl::Create_Thread(char* thread_name, char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& thread_handle_ret) {
-	return 0;
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Clone));
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(thread_name);
+	regs.rdi.r = reinterpret_cast<decltype(regs.rdx.x)>(argument);
+	regs.rbx.e = (stdin_handle << 16) | stdout_handle;
 
+	const bool result = kiv_os::Sys_Call(regs);
+	thread_handle_ret = regs.rax.r;
+	return result;
 }
 
 bool kiv_os_rtl::Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_handles, kiv_os::THandle &handle_signal_ret) {
-	return 0;
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Wait_For));
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(handles_to_wait);
+	regs.rcx.r = static_cast<decltype(regs.rcx.x)>(num_of_handles);
 
+	const bool result = kiv_os::Sys_Call(regs);
+	handle_signal_ret = regs.rax.r;
+	return result;
 }
 
 bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, uint16_t &exit_code_ret) {
-	return 0;
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Read_Exit_Code));
+	regs.rdx.r = static_cast<decltype(regs.rdx.x)>(process_handle);
 
+	const bool result = kiv_os::Sys_Call(regs);
+	exit_code_ret = regs.rax.r;
+	return result;
 }
 
 bool kiv_os_rtl::Exit(uint16_t exit_code) {
-	return 0;
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Exit));
+	regs.rcx.r = static_cast<decltype(regs.rcx.x)>(exit_code);
 
+	const bool result = kiv_os::Sys_Call(regs);
+	return result;
 }
 
 bool kiv_os_rtl::Shutdown() {
-	return 0;
-
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Shutdown));
+	
+	const bool result = kiv_os::Sys_Call(regs);
+	return result;
 }
 
 bool kiv_os_rtl::Register_Signal_Handler(kiv_os::NSignal_Id signal_id, kiv_os::THandle process_handle) {
-	return 0;
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Register_Signal_Handler));
+	regs.rcx.r = static_cast<decltype(regs.rcx.x)>(signal_id);
+	regs.rdx.r = static_cast<decltype(regs.rdx.x)>(process_handle);
 
+	const bool result = kiv_os::Sys_Call(regs);
+	return result;
 }
