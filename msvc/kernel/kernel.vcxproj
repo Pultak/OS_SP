@@ -23,8 +23,11 @@
     <ClCompile Include="..\..\src\kernel\handles.cpp" />
     <ClCompile Include="..\..\src\kernel\io.cpp" />
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
-    <ClCompile Include="Process.cpp" />
-    <ClCompile Include="Synchronization.cpp" />
+    <ClCompile Include="..\..\src\kernel\Process.cpp" />
+    <ClCompile Include="..\..\src\kernel\ProcessControlBlock.cpp" />
+    <ClCompile Include="..\..\src\kernel\Synchronization.cpp" />
+    <ClCompile Include="..\..\src\kernel\ThreadControlBlock.cpp" />
+    <ClCompile Include="SleepListener.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
@@ -32,8 +35,11 @@
     <ClInclude Include="..\..\src\kernel\handles.h" />
     <ClInclude Include="..\..\src\kernel\io.h" />
     <ClInclude Include="..\..\src\kernel\kernel.h" />
-    <ClInclude Include="Process.h" />
-    <ClInclude Include="Synchronization.h" />
+    <ClInclude Include="..\..\src\kernel\Process.h" />
+    <ClInclude Include="..\..\src\kernel\ProcessControlBlock.h" />
+    <ClInclude Include="..\..\src\kernel\Synchronization.h" />
+    <ClInclude Include="..\..\src\kernel\ThreadControlBlock.h" />
+    <ClInclude Include="SleepListener.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B4305463-59C5-40C3-9A1A-92976A40562D}</ProjectGuid>
@@ -122,6 +128,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;KERNEL_EXPORTS;KERNEL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -159,6 +166,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;KERNEL_EXPORTS;KERNEL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <CallingConvention>VectorCall</CallingConvention>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

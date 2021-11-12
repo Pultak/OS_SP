@@ -4,68 +4,87 @@
 #include <memory.h>
 #include <iostream>
 #include <map>
+#include <filesystem>
 #include "ProcessControlBlock.h"
 #include "ThreadControlBlock.h"
 #include "Windows.h"
+#include <filesystem>
+#include <filesystem>
+#include <filesystem>
+#include "../../msvc/kernel/SleepListener.h"
 
-enum class Process_Status {
+enum class ProcessState {
 	Ready = 0,
 	Running = 1,
-	Zombie = 2
+	Waiting = 2,
+	Terminated = 3
 };
+
+size_t __stdcall default_signal_handler(const kiv_hal::TRegisters& regs) {
+	auto signal_id = static_cast<kiv_os::NSignal_Id>(regs.rcx.l);
+	// process the signal
+	return 0;
+}
+
 
 class Process {
 public:
-	static void Handle_Process(kiv_hal::TRegisters& registers, HMODULE user_programs);
+	static void HandleProcess(kiv_hal::TRegisters& registers, HMODULE user_programs);
 
 private:
-	static void clone(kiv_hal::TRegisters& registers, HMODULE user_programs);
+	static void clone(kiv_hal::TRegisters& registers, HMODULE userSpaceLib);
 
-	static void wait_for(kiv_hal::TRegisters& registers);
+	static void waitFor(kiv_hal::TRegisters& registers);
 
 	static void exit(kiv_hal::TRegisters& registers);
 
-	static void exit(kiv_os::THandle handle, kiv_os::NOS_Error exit_code);
-
-	static void read_exit_code(kiv_hal::TRegisters& registers);
-
-	static void register_signal_handler(kiv_hal::TRegisters& registers);
-
-	static void signal_all_processes(kiv_os::NSignal_Id signal);
-
-	static void signal(kiv_os::NSignal_Id signal_id, Process* process);
+	static void readExitCode(kiv_hal::TRegisters& registers);
 
 	static void shutdown();
 
-public:
-	static std::shared_ptr<ProcessControlBlock*> pcb;
+	static void registerSignalHandler(kiv_hal::TRegisters& registers);
+
+private:
+	static void cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpaceLib);
+
+	static void processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc t_threadproc);
+	static void threadStartPoint();
+
+	static void invalidWaitForRequest(const int alreadyDone, const kiv_os::THandle* handles, const kiv_os::THandle thisHandle);
+
 
 public:
-	std::shared_ptr <ThreadControlBlock*> tcb;
+	static const std::unique_ptr<ProcessControlBlock> pcb;
+
 
 public:
 
 	kiv_os::THandle handle;
-	kiv_os::THandle std_in;
-	kiv_os::THandle std_out;
-	Process_Status status = Process_Status::Ready;
-	kiv_os::NOS_Error exit_code;
-	char program_name[42];
-	//todo change to filesystem path
-	char working_directory[256];
+	kiv_os::THandle stdInput;
+	kiv_os::THandle stdOutput;
+	ProcessState state = ProcessState::Ready;
+	kiv_os::NOS_Error exitCode;
+	char* programName;
+
+	std::filesystem::path workingDirectory;
+
+	std::map<kiv_os::NSignal_Id, kiv_os::TThread_Proc> signalHandlers;
+
+private:
+	std::shared_ptr <ThreadControlBlock*> tcb;
+	std::list<std::unique_ptr<SleepListener*>> listeners;
 
 
+public:
 
-	Process(kiv_hal::TRegisters regs, kiv_os::THandle handle, kiv_os::THandle std_in, kiv_os::THandle std_out, char* program) {
-		registers = std::make_unique<kiv_hal::TRegisters>(regs);
-		//todo other parameters
+	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program): handle(handle), stdInput(stdIn), stdOutput(stdOut), programName(program) {
+		
+		//no other signals are pressent atm
+		signalHandlers[kiv_os::NSignal_Id::Terminate] = default_signal_handler;
 	}
 
 	~Process() {
 		//todo check exit codes by parent -> block process?
 	}
 
-private:
-	std::unique_ptr<kiv_hal::TRegisters> registers;
-	static std::map<kiv_os::THandle, std::unique_ptr<Process>> pcb;
 };

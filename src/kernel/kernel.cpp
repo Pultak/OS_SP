@@ -22,7 +22,7 @@ void __stdcall Sys_Call(kiv_hal::TRegisters &regs) {
 			Handle_IO(regs);
 			break;
 		case kiv_os::NOS_Service_Major::Process:
-			Process::Handle_Process(regs, User_Programs);
+			Process::HandleProcess(regs, User_Programs);
 			break;
 	}
 
