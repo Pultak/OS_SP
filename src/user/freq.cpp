@@ -30,7 +30,7 @@ void freq_prot(const kiv_hal::TRegisters& regs)
 			for (int i = 0; i < counter; i++)
 			{
 				char c = buffer[i];
-				//change to EOT later, q only for testing
+
 				if (c == 'q')
 				{
 					flag_continue = false;
