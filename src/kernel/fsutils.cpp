@@ -124,7 +124,6 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 	folders_in_path.pop_back(); 
 	int start_sector = -1;
 	std::vector<int> sectors_nums_data;
-	printf("ojojoj");
 	if (folders_in_path.size() == 0) {
 		printf(" root ");
 		start_sector = 19;
@@ -133,7 +132,6 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 		}
 	}
 	else {
-		printf(" vagikuba ");
 		directory_item target_folder = retrieve_item(19, int_fat_table, folders_in_path);
 		sectors_nums_data = retrieve_sectors_fs(int_fat_table, target_folder.first_cluster);
 
@@ -143,11 +141,9 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 
 	int free_index = retrieve_free_index(int_fat_table);
 	if (free_index == -1) { 
-		printf(" nenajdu index? ");
 		return -1; 
 	}
 	else {
-		printf(" najdu index? ");
 		std::vector<unsigned char> modified_bytes = num_to_bytes_fs(free_index, fat_table, 4095);
 		fat_table.at(static_cast<int>(static_cast<double>(free_index) * 1.5)) = modified_bytes.at(0); 
 		fat_table.at((static_cast<size_t>(static_cast<double>(free_index) * 1.5)) + 1) = modified_bytes.at(1);
@@ -180,7 +176,6 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 		to_write_subfolder.push_back(0);
 	}
 	//konec pripravy
-	printf(" i jsem pripravil entry ");
 	if (folders_in_path.size() == 0) { 
 		if ((items_folder.size() + 1 + 1) <= (sectors_nums_data.size() * 16)) { 
 			size_t cluster_num = (items_folder.size() + 1) / 16; 
@@ -195,11 +190,9 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 			for (int i = 0; i < data_clust.size(); i++) {
 				to_save.push_back(data_clust.at(i));
 			}
-			printf("xoxo %d", sectors_nums_data.at(cluster_num));
 			write_to_fs(sectors_nums_data.at(cluster_num) - 31, to_save);
 		}
 		else {
-			printf(" to to jako skoci sem?? ");
 			std::vector<unsigned char> modified_bytes = num_to_bytes_fs(free_index, fat_table, 0);
 			fat_table.at(static_cast<int>(static_cast<double>(free_index) * 1.5)) = modified_bytes.at(0); 
 			fat_table.at((static_cast<size_t>(static_cast<double>(free_index) * 1.5)) + 1) = modified_bytes.at(1);
@@ -209,7 +202,6 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 		}
 	}
 	else {
-		printf(" travolta ");
 		//mimo root slozku
 	}
 
@@ -322,7 +314,6 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 
 	if (path.size() == 0) {
 		directory_item dir_item;
-		printf(" jaj ");
 		dir_item.filename = "\\";
 		dir_item.extension = "";
 		dir_item.filesize = 0;
@@ -335,14 +326,11 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 	for (int i = 0; i < path.size(); i++) {
 		dir_item_number = -1;
 		cur_folder_items = retrieve_folders_from_folder(int_fat_table, traversed_sector_folder); 
-		printf("velikost podadresaru %d", cur_folder_items.size());
 		int j = 0;
 
 		std::string item_to_check = "";  
 		while (dir_item_number == -1 && j < cur_folder_items.size()) { 
 			directory_item dir_item = cur_folder_items.at(j);
-			printf(" path at i : %s", path.at(i).c_str());
-			printf(" jmeno diru: %s", dir_item.filename.c_str());
 			if (!dir_item.extension.empty()) {
 				item_to_check = dir_item.filename + "." + dir_item.extension;
 			}
@@ -371,7 +359,6 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 	}
 
 	directory_item dir_item{};
-	printf(" devka ma %d", dir_item_number);
 	if (dir_item_number != -1) { 
 		dir_item = cur_folder_items.at(dir_item_number);
 
@@ -459,7 +446,6 @@ std::vector<kiv_os::TDir_Entry> get_os_dir_content(size_t sectors, std::vector<u
 
 std::vector<directory_item> retrieve_folders_from_folder(std::vector<int> int_fat_table, int working_dir_sector) {
 	if (working_dir_sector == 19) { 
-		printf(" kurvadrat ");
 		std::vector<unsigned char> root_dir = read_from_fs(19 - 31, 14);
 		std::vector<directory_item> directory_content = get_dir_items(14, root_dir);
 

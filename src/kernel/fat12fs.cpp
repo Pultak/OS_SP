@@ -72,10 +72,9 @@ kiv_os::NOS_Error FAT::open(const char* name, kiv_os::NOpen_File flags, uint8_t 
         }
     }
     else if ((dir_item.attribute & static_cast<uint8_t>(kiv_os::NFile_Attributes::Directory)) && ((attributes & static_cast<uint8_t>(kiv_os::NFile_Attributes::Directory)) == 0)) {
-        printf(" takze tady?? ");
+        
         return kiv_os::NOS_Error::Permission_Denied;
     }
-    printf("zmrd dela problem %d", target_cluster);
     file.attributes = dir_item.attribute;
     file.handle = target_cluster;
     std::vector<int> sector_nums = retrieve_sectors_fs(int_fat_table, file.handle);

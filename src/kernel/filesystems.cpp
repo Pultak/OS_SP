@@ -96,7 +96,6 @@ kiv_os::THandle Open_File(const char* input_file_name, kiv_os::NOpen_File flags,
 		}
 	}
 	else {
-		printf(" jaj, to je sraCKA ");
 		error = kiv_os::NOS_Error::File_Not_Found;
 	}
 	return kiv_os::Invalid_Handle;
