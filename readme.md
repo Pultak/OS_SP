@@ -23,12 +23,14 @@ Tvorba filesystemu
 Projekt **kernel**
 ==========
 Jadro systemu:
-
 1. roury a presmerovani
 2. prikaz tasklist (vsechny procesy)
 3. prikaz echo (echo musi umet @echo on a off)
 4. program rgen
 5. program freq
+
+
+Monoliticke jadro.
 
 
 * handles.h/cpp - handlery na pristupy ke knihovnam a k dalsim bs?
@@ -55,12 +57,3 @@ Sdilene zdrojaky, ktere se nemeni (pravdepodobne):
 
 * hal.h  => Hardware abstraction layer (classic registry {rax, rbx, rcx, rdx}, index registr {rdi} - slouzi pro pomocne vypocty asi, flags, enum tridy obsahujici pravdepodobne vsechny potrebne hodnoty, info o disku (cylindry, cteci hlava .....))
 * api.cpp/h => melo by poskytovat veskere potrebne informace, ostatni informace z filesystemu (napr predem stanovene adresare 0:\procfs). Obsahuje mozne odpovedi/zadosti API ve forme enum trid
-
-
-
-
-
-Repository pro inspiraci:
-https://github.com/qwertzdenek/os-project
-
-https://github.com/danisik/OS
