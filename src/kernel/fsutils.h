@@ -9,7 +9,6 @@ struct directory_item {
 	std::string extension = ""; 
 	size_t filesize = 0;
 	int first_cluster = 0; 
-
 	unsigned char attribute = '0';
 };
 
@@ -44,3 +43,11 @@ std::vector<unsigned char> dec_to_hex(int start);
 void save_fat(std::vector<unsigned char> fat_table);
 
 std::vector<kiv_os::TDir_Entry> get_os_dir_content(size_t sectors, std::vector<unsigned char> clusters, bool is_root);
+
+void clear_fat_tables(std::vector<unsigned char> fat_table);
+
+void write_folder_into_fs(int index, int upper_index);
+
+int aloc_cluster(int start, std::vector<int>& int_fat_table, std::vector<unsigned char>& fat_table);
+
+unsigned char char_to_hex(char charar[2]);

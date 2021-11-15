@@ -71,6 +71,7 @@ std::vector<unsigned char> load_second_table() {
 }
 
 void write_to_fs(int start, std::vector<char> data) {
+	
 	kiv_hal::TRegisters write_reg;
 	kiv_hal::TDisk_Address_Packet write_packet;
 
@@ -80,6 +81,7 @@ void write_to_fs(int start, std::vector<char> data) {
 	write_reg.rdx.l = 129;
 	write_reg.rax.h = static_cast<decltype(write_reg.rax.h)>(kiv_hal::NDisk_IO::Write_Sectors);
 	write_reg.rdi.r = reinterpret_cast<decltype(write_reg.rdi.r)>(&write_packet);
+	
 	int last_sector_alloc = (start + static_cast<int>(write_packet.count)) - 1;
 	std::vector<unsigned char> last_sector_data = read_from_fs(last_sector_alloc, 1);
 	int size_to_hold = static_cast<int>(write_packet.count) * 512;
@@ -119,8 +121,8 @@ std::vector<unsigned char> read_from_fs(int start, int sectors_count) {
 
 int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fat_table, std::vector<int>& int_fat_table) {
 	std::vector<std::string> folders_in_path = get_directories(name);
-	//std::string new_folder_name = folders_in_path.at(folders_in_path.size() - 1); 
-	std::string new_folder_name = name;
+	
+	std::string new_folder_name = folders_in_path.at(folders_in_path.size() - 1); 
 	folders_in_path.pop_back(); 
 	int start_sector = -1;
 	std::vector<int> sectors_nums_data;
@@ -140,6 +142,7 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 	std::vector<directory_item> items_folder = retrieve_folders_from_folder(int_fat_table, start_sector); 
 
 	int free_index = retrieve_free_index(int_fat_table);
+	printf(" free: %d ", free_index);
 	if (free_index == -1) { 
 		return -1; 
 	}
@@ -147,7 +150,7 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 		std::vector<unsigned char> modified_bytes = num_to_bytes_fs(free_index, fat_table, 4095);
 		fat_table.at(static_cast<int>(static_cast<double>(free_index) * 1.5)) = modified_bytes.at(0); 
 		fat_table.at((static_cast<size_t>(static_cast<double>(free_index) * 1.5)) + 1) = modified_bytes.at(1);
-		fat_table.at(free_index) = 4095;
+		int_fat_table.at(free_index) = 4095;
 		save_fat(fat_table); 
 	}
 	
@@ -202,10 +205,94 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 		}
 	}
 	else {
-		//mimo root slozku
+		bool can_write = false; 
+		if ((items_folder.size() + 2 + 1) <= (sectors_nums_data.size() * 16)) {
+			can_write = true;
+		}
+		else { 
+			int aloc_res = aloc_cluster(start_sector, int_fat_table, fat_table); 
+			if (aloc_res == -1) {
+				can_write = false;
+			}
+			else {
+				can_write = true;
+				sectors_nums_data.push_back(aloc_res);
+			}
+		}
+
+		if (can_write) { 
+			size_t cluster_num = (items_folder.size() + 2) / 16; 
+			size_t item_num_clust_rel = (items_folder.size() + 2) % 16;
+
+			std::vector<unsigned char> data_clust = read_from_fs(sectors_nums_data.at(cluster_num), 1);
+
+			for (int i = 0; i < to_write_subfolder.size(); i++) {
+				data_clust.at((item_num_clust_rel * 32) + i) = to_write_subfolder.at(i);
+			}
+
+			for (int i = 0; i < data_clust.size(); i++) {
+				to_save.push_back(data_clust.at(i));
+			}
+
+			write_to_fs(sectors_nums_data.at(cluster_num), to_save);
+		}
+		else {
+			std::vector<unsigned char> modified_bytes = num_to_bytes_fs(free_index, fat_table, 0);
+			fat_table.at(static_cast<int>(static_cast<double>(free_index) * 1.5)) = modified_bytes.at(0);
+			fat_table.at((static_cast<size_t>(static_cast<double>(free_index) * 1.5)) + 1) = modified_bytes.at(1);
+			int_fat_table.at(free_index) = 0;
+
+			save_fat(fat_table);
+
+			return -1;
+		}
+	}
+	write_folder_into_fs(free_index, start_sector);
+	return 0;
+}
+
+void write_folder_into_fs(int index, int upper_index) {
+	std::vector<char> subfolder;
+	subfolder.push_back(46);
+	for (int i = 0; i < 10; i++) {
+		subfolder.push_back(32);
+	}
+	subfolder.push_back(0x10);
+	for (int i = 0; i < 14; i++) {
+		subfolder.push_back(32);
+	}
+	std::vector<unsigned char> first_assigned_clust = dec_to_hex(index);
+	for (int i = 0; i < 2; i++) {
+		subfolder.push_back(first_assigned_clust.at(i));
+	}
+	for (int i = 0; i < 4; i++) { 
+		subfolder.push_back(0);
+	}
+	subfolder.push_back(46);
+	subfolder.push_back(46);
+
+	for (int i = 0; i < 9; i++) {
+		subfolder.push_back(32);
+	}
+	subfolder.push_back(10);
+	for (int i = 0; i < 14; i++) {
+		subfolder.push_back(32);
+	}
+	if (upper_index == 19) { 
+		upper_index = 0;
+	}
+	std::vector<unsigned char> upper_clust = dec_to_hex(upper_index);
+	for (int i = 0; i < 2; i++) {
+		subfolder.push_back(upper_clust.at(i));
+	}
+	for (int i = 0; i < 4; i++) {
+		subfolder.push_back(0);
+	}
+	for (size_t i = subfolder.size(); i < 512; i++) {
+		subfolder.push_back(0);
 	}
 
-	return 0;
+	write_to_fs(index, subfolder);
 }
 
 std::vector<unsigned char> dec_to_hex(int start) {
@@ -226,8 +313,8 @@ std::vector<unsigned char> dec_to_hex(int start) {
 	byte_to_save_second[1] = convert_buffer[3];
 	byte_to_save_second[2] = '\0';
 
-	first_byte = static_cast<char>(strtol(byte_to_save_first, NULL, 16));
-	second_byte = static_cast<char>(strtol(byte_to_save_first, NULL, 16));
+	first_byte = char_to_hex(byte_to_save_first);
+	second_byte = char_to_hex(byte_to_save_second);
 
 	converted.push_back(second_byte);
 	converted.push_back(first_byte);
@@ -276,14 +363,21 @@ std::vector<unsigned char> num_to_bytes_fs(int target, std::vector<unsigned char
 
 	byte_to_save_first[2] = '\0';
 	byte_to_save_second[2] = '\0';
-	first_byte = static_cast<char>(strtol(byte_to_save_first, NULL, 16));
-	second_byte = static_cast<char>(strtol(byte_to_save_first, NULL, 16));
+	first_byte = char_to_hex(byte_to_save_first);
+	second_byte = char_to_hex(byte_to_save_second);
 
 	converted_bytes.push_back(first_byte);
 	converted_bytes.push_back(second_byte);
 
 	return converted_bytes;
 
+}
+
+unsigned char char_to_hex(char charar[2]) {
+	char ret[1];
+	ret[0] = static_cast<char>(strtol(charar, NULL, 16));
+
+	return ret[0];
 }
 
 std::vector<int> convert_fat_to_dec(std::vector<unsigned char> fat_table) {
@@ -311,7 +405,6 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 	int traversed_sector_folder = start_cluster;
 	int dir_item_number = -1;
 	std::vector<directory_item> cur_folder_items;
-
 	if (path.size() == 0) {
 		directory_item dir_item;
 		dir_item.filename = "\\";
@@ -326,6 +419,16 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 	for (int i = 0; i < path.size(); i++) {
 		dir_item_number = -1;
 		cur_folder_items = retrieve_folders_from_folder(int_fat_table, traversed_sector_folder); 
+		/*
+		printf("\n");
+		for (int i = 0; i < cur_folder_items.size(); i++) {
+			printf("\njmeno slozky: %s ", cur_folder_items[i].filename.c_str());
+			printf("attr: %c ", cur_folder_items[i].attribute);
+			printf("first cluster: %d ", cur_folder_items[i].first_cluster);
+			printf("size: %d", (int)cur_folder_items[i].filesize);
+		}
+		printf("\n");
+		//*/
 		int j = 0;
 
 		std::string item_to_check = "";  
@@ -337,7 +440,6 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 			else {
 				item_to_check = dir_item.filename;
 			}
-
 			if (path.at(i).compare(item_to_check) == 0) {
 				dir_item_number = j;
 			}
@@ -348,7 +450,6 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 		if (dir_item_number != -1) { 
 			directory_item dir_item = cur_folder_items.at(dir_item_number);
 			traversed_sector_folder = dir_item.first_cluster;
-
 			if (dir_item.first_cluster == 0) {
 				dir_item.first_cluster = 19;
 			}
@@ -357,11 +458,9 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 			break;
 		}
 	}
-
 	directory_item dir_item{};
 	if (dir_item_number != -1) { 
 		dir_item = cur_folder_items.at(dir_item_number);
-
 		if (dir_item.first_cluster == 0) { 
 			dir_item.first_cluster = 19;
 		}
@@ -370,7 +469,6 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 		dir_item.first_cluster = -1;
 		dir_item.filesize = -1;
 	}
-
 	return dir_item;
 }
 
@@ -448,13 +546,11 @@ std::vector<directory_item> retrieve_folders_from_folder(std::vector<int> int_fa
 	if (working_dir_sector == 19) { 
 		std::vector<unsigned char> root_dir = read_from_fs(19 - 31, 14);
 		std::vector<directory_item> directory_content = get_dir_items(14, root_dir);
-
 		directory_content.erase(directory_content.begin()); 
 		return directory_content;
 	}
 	else { 
 		std::vector<int> sectors_nums_data = retrieve_sectors_fs(int_fat_table, working_dir_sector); 
-
 		std::vector<unsigned char> retrieved_data_clust;
 		std::vector<directory_item> all_dir_items; 
 
@@ -514,7 +610,7 @@ std::vector<directory_item> get_dir_items(int sectornums, std::vector<unsigned c
 		while (j < 3 && !end_encountered) { 
 			if ((int)dir_content[i] == 32) { 
 				end_encountered = true;
-				i += 8 - j; 
+				i += 3 - j; 
 			}
 			else {
 				dir_item.extension.push_back(dir_content[i++]);
@@ -540,7 +636,6 @@ std::vector<int> retrieve_sectors_fs(std::vector<int> int_fat_table, int startin
 	std::vector<int> sector_list;
 	int cluster_num = -1;
 	int traversed_sector = starting_sector;
-	
 	while (traversed_sector < 4088 || traversed_sector > 4095) {
 		if (sector_list.size() == 0) { 
 			sector_list.push_back(traversed_sector);
@@ -563,4 +658,34 @@ void save_fat(std::vector<unsigned char> fat_table) {
 
 	write_to_fs(1 - 31, fat_table_to_save); 
 	write_to_fs(10 - 31, fat_table_to_save); 
+}
+
+void clear_fat_tables(std::vector<unsigned char> fat_table) {
+	std::vector<char> clear_fat_table;
+	for (int i = 0; i < fat_table.size(); i++) {
+		clear_fat_table.push_back(30);
+	}
+	write_to_fs(1 - 31, clear_fat_table);
+	write_to_fs(10 - 31, clear_fat_table);
+}
+
+int aloc_cluster(int start, std::vector<int>& int_fat_table, std::vector<unsigned char>& fat_table) {
+	int free_index = retrieve_free_index(int_fat_table); 
+	if (free_index == -1) {
+		return -1;
+	}
+	else {
+		std::vector<int> item_clusters = retrieve_sectors_fs(int_fat_table, start);
+		std::vector<unsigned char> modified_bytes = num_to_bytes_fs(free_index, fat_table, 4095);
+		fat_table.at(static_cast<int>(static_cast<double>(free_index) * 1.5)) = modified_bytes.at(0);
+		fat_table.at((static_cast<size_t>(static_cast<double>(free_index) * 1.5)) + static_cast <int>(1)) = modified_bytes.at(1);
+		int_fat_table.at(free_index) = 4095;
+		modified_bytes = num_to_bytes_fs(item_clusters.at(item_clusters.size() - 1), fat_table, free_index);
+		fat_table.at(static_cast<int>(static_cast<double>(item_clusters.at(item_clusters.size() - 1)) * 1.5)) = modified_bytes.at(0);
+		fat_table.at((static_cast<size_t>(static_cast<double>(item_clusters.at(item_clusters.size() - 1)) * 1.5)) + static_cast <int>(1)) = modified_bytes.at(1);
+		int_fat_table.at(item_clusters.at(item_clusters.size() - 1)) = free_index;
+		save_fat(fat_table);
+		return free_index;
+	}
+
 }

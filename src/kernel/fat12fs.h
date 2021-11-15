@@ -11,10 +11,6 @@ public:
 
 	kiv_os::NOS_Error dirread(const char* name, std::vector<kiv_os::TDir_Entry>& entries) override;
 
-	std::vector<unsigned char> fat_table;
-
-	std::vector<int> int_fat_table;
-
 	kiv_os::NOS_Error open(const char* name, kiv_os::NOpen_File flags, uint8_t attributes, File& file) override;
 
 	~FAT() {}

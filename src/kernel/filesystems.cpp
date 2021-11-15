@@ -78,7 +78,6 @@ kiv_os::THandle Open_File(const char* input_file_name, kiv_os::NOpen_File flags,
 
 	std::filesystem::path input_path = input_file_name;
 	std::string file_name = input_path.filename().string();
-
 	auto fs = Filesystem_exists(input_path, resolved_path_relative_to_fs, absolute_path);
 	if (fs != nullptr) {
 		printf(" fs nalezen ");
@@ -87,7 +86,7 @@ kiv_os::THandle Open_File(const char* input_file_name, kiv_os::NOpen_File flags,
 		strcpy_s(name, length, resolved_path_relative_to_fs.string().c_str());
 		
 		File f{};
-		auto result = fs->open("slozka", flags, attributes, f);
+		auto result = fs->open("slozka4\\slozka5\\slozka6", flags, attributes, f);
 		if (result == kiv_os::NOS_Error::Success) {
 			printf(" pridan soubor ");
 		}
