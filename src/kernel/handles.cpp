@@ -1,3 +1,4 @@
+#pragma once
 #include "handles.h"
 
 #include <map>

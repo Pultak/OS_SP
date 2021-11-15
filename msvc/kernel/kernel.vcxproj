@@ -25,9 +25,9 @@
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\..\src\kernel\Process.cpp" />
     <ClCompile Include="..\..\src\kernel\ProcessControlBlock.cpp" />
+    <ClCompile Include="..\..\src\kernel\SleepListener.cpp" />
     <ClCompile Include="..\..\src\kernel\Synchronization.cpp" />
     <ClCompile Include="..\..\src\kernel\ThreadControlBlock.cpp" />
-    <ClCompile Include="SleepListener.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
@@ -37,9 +37,9 @@
     <ClInclude Include="..\..\src\kernel\kernel.h" />
     <ClInclude Include="..\..\src\kernel\Process.h" />
     <ClInclude Include="..\..\src\kernel\ProcessControlBlock.h" />
+    <ClInclude Include="..\..\src\kernel\SleepListener.h" />
     <ClInclude Include="..\..\src\kernel\Synchronization.h" />
     <ClInclude Include="..\..\src\kernel\ThreadControlBlock.h" />
-    <ClInclude Include="SleepListener.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B4305463-59C5-40C3-9A1A-92976A40562D}</ProjectGuid>
@@ -129,6 +129,7 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;KERNEL_EXPORTS;KERNEL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -167,6 +168,7 @@
       <SDLCheck>true</SDLCheck>
       <CallingConvention>VectorCall</CallingConvention>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

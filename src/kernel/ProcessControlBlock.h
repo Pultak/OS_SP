@@ -1,24 +1,28 @@
 #pragma once
-#include "Process.h"
 #include "../api/api.h"
 
 #include "Synchronization.h"
+#include "Process.h"
+#include <memory>
 
 class ProcessControlBlock{
 public:
 
 	ProcessControlBlock(){
-		lockMaster = std::make_unique<Synchronization::Spinlock>(new Synchronization::Spinlock());
+		lockMaster = new Synchronization::Spinlock(0);
 	}
-
+	~ProcessControlBlock() {
+		delete lockMaster;
+	}
 	void AddNewProcess(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program, std::filesystem::path actualDir);
-	std::shared_ptr<Process> getProcess(kiv_os::THandle handle);
+	Process* getProcess(kiv_os::THandle handle);
+	bool removeProcess(kiv_os::THandle handle);
 	void signalProcesses(kiv_os::NSignal_Id signal);
 
 private:
-	std::map<kiv_os::THandle, std::shared_ptr<Process>> table;
+	std::map<kiv_os::THandle, Process*> table;
 
-	static std::unique_ptr<Synchronization::Spinlock> lockMaster;
+	static Synchronization::Spinlock* lockMaster;
 
 
 };

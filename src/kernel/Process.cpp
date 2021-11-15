@@ -65,7 +65,7 @@ void Process::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpaceLib)
 
         auto thisHandle = handles::getTHandleById(std::this_thread::get_id());
         //is actual process inside pcb?
-        auto thisProcess = pcb->getProcess(thisHandle);
+        Process* thisProcess = pcb->getProcess(thisHandle);
         std::filesystem::path workingDir = thisProcess ? thisProcess->workingDirectory : "/";
        
         pcb->AddNewProcess(tHandle, stdIn, stdOut, programName, workingDir);
@@ -88,17 +88,24 @@ void Process::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_
     auto handle = handles::getTHandleById(std::this_thread::get_id());
 
     //maybe different for thread?
-    auto thisProcess = pcb->getProcess(handle);
+    Process* thisProcess = pcb->getProcess(handle);
 
     handles::Remove_Handle(handle);
     
 
+    thisProcess->state = ProcessState::Terminated;
+    thisProcess->listenersLock->lock();
     for (auto const& listener : thisProcess->listeners) {
         //wake up the slave
         listener->lock->unlock();
     }
     thisProcess->listeners.clear();
-    thisProcess->state = ProcessState::Terminated;
+    thisProcess->listenersLock->unlock();
+}
+
+void Process::threadStartPoint(){
+    //todo thread_clone implementation needed first
+
 }
 
 
@@ -112,8 +119,8 @@ void Process::waitFor(kiv_hal::TRegisters& registers){
         invalidWaitForRequest(0, handles, thisHandle);
     }
     kiv_os::THandle actualHandle = kiv_os::Invalid_Handle;
-    //todo move this to be faster?
-    std::vector listeners(handleCount, std::make_unique<SleepListener>(new SleepListener(thisHandle)));
+
+    std::vector<SleepListener*> listeners(handleCount, new SleepListener(thisHandle));
     for (int i = 0; i < handleCount; ++i) {
         actualHandle = handles[i];
         if (handles::Resolve_kiv_os_Handle(actualHandle) == INVALID_HANDLE_VALUE) {
@@ -122,13 +129,28 @@ void Process::waitFor(kiv_hal::TRegisters& registers){
             return;
         }
         else {
-            auto process = pcb->getProcess(actualHandle);
-            process->listeners.push_back(listeners[i]);
+            Process* process = pcb->getProcess(actualHandle);
+            if (process->state != ProcessState::Terminated) {
+                process->listenersLock->lock();
+                process->listeners.push_back(listeners[i]);
+                process->listenersLock->unlock();
+            }
+            else {
+                //process is already dead -> no reason to keep listener locked
+                listeners[i]->lock->unlock();
+            }
         }
     }
-
-
-
+    int index = 0;
+    for (; index < handleCount; index++) {
+        //wait until notified
+        listeners[index]->lock->lock();
+        //reference to listener from the process is already removed
+        delete listeners[index];
+    }
+    listeners.clear();
+    //return last index of handle
+    registers.rax.l = index;
 
 }
 
@@ -136,17 +158,20 @@ void Process::invalidWaitForRequest(const int alreadyDone, const kiv_os::THandle
     for (int i = 0; i < alreadyDone; i++) {
         // load a handle
         auto handle = handles[i];
-        auto process = pcb->getProcess(handle);
+        Process* process = pcb->getProcess(handle);
         if (process) {
             //todo synchronization needed?
-            
+
+            process->listenersLock->lock();
             auto i = process->listeners.begin();
             while (i != process->listeners.end()) {
                 //remove all inserted listeners
                 if ((*i)->sleeperHandle == thisHandle) {
+
                     process->listeners.erase(i++);
                 }
             }
+            process->listenersLock->unlock();
         }
         else {
             //process already finished
@@ -163,38 +188,42 @@ void Process::exit(kiv_hal::TRegisters& registers){
     //todoo process get handle
     kiv_os::THandle pHandle = kiv_os::Invalid_Handle;
     if (pHandle != kiv_os::Invalid_Handle) {
-        auto exitingProcess = pcb->getProcess(pHandle);
+        Process* exitingProcess = pcb->getProcess(pHandle);
         if (exitingProcess != nullptr) {
             auto exitCode = static_cast<kiv_os::NOS_Error>(registers.rcx.x);
             exitingProcess->exitCode = exitCode;
             exitingProcess->state = ProcessState::Terminated;
         }
         else {
-            //todo what da process doin
+            //todo what now? Process is missing  
         }
 
     }
     else {
-        //todo 
+        //todo missing handle
     }
+
 }
 
 void Process::readExitCode(kiv_hal::TRegisters& registers){
-    
+    auto resultExitCode = kiv_os::NOS_Error::Unknown_Error;
     kiv_os::THandle handle = registers.rdx.x;
     
-    //handle of active thread?
+    //is handle of active thread?
     if (handle != kiv_os::Invalid_Handle) {
-        auto process = pcb->getProcess(handle);
-        if (process) {
-            registers.rcx.x = static_cast<uint16_t>(process->exitCode);
-            //todo remove if already terminated
+        Process* process = pcb->getProcess(handle);
+        if (process && process->state == ProcessState::Terminated) {
+            resultExitCode = process->exitCode;
+            pcb->removeProcess(handle);
+        }
+        else {
+            //todo process missing or not yet finished
         }
     }
-
-
-
-
+    else {
+        //todo handle missing
+    }
+    registers.rcx.x = static_cast<uint16_t>(resultExitCode);
 }
 
 
@@ -202,30 +231,29 @@ void Process::shutdown(){
 
     pcb->signalProcesses(kiv_os::NSignal_Id::Terminate);
 
-    //todo jeste neco? File?
+    //todo jeste neco? zavrit files?
+    
 
 }
 
 void Process::registerSignalHandler(kiv_hal::TRegisters& registers){
-
-
-
     //todo process get handle
-    kiv_os::THandle handle = kiv_os::Invalid_Handle;
+    auto handle = handles::getTHandleById(std::this_thread::get_id());
 
     if (handle != kiv_os::Invalid_Handle) {
-        auto actualProcess = pcb->getProcess(handle);
+        Process* actualProcess = pcb->getProcess(handle);
         if (actualProcess == nullptr) {
-            //todo what now?
+            //todo missing process
         }else {
             auto signal = static_cast<kiv_os::NSignal_Id>(registers.rcx.l);
+            //read program address of the signal handler
             auto progAddress = reinterpret_cast<kiv_os::TThread_Proc>(registers.rdx.r);
-            if (progAddress == nullptr)progAddress = default_signal_handler;
-            actualProcess->signal_handlers[signal] = progAddress;
+            if (progAddress == nullptr)progAddress = defaultSignalHandler;
+            actualProcess->signalHandlers[signal] = progAddress;
         }
     }
     else {
-        //todo
+        //todo missing handle
     }
 }
 

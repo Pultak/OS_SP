@@ -3,6 +3,7 @@
 #include "..\api\api.h"
 
 #include <Windows.h>
+#include <thread>
 
 namespace handles {
 	kiv_os::THandle Convert_Native_Handle(const HANDLE hnd);
