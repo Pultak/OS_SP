@@ -1,10 +1,10 @@
 #pragma once
-#include "../../src/api/api.h"
-#include "memory"
+#include <memory>
 #include "../../src/kernel/Synchronization.h"
-class SleepListener{
+#include "../../src/api/api.h"
+class SleepListener {
 public:
-	SleepListener(kiv_os::THandle handle): sleeperHandle(handle) {
+	SleepListener(kiv_os::THandle handle) : sleeperHandle(handle) {
 		lock = std::make_unique<Synchronization::Spinlock>(false);
 	}
 

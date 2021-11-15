@@ -36,11 +36,11 @@
     <ClCompile Include="..\..\src\kernel\Synchronization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\kernel\ThreadControlBlock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\kernel\SleepListener.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kernel\ProcessUtils.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,10 +68,10 @@
     <ClInclude Include="..\..\src\kernel\Synchronization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kernel\ThreadControlBlock.h">
+    <ClInclude Include="..\..\src\kernel\SleepListener.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kernel\SleepListener.h">
+    <ClInclude Include="..\..\src\kernel\ProcessUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

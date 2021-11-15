@@ -1,9 +1,9 @@
 #pragma once
 
-#include "..\api\api.h"
-
 #include <Windows.h>
 #include <thread>
+#include "..\api\api.h"
+
 
 namespace handles {
 	kiv_os::THandle Convert_Native_Handle(const HANDLE hnd);
@@ -11,4 +11,4 @@ namespace handles {
 	kiv_os::THandle getTHandleById(const std::thread::id id);
 	bool Remove_Handle(const kiv_os::THandle hnd);
 	kiv_os::THandle removeHandleById(const std::thread::id id);
-}
+};

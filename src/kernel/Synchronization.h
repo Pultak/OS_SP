@@ -5,10 +5,10 @@
 #include <cassert>
 #include <mutex>
 
-namespace Synchronization{
+namespace Synchronization {
 
     class Spinlock {
-    
+
     private:
         std::atomic<bool> lockVal = { 0 };
     public:
@@ -22,15 +22,15 @@ namespace Synchronization{
                     return;
                 }
                 while (lockVal.load(std::memory_order_relaxed)) {
-                    #if defined(USE_mm_pause)
-                        //platform specific pauses that should be faster
-                        __asm__("pause;");
-                        //_mm_pause();
-                        //__builtin_ia32_pause();
-                    #else
-                        std::this_thread::sleep_for(std::chrono::seconds(0));
-                    #endif
-                    
+#if defined(USE_mm_pause)
+                    //platform specific pauses that should be faster
+                    __asm__("pause;");
+                    //_mm_pause();
+                    //__builtin_ia32_pause();
+#else
+                    std::this_thread::sleep_for(std::chrono::seconds(0));
+#endif
+
                 }
             }
         }
@@ -45,5 +45,5 @@ namespace Synchronization{
         }
     };
 
-}
+};
 

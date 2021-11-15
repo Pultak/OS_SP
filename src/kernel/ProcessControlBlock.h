@@ -1,14 +1,15 @@
 #pragma once
-#include "../api/api.h"
+#include <memory>
 
 #include "Synchronization.h"
 #include "Process.h"
-#include <memory>
 
-class ProcessControlBlock{
+#include "../api/api.h"
+
+class ProcessControlBlock {
 public:
 
-	ProcessControlBlock(){
+	ProcessControlBlock() {
 		lockMaster = new Synchronization::Spinlock(0);
 	}
 	~ProcessControlBlock() {
@@ -22,7 +23,7 @@ public:
 private:
 	std::map<kiv_os::THandle, Process*> table;
 
-	static Synchronization::Spinlock* lockMaster;
+	Synchronization::Spinlock* lockMaster;
 
 
 };
