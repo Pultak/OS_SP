@@ -35,7 +35,6 @@ bool kiv_os_rtl::Write_File(const kiv_os::THandle file_handle, const char *buffe
 bool kiv_os_rtl::Set_Working_Dir(const char* dir) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Set_Working_Dir));
 	regs.rdx.x = reinterpret_cast<decltype(regs.rdx.x)>(dir);
-
 	const bool result = kiv_os::Sys_Call(regs);
 	return result;
 }

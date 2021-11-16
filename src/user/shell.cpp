@@ -1,6 +1,5 @@
 #include "shell.h"
 #include "global.h"
-
 #include "rtl.h"
 #include "command_parser.h"
 
