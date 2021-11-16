@@ -106,12 +106,27 @@ static int FindPipeOrRedirect(int index, char* line)
 }
 
 /* Processes a single command - bounded by |<> */
-static char* ProcessCommand(char* command)
+static Program ProcessCommand(char* command, char operation_left, char operation_right)
 {
+	Program prog_ret;
+	std::cout << prog_ret.command;
 	if (command[0] == 0)
 	{
-		return 0;
+		return prog_ret;
 	}
+	if (operation_left == '>')
+	{
+		prog_ret.command = command;
+		prog_ret.redirection_in = true;
+		return prog_ret;
+	}
+	if (operation_left == '<')
+	{
+		prog_ret.command = command;
+		prog_ret.redirection_out = true;
+		return prog_ret;
+	}
+
 	RemoveWhitespace(command);
 	int index = 0;
 	int index_arg = 0;
@@ -120,12 +135,6 @@ static char* ProcessCommand(char* command)
 	//load command into command_result - check for string of letters only
 	while (command[index] >= 65 && command[index] <= 90 || command[index] >= 97 && command[index] <= 122)
 	{
-		//longest command is 8 chars
-		if (index >= 8)
-		{
-			std::cout << "ERROR: command too long" << "\n";
-			break;
-		}
 		command_result[index] = command[index];
 		index++;
 	}
@@ -133,11 +142,6 @@ static char* ProcessCommand(char* command)
 	if (command[index] == 0)
 	{
 		std::cout << "No argument" << "\n";
-	}
-	//command has to be followed by a space or a dot - really only these two cases? could also be handled separately for each command
-	else if (!(command[index] == ' ' || command[index] == '.'))
-	{
-		std::cout << "ERROR: command not recognized" << "\n";
 	}
 	//null terminate command result
 	command_result[index] = 0;
@@ -156,18 +160,20 @@ static char* ProcessCommand(char* command)
 	ExecuteCommand(command_result, argument_result);
 	std::cout << "cmd: " << command_result << "\n";
 	std::cout << "arg: " << argument_result << "\n";
-	return command_result;
+	return prog_ret;
 
 }
 
 /* Processes a whole line of input */
-void ProcessLine(char* line)
+std::vector<Program> ProcessLine(char* line)
 {
 	int index_line = 0;
 	int index_end_cmd = 0;
 	int index_cmd = 0;
 	int index_arg = 0;
 	char command[256];
+	char op_left = 0;
+	char op_right = 0;
 
 	std::cout << "\n";
 
@@ -176,9 +182,17 @@ void ProcessLine(char* line)
 	{
 		index_cmd = 0;
 
+		//load left operation |<>
+		if (index_line == 0)
+		{
+			op_left = 0;
+		}
+		else
+		{
+			op_left = op_right;
+		}
+
 		index_end_cmd = FindPipeOrRedirect(index_line, line);
-		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
-		
 
 		//copy chars from line to command
 		while(index_line <index_end_cmd && line[index_line])
@@ -188,17 +202,24 @@ void ProcessLine(char* line)
 			index_line++;
 		}
 
-		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
-
 		//null terminate command
 		command[index_cmd] = 0;
-		//skip the |<> if not EOL
+
+		//load right operation |<>
 		if (line[index_line])
 		{
+			op_right = line[index_line];
 			index_line++;
 		}
+		else
+		{
+			op_right = 0;
+		}
 
-		ProcessCommand(command);
+		ProcessCommand(command, op_left, op_right);
+		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
 
 	}
+	std::vector<Program> ret;
+	return ret;
 }
