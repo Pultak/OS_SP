@@ -51,3 +51,4 @@ void write_folder_into_fs(int index, int upper_index);
 int aloc_cluster(int start, std::vector<int>& int_fat_table, std::vector<unsigned char>& fat_table);
 
 unsigned char char_to_hex(char charar[2]);
+
