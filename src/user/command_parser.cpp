@@ -107,43 +107,43 @@ static int FindPipeOrRedirect(int index, char* line)
 /* Processes a single command - bounded by |<> */
 static Program ProcessCommand(char* command, char operation_left, char operation_right)
 {
-	Program prog_ret;
+	Program program_ret;
 	RemoveWhitespace(command);
 
 	//return empty empty program if there is no input
 	if (command[0] == 0)
 	{
-		return prog_ret;
+		return program_ret;
 	}
 	//load whole command string into program if it's a file
 	if (operation_left == '>')
 	{
-		prog_ret.command = command;
-		prog_ret.redirection_in = true;
-		return prog_ret;
+		program_ret.command = command;
+		program_ret.redirection_in = true;
+		return program_ret;
 	}
 	if (operation_left == '<')
 	{
-		prog_ret.command = command;
-		prog_ret.redirection_out = true;
-		return prog_ret;
+		program_ret.command = command;
+		program_ret.redirection_out = true;
+		return program_ret;
 	}
 	//set redirection and pipe flags for other cases
 	if (operation_left == '|')
 	{
-		prog_ret.pipe_in = true;
+		program_ret.pipe_in = true;
 	}
 	if (operation_right == '|')
 	{
-		prog_ret.pipe_out = true;
+		program_ret.pipe_out = true;
 	}
 	if (operation_right == '<')
 	{
-		prog_ret.redirection_in = true;
+		program_ret.redirection_in = true;
 	}
 		if (operation_right == '>')
 	{
-		prog_ret.redirection_out = true;
+		program_ret.redirection_out = true;
 	}
 
 	int index = 0;
@@ -159,7 +159,7 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 
 	//null terminate command result and load into program struct
 	command_result[index] = 0;
-	prog_ret.command = command_result;
+	program_ret.command = command_result;
 
 	//load argument into argument_result
 	while (command[index])
@@ -172,13 +172,10 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 	//null terminate argument result, remove additional whitespace and load into program struct
 	argument_result[index_arg] = 0;
 	RemoveLeadingWhitespace(argument_result);
-	prog_ret.argument = argument_result;
+	program_ret.argument = argument_result;
 
 	ExecuteCommand(command_result, argument_result);
-	std::cout << "cmd: " << command_result << "\n";
-	std::cout << "arg: " << argument_result << "\n\n\n";
-	return prog_ret;
-
+	return program_ret;
 }
 
 /* Processes a whole line of input */
@@ -191,8 +188,7 @@ std::vector<Program> ProcessLine(char* line)
 	char command[256];
 	char op_left = 0;
 	char op_right = 0;
-
-	std::cout << "\n";
+	Program program_ret;
 
 	//loop through commands until EOL
 	while(line[index_line])
@@ -232,8 +228,8 @@ std::vector<Program> ProcessLine(char* line)
 		{
 			op_right = 0;
 		}
-		Program prog_ret = ProcessCommand(command, op_left, op_right);
-		prog_ret.Print();
+		program_ret = ProcessCommand(command, op_left, op_right);
+		program_ret.Print();
 
 		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
 

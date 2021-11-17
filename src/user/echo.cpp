@@ -1,13 +1,11 @@
 #include "global.h"
+#include "echo.h"
 #include <iostream>
 
 bool echo_on = true;
 
 void echo_prot(char* input)
 {
-	//std::cout << "ECHO\n";
-	//std::cout << input << "\n";
-	//no input, print echo status
 	if (input[0] == 0)
 	{
 		if (echo_on)
