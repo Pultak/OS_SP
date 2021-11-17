@@ -2,7 +2,6 @@
 
 #include "command_parser.h"
 #include "echo.h"
-#include <iostream>
 
 /* Function to remove leading spaces from a command/line */
 static void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
@@ -109,11 +108,14 @@ static int FindPipeOrRedirect(int index, char* line)
 static Program ProcessCommand(char* command, char operation_left, char operation_right)
 {
 	Program prog_ret;
-	std::cout << prog_ret.command;
+	RemoveWhitespace(command);
+
+	//return empty empty program if there is no input
 	if (command[0] == 0)
 	{
 		return prog_ret;
 	}
+	//load whole command string into program if it's a file
 	if (operation_left == '>')
 	{
 		prog_ret.command = command;
@@ -126,11 +128,27 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 		prog_ret.redirection_out = true;
 		return prog_ret;
 	}
+	//set redirection and pipe flags for other cases
+	if (operation_left == '|')
+	{
+		prog_ret.pipe_in = true;
+	}
+	if (operation_right == '|')
+	{
+		prog_ret.pipe_out = true;
+	}
+	if (operation_right == '<')
+	{
+		prog_ret.redirection_in = true;
+	}
+		if (operation_right == '>')
+	{
+		prog_ret.redirection_out = true;
+	}
 
-	RemoveWhitespace(command);
 	int index = 0;
 	int index_arg = 0;
-	char command_result[9];
+	char command_result[256];
 	char argument_result[256];
 	//load command into command_result - check for string of letters only
 	while (command[index] >= 65 && command[index] <= 90 || command[index] >= 97 && command[index] <= 122)
@@ -138,14 +156,11 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 		command_result[index] = command[index];
 		index++;
 	}
-	//if input ends after command - no argument - should be handled for each command differently
-	if (command[index] == 0)
-	{
-		std::cout << "No argument" << "\n";
-	}
-	//null terminate command result
+
+	//null terminate command result and load into program struct
 	command_result[index] = 0;
-	
+	prog_ret.command = command_result;
+
 	//load argument into argument_result
 	while (command[index])
 	{
@@ -154,12 +169,14 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 		index_arg++;
 	}
 
-	//null terminate argument result
+	//null terminate argument result, remove additional whitespace and load into program struct
 	argument_result[index_arg] = 0;
 	RemoveLeadingWhitespace(argument_result);
+	prog_ret.argument = argument_result;
+
 	ExecuteCommand(command_result, argument_result);
 	std::cout << "cmd: " << command_result << "\n";
-	std::cout << "arg: " << argument_result << "\n";
+	std::cout << "arg: " << argument_result << "\n\n\n";
 	return prog_ret;
 
 }
@@ -215,8 +232,9 @@ std::vector<Program> ProcessLine(char* line)
 		{
 			op_right = 0;
 		}
+		Program prog_ret = ProcessCommand(command, op_left, op_right);
+		prog_ret.Print();
 
-		ProcessCommand(command, op_left, op_right);
 		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
 
 	}
