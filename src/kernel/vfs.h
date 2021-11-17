@@ -15,6 +15,8 @@ class VFS {
 public:
 	virtual kiv_os::NOS_Error mkdir(const char* name, uint8_t attr) = 0;
 
+    virtual kiv_os::NOS_Error rmdir(const char* name) = 0;
+
 
     virtual kiv_os::NOS_Error dirread(const char* name, std::vector<kiv_os::TDir_Entry>& entries) = 0;
 
