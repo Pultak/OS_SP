@@ -116,7 +116,8 @@ bool kiv_os_rtl::Create_Pipe(kiv_os::THandle *file_handles) {
 
 bool kiv_os_rtl::Create_Process(char* process_name, char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle &process_handle_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Clone));
-	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(process_name);
+	regs.rcx.l = static_cast<decltype(regs.rcx.l)>(kiv_os::NClone::Create_Process);
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(process_name);
 	regs.rdi.r = reinterpret_cast<decltype(regs.rdx.x)>(argument);
 	regs.rbx.e = (stdin_handle << 16) | stdout_handle;
 
@@ -127,7 +128,8 @@ bool kiv_os_rtl::Create_Process(char* process_name, char* argument, kiv_os::THan
 
 bool kiv_os_rtl::Create_Thread(char* thread_name, char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& thread_handle_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Clone));
-	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(thread_name);
+	regs.rcx.l = static_cast<decltype(regs.rcx.l)>(kiv_os::NClone::Create_Thread);
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(thread_name);
 	regs.rdi.r = reinterpret_cast<decltype(regs.rdx.x)>(argument);
 	regs.rbx.e = (stdin_handle << 16) | stdout_handle;
 

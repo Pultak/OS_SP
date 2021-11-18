@@ -189,6 +189,8 @@ std::vector<Program> ProcessLine(char* line)
 	char op_left = 0;
 	char op_right = 0;
 	Program program_ret;
+	std::vector<Program> vector_program_ret;
+
 
 	//loop through commands until EOL
 	while(line[index_line])
@@ -229,11 +231,10 @@ std::vector<Program> ProcessLine(char* line)
 			op_right = 0;
 		}
 		program_ret = ProcessCommand(command, op_left, op_right);
-		program_ret.Print();
+		//program_ret.Print();
 
 		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
-
+		vector_program_ret.push_back(program_ret);
 	}
-	std::vector<Program> ret;
-	return ret;
+	return vector_program_ret;
 }
