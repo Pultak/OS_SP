@@ -1,13 +1,16 @@
 #include "global.h"
+#include "echo.h"
 #include <iostream>
 
 bool echo_on = true;
 
+size_t __stdcall echo(const kiv_hal::TRegisters& regs) {
+	std::cout << "TEST ECHO PROCESS";
+	return 0;
+}
+
 void echo_prot(char* input)
 {
-	//std::cout << "ECHO\n";
-	//std::cout << input << "\n";
-	//no input, print echo status
 	if (input[0] == 0)
 	{
 		if (echo_on)

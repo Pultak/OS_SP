@@ -1,5 +1,7 @@
 #include "io.h"
 #include "kernel.h"
+#include "dir.h"
+#include "filesystems.h"
 #include "handles.h"
 
 size_t Read_Line_From_Console(char *buffer, const size_t buffer_size) {
@@ -62,7 +64,7 @@ void Handle_IO(kiv_hal::TRegisters &regs) {
 				}
 				break;
 
-
+		
 		case kiv_os::NOS_File_System::Write_File: {
 					//Spravne bychom nyni meli pouzit interni struktury kernelu a zadany handle resolvovat na konkretni objekt, ktery pise na konkretni zarizeni/souboru/roury.
 					//Ale protoze je tohle jenom kostra, tak to rovnou biosem posleme na konzoli.
@@ -78,6 +80,16 @@ void Handle_IO(kiv_hal::TRegisters &regs) {
 					regs.rax = registers.rcx;	//VGA BIOS nevraci pocet zapsanych znaku, tak predpokladame, ze zapsal vsechny
 				}
 				break; //Write_File
+		case kiv_os::NOS_File_System::Set_Working_Dir: {
+			bool result = Set_Working_Dir(regs);
+			if (!result) regs.flags.carry = 1;
+			break;
+		}
+		case kiv_os::NOS_File_System::Open_File: {
+			Open_File(regs);
+			break;
+		}
+
 
 
 	/* Nasledujici dve vetve jsou ukazka, ze starsiho zadani, ktere ukazuji, jak mate mapovat Windows HANDLE na kiv_os handle a zpet, vcetne jejich alokace a uvolneni

@@ -50,7 +50,6 @@ kiv_os::THandle handles::getTHandleById(const std::thread::id id) {
 
 bool handles::Remove_Handle(const kiv_os::THandle hnd) {
 	std::lock_guard<std::mutex> guard(Handles_Guard);
-
 	return Handles.erase(hnd) == 1;
 }
 

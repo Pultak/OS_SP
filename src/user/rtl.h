@@ -17,31 +17,35 @@ namespace kiv_os_rtl {
 	//vraci true, kdyz vse OK
 	//vraci true, kdyz vse OK
 
-	bool kiv_os_rtl::Set_Working_Dir(const char* dir);
+	bool Set_Working_Dir(const char* dir);
 
-	bool kiv_os_rtl::Get_Working_Dir(char* buffer, const size_t buffer_size, size_t& chars_written);
+	bool Get_Working_Dir(char* buffer, const size_t buffer_size, size_t& chars_written);
 
-	bool kiv_os_rtl::Open_File(char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle& file_handle_ret);
+	bool Open_File(char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle& file_handle_ret);
 
-	bool kiv_os_rtl::Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint16_t & position_ret);
+	bool Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint16_t & position_ret);
 	
-	bool kiv_os_rtl::Close_Handle(kiv_os::THandle handle);
+	bool Close_Handle(kiv_os::THandle handle);
 
-	bool kiv_os_rtl::Delete_File(char* file_name);
+	bool Delete_File(char* file_name);
 
-	bool kiv_os_rtl::Create_Pipe(kiv_os::THandle * file_handles);
+	bool Set_File_Attribute(char* file_name, kiv_os::NFile_Attributes file_attribute);
 
-	bool kiv_os_rtl::Create_Process(char* process_name, char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& process_handle_ret);
+	bool Get_File_Attribute(char* file_name, uint8_t& file_attribute_ret);
+
+	bool Create_Pipe(kiv_os::THandle * file_handles);
+
+	bool Create_Process(const char* process_name,const char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& process_handle_ret);
 	
-	bool kiv_os_rtl::Create_Thread(char* thread_name, char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& thread_handle_ret);
+	bool Create_Thread(char* thread_name, char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& thread_handle_ret);
 	
-	bool kiv_os_rtl::Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_handles, kiv_os::THandle& handle_signal_ret);
+	bool Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_handles, kiv_os::THandle& handle_signal_ret);
 				
-	bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, uint16_t& exit_code_ret);
+	bool Read_Exit_Code(kiv_os::THandle process_handle, uint16_t& exit_code_ret);
 
-	bool kiv_os_rtl::Exit(uint16_t exit_code);
+	bool Exit(uint16_t exit_code);
 	
-	bool kiv_os_rtl::Shutdown();
+	bool Shutdown();
 	
-	bool kiv_os_rtl::Register_Signal_Handler(kiv_os::NSignal_Id signal_id, kiv_os::THandle process_handle);
+	bool Register_Signal_Handler(kiv_os::NSignal_Id signal_id, kiv_os::THandle process_handle);
 }
