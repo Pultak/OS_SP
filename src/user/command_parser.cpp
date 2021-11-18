@@ -238,3 +238,24 @@ std::vector<Program> ProcessLine(char* line)
 	}
 	return vector_program_ret;
 }
+
+void Execute_Commands(std::vector<Program> program_vector) {
+
+	Program test = program_vector.at(0);
+	kiv_os::THandle process_handle;
+	kiv_os::THandle signal_ret;
+	uint16_t exit_code = 0;
+
+	//print program
+	test.Print();
+
+	kiv_os_rtl::Create_Process(test.command.c_str(), test.argument.c_str(), kiv_os::Invalid_Handle, kiv_os::Invalid_Handle, process_handle);
+
+	kiv_os::THandle handles[1]= { process_handle };
+	kiv_os_rtl::Wait_For(handles, 1, signal_ret);
+	kiv_os_rtl::Read_Exit_Code(signal_ret, exit_code);
+
+	//print exit code
+	std::cout << "exit code: " << exit_code << "\n";
+
+}

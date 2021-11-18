@@ -26,6 +26,7 @@ struct Program {
 };
 
 std::vector<Program> ProcessLine(char* line);
+void Execute_Commands(std::vector<Program> program_vector);
 
 
 

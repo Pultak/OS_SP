@@ -4,6 +4,11 @@
 
 bool echo_on = true;
 
+size_t __stdcall echo(const kiv_hal::TRegisters& regs) {
+	std::cout << "TEST ECHO PROCESS";
+	return 0;
+}
+
 void echo_prot(char* input)
 {
 	if (input[0] == 0)
