@@ -27,7 +27,7 @@ namespace ProcessUtils {
 	void invalidWaitForRequest(const int alreadyDone, const kiv_os::THandle* handles, const kiv_os::THandle thisHandle);
 
 
-	const std::unique_ptr<ProcessControlBlock> pcb;
+	const std::unique_ptr<ProcessControlBlock> pcb = std::make_unique<ProcessControlBlock>();
 
 
 };

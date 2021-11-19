@@ -41,6 +41,7 @@
     <ClInclude Include="..\..\src\kernel\handles.h" />
     <ClInclude Include="..\..\src\kernel\io.h" />
     <ClInclude Include="..\..\src\kernel\kernel.h" />
+    <ClInclude Include="..\..\src\kernel\PipeUtils.h" />
     <ClInclude Include="..\..\src\kernel\vfs.h" />
     <ClInclude Include="..\..\src\kernel\fat12fs.h" />
     <ClInclude Include="..\..\src\kernel\fsutils.h" />
