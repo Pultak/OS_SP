@@ -119,7 +119,7 @@ bool kiv_os_rtl::Create_Process(const char* process_name,const char* argument, k
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Clone));
 	regs.rcx.l = static_cast<decltype(regs.rcx.l)>(kiv_os::NClone::Create_Process);
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(process_name);
-	regs.rdi.r = reinterpret_cast<decltype(regs.rdx.x)>(argument);
+	regs.rdi.r = reinterpret_cast<decltype(regs.rdi.r)>(argument);
 	regs.rbx.e = (stdin_handle << 16) | stdout_handle;
 
 	const bool result = kiv_os::Sys_Call(regs);
@@ -142,7 +142,7 @@ bool kiv_os_rtl::Create_Thread(char* thread_name, char* argument, kiv_os::THandl
 bool kiv_os_rtl::Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_handles, kiv_os::THandle &handle_signal_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Wait_For));
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(handles_to_wait);
-	regs.rcx.r = static_cast<decltype(regs.rcx.r)>(num_of_handles);
+	regs.rcx.l = static_cast<decltype(regs.rcx.l)>(num_of_handles);
 
 	const bool result = kiv_os::Sys_Call(regs);
 	handle_signal_ret = regs.rax.l;
@@ -151,7 +151,7 @@ bool kiv_os_rtl::Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_hand
 
 bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, uint16_t &exit_code_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Read_Exit_Code));
-	regs.rdx.r = static_cast<decltype(regs.rdx.x)>(process_handle);
+	regs.rdx.x = static_cast<decltype(regs.rdx.x)>(process_handle);
 
 	const bool result = kiv_os::Sys_Call(regs);
 	exit_code_ret = regs.rcx.x;
