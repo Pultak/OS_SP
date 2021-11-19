@@ -1,4 +1,5 @@
 #include "rtl.h"
+#include <iostream>
 
 std::atomic<kiv_os::NOS_Error> kiv_os_rtl::Last_Error;
 
@@ -122,7 +123,7 @@ bool kiv_os_rtl::Create_Process(const char* process_name,const char* argument, k
 	regs.rbx.e = (stdin_handle << 16) | stdout_handle;
 
 	const bool result = kiv_os::Sys_Call(regs);
-	process_handle_ret = regs.rax.r;
+	process_handle_ret = regs.rax.x;
 	return result;
 }
 
@@ -134,7 +135,7 @@ bool kiv_os_rtl::Create_Thread(char* thread_name, char* argument, kiv_os::THandl
 	regs.rbx.e = (stdin_handle << 16) | stdout_handle;
 
 	const bool result = kiv_os::Sys_Call(regs);
-	thread_handle_ret = regs.rax.r;
+	thread_handle_ret = regs.rax.x;
 	return result;
 }
 
@@ -144,7 +145,7 @@ bool kiv_os_rtl::Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_hand
 	regs.rcx.r = static_cast<decltype(regs.rcx.r)>(num_of_handles);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	handle_signal_ret = regs.rax.r;
+	handle_signal_ret = regs.rax.l;
 	return result;
 }
 
@@ -153,7 +154,7 @@ bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, uint16_t &exit_c
 	regs.rdx.r = static_cast<decltype(regs.rdx.x)>(process_handle);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	exit_code_ret = regs.rax.r;
+	exit_code_ret = regs.rcx.x;
 	return result;
 }
 
