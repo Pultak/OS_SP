@@ -74,7 +74,8 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
         //copy program args
         newProcessRegs.rdi.r = registers.rdi.r;
 
-        std::thread t1(processStartPoint, newProcessRegs, progFuncAddress);
+        Synchronization::Spinlock* synchLock = new Synchronization::Spinlock(true);
+        std::thread t1(processStartPoint, newProcessRegs, progFuncAddress, synchLock);
         auto tHandle = handles::Convert_Native_Handle(t1.get_id(), t1.native_handle());
 
         auto thisHandle = handles::getTHandleById(std::this_thread::get_id());
@@ -86,6 +87,7 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
 
         // return new process handle
         registers.rax.x = tHandle;
+        synchLock->unlock();
         t1.detach();
     }
     else {
@@ -94,7 +96,9 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
     }
 }
 
-void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram) {
+void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock) {
+    lock->lock();
+    delete lock;
     userProgram(registers);
 
     //after program is finished:
