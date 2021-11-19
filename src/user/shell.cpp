@@ -30,7 +30,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 			buffer[counter] = 0;	//udelame z precteneho vstup null-terminated retezec
 
 			program_vector = ProcessLine(buffer);
-			Execute_Commands(program_vector);
+			Execute_Commands(program_vector, regs);
 
 			const char* new_line = "\n";
 			if (echo_on)

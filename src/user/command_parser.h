@@ -3,6 +3,8 @@
 #include <string>
 #include <bitset>
 #include <iostream>
+#include "..\api\api.h"
+
 
 
 
@@ -21,12 +23,12 @@ struct Program {
 	}
 	void Print() {
 		int flags = redirection_in << 3 | redirection_out << 2 | pipe_in << 1 | pipe_out;
-		std::cout << "\nProgram: " << command << ", " << argument << ", rin, rout, pin, pout: " << std::bitset<4>(flags);
+		std::cout << "\nProgram: " << command << ", " << argument << ", rin, rout, pin, pout: " << std::bitset<4>(flags) << "\n";
 	}
 };
 
 std::vector<Program> ProcessLine(char* line);
-void Execute_Commands(std::vector<Program> program_vector);
+void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegisters& regs);
 
 
 

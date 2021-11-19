@@ -174,7 +174,7 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 	RemoveLeadingWhitespace(argument_result);
 	program_ret.argument = argument_result;
 
-	ExecuteCommand(command_result, argument_result);
+	//ExecuteCommand(command_result, argument_result);
 	return program_ret;
 }
 
@@ -239,7 +239,7 @@ std::vector<Program> ProcessLine(char* line)
 	return vector_program_ret;
 }
 
-void Execute_Commands(std::vector<Program> program_vector) {
+void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegisters& regs) {
 
 	Program test = program_vector.at(0);
 	kiv_os::THandle process_handle;
@@ -249,8 +249,10 @@ void Execute_Commands(std::vector<Program> program_vector) {
 	//print program
 	test.Print();
 
-	kiv_os_rtl::Create_Process(test.command.c_str(), test.argument.c_str(), kiv_os::Invalid_Handle, kiv_os::Invalid_Handle, process_handle);
+	const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
+	const kiv_os::THandle std_out = static_cast<kiv_os::THandle>(regs.rbx.x);
 
+	kiv_os_rtl::Create_Process(test.command.c_str(), test.argument.c_str(), std_in, std_out, process_handle);
 	kiv_os::THandle handles[1]= { process_handle };
 	kiv_os_rtl::Wait_For(handles, 1, signal_ret);
 	kiv_os_rtl::Read_Exit_Code(signal_ret, exit_code);
