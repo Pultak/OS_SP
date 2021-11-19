@@ -16,13 +16,13 @@ std::uniform_int_distribution<> dis(1, 6);
 
 
 
-kiv_os::THandle handles::Convert_Native_Handle(const HANDLE hnd) {
+kiv_os::THandle handles::Convert_Native_Handle(const std::thread::id tId, const HANDLE hnd) {
 	std::lock_guard<std::mutex> guard(Handles_Guard);
 
 	Last_Handle += dis(gen);	//vygenerujeme novy interni handle s nahodnou hodnotou
 
 	Handles.insert(std::pair<kiv_os::THandle, HANDLE>(Last_Handle, hnd));
-
+	id2Handle.insert(std::pair<std::thread::id, kiv_os::THandle>(tId, Last_Handle));
 	return Last_Handle;
 }
 

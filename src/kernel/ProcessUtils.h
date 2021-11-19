@@ -21,13 +21,13 @@ namespace ProcessUtils {
 	void registerSignalHandler(kiv_hal::TRegisters& registers);
 
 	void cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpaceLib);
-	void processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc t_threadproc);
+	void processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock);
 	void threadStartPoint();
 
 	void invalidWaitForRequest(const int alreadyDone, const kiv_os::THandle* handles, const kiv_os::THandle thisHandle);
 
 
-	const std::unique_ptr<ProcessControlBlock> pcb;
+	const std::unique_ptr<ProcessControlBlock> pcb = std::make_unique<ProcessControlBlock>();
 
 
 };

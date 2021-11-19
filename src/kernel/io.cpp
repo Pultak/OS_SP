@@ -58,40 +58,65 @@ void Handle_IO(kiv_hal::TRegisters &regs) {
 
 	switch (static_cast<kiv_os::NOS_File_System>(regs.rax.l)) {
 		
-		case kiv_os::NOS_File_System::Read_File: {
-				//viz uvodni komentar u Write_File
-				regs.rax.r = Read_Line_From_Console(reinterpret_cast<char*>(regs.rdi.r), regs.rcx.r);
-				}
-				break;
 
-		
+		case kiv_os::NOS_File_System::Open_File: {
+			Open_File(regs);
+			break;
+		}
 		case kiv_os::NOS_File_System::Write_File: {
-					//Spravne bychom nyni meli pouzit interni struktury kernelu a zadany handle resolvovat na konkretni objekt, ktery pise na konkretni zarizeni/souboru/roury.
-					//Ale protoze je tohle jenom kostra, tak to rovnou biosem posleme na konzoli.
-					kiv_hal::TRegisters registers;
-					registers.rax.h = static_cast<decltype(registers.rax.h)>(kiv_hal::NVGA_BIOS::Write_String);
-					registers.rdx.r = regs.rdi.r;
-					registers.rcx = regs.rcx;
-		
-					//preklad parametru dokoncen, zavolame sluzbu
-					kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::VGA_BIOS, registers);
+			//Spravne bychom nyni meli pouzit interni struktury kernelu a zadany handle resolvovat na konkretni objekt, ktery pise na konkretni zarizeni/souboru/roury.
+			//Ale protoze je tohle jenom kostra, tak to rovnou biosem posleme na konzoli.
+			kiv_hal::TRegisters registers;
+			registers.rax.h = static_cast<decltype(registers.rax.h)>(kiv_hal::NVGA_BIOS::Write_String);
+			registers.rdx.r = regs.rdi.r;
+			registers.rcx = regs.rcx;
 
-					regs.flags.carry |= (registers.rax.r == 0 ? 1 : 0);	//jestli jsme nezapsali zadny znak, tak jiste doslo k nejake chybe
-					regs.rax = registers.rcx;	//VGA BIOS nevraci pocet zapsanych znaku, tak predpokladame, ze zapsal vsechny
-				}
-				break; //Write_File
+			//preklad parametru dokoncen, zavolame sluzbu
+			kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::VGA_BIOS, registers);
+
+			regs.flags.carry |= (registers.rax.r == 0 ? 1 : 0);	//jestli jsme nezapsali zadny znak, tak jiste doslo k nejake chybe
+			regs.rax = registers.rcx;	//VGA BIOS nevraci pocet zapsanych znaku, tak predpokladame, ze zapsal vsechny
+			break;
+		}
+		case kiv_os::NOS_File_System::Read_File: {
+			//viz uvodni komentar u Write_File
+			regs.rax.r = Read_Line_From_Console(reinterpret_cast<char*>(regs.rdi.r), regs.rcx.r);
+			break;
+		}
+		case kiv_os::NOS_File_System::Seek: {
+
+			break;
+		}
+		case kiv_os::NOS_File_System::Close_Handle: {
+
+			break;
+		}
+		case kiv_os::NOS_File_System::Delete_File: {
+
+			break;
+		}
+		
 		case kiv_os::NOS_File_System::Set_Working_Dir: {
 			bool result = Set_Working_Dir(regs);
 			if (!result) regs.flags.carry = 1;
 			break;
 		}
-		case kiv_os::NOS_File_System::Open_File: {
-			Open_File(regs);
+		case kiv_os::NOS_File_System::Get_Working_Dir: {
+
 			break;
 		}
+		case kiv_os::NOS_File_System::Set_File_Attribute: {
 
+			break;
+		}
+		case kiv_os::NOS_File_System::Get_File_Attribute: {
 
-
+			break;
+		}
+		case kiv_os::NOS_File_System::Create_Pipe: {
+			
+			break;
+		}
 	/* Nasledujici dve vetve jsou ukazka, ze starsiho zadani, ktere ukazuji, jak mate mapovat Windows HANDLE na kiv_os handle a zpet, vcetne jejich alokace a uvolneni
 
 		case kiv_os::scCreate_File: {

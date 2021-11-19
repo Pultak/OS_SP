@@ -5,7 +5,7 @@
 class SleepListener {
 public:
 	SleepListener(kiv_os::THandle handle) : sleeperHandle(handle) {
-		lock = std::make_unique<Synchronization::Spinlock>(false);
+		lock = std::make_unique<Synchronization::Spinlock>(true);
 	}
 
 

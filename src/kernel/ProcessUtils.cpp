@@ -4,11 +4,16 @@ size_t __stdcall ProcessUtils::defaultSignalHandler(const kiv_hal::TRegisters& r
     auto signal_id = static_cast<kiv_os::NSignal_Id>(regs.rcx.l);
 
     switch (signal_id) {
-    case kiv_os::NSignal_Id::Terminate:
-        //todo kill the system or something idk
-        break;
+        case kiv_os::NSignal_Id::Terminate: {
+            //todo kill the system or something idk
+            printf("Terminate called!");
+            break;
+        }
+        default: {
+            printf("Default signal handler called!");
+            break;
+        }
     }
-
 
     return 0;
 };
@@ -35,8 +40,6 @@ void ProcessUtils::HandleProcess(kiv_hal::TRegisters& registers, HMODULE user_pr
         registerSignalHandler(registers);
         break;
     default:
-        //TODO what now?
-        std::cout << "Wtf u tryin to do?" << std::endl;
         break;
     }
 }
@@ -71,18 +74,20 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
         //copy program args
         newProcessRegs.rdi.r = registers.rdi.r;
 
-        std::thread t1(processStartPoint, newProcessRegs, progFuncAddress);
-        auto tHandle = handles::Convert_Native_Handle(t1.native_handle());
+        Synchronization::Spinlock* synchLock = new Synchronization::Spinlock(true);
+        std::thread t1(processStartPoint, newProcessRegs, progFuncAddress, synchLock);
+        auto tHandle = handles::Convert_Native_Handle(t1.get_id(), t1.native_handle());
 
         auto thisHandle = handles::getTHandleById(std::this_thread::get_id());
         //is actual process inside pcb?
         Process* thisProcess = pcb->getProcess(thisHandle);
-        std::filesystem::path workingDir = thisProcess ? thisProcess->workingDirectory : "/";
+        std::filesystem::path workingDir = thisProcess ? thisProcess->workingDirectory : "C://";
 
         pcb->AddNewProcess(tHandle, stdIn, stdOut, programName, workingDir);
 
         // return new process handle
         registers.rax.x = tHandle;
+        synchLock->unlock();
         t1.detach();
     }
     else {
@@ -91,7 +96,9 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
     }
 }
 
-void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram) {
+void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock) {
+    lock->lock();
+    delete lock;
     userProgram(registers);
 
     //after program is finished:
@@ -126,7 +133,8 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
 
     kiv_os::THandle thisHandle = handles::getTHandleById(std::this_thread::get_id());
     if (thisHandle == kiv_os::Invalid_Handle) {
-        invalidWaitForRequest(0, handles, thisHandle);
+        //todo invalidWaitForRequest(0, handles, thisHandle);
+        //thisHandle = 0;
     }
     kiv_os::THandle actualHandle = kiv_os::Invalid_Handle;
 
@@ -170,8 +178,6 @@ void ProcessUtils::invalidWaitForRequest(const int alreadyDone, const kiv_os::TH
         auto handle = handles[i];
         Process* process = pcb->getProcess(handle);
         if (process) {
-            //todo synchronization needed?
-
             process->listenersLock->lock();
             auto i = process->listeners.begin();
             while (i != process->listeners.end()) {
