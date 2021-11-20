@@ -1,4 +1,3 @@
-#include "global.h"
 #include "echo.h"
 #include <iostream>
 
