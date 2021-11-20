@@ -13,6 +13,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 
 	const size_t buffer_size = 256;
 	char buffer[buffer_size];
+	char directory[buffer_size];
 	size_t counter;
 	std::vector<Program> program_vector;
 	
@@ -22,6 +23,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 
 
 	const char* prompt = "C:\\>";
+	size_t chars_written;
 	do {
 		kiv_os_rtl::Write_File(std_out, prompt, strlen(prompt), counter);
 
@@ -41,6 +43,35 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 					else if (strcmp(it->argument.c_str(), "off") == 0)
 					{
 						echo_on = false;
+					}
+				}
+				else if (strcmp(it->command.c_str(), "cd") == 0)
+				{
+					if (!it->argument.empty())
+					{
+						if (kiv_os_rtl::Set_Working_Dir(it->argument.c_str()))
+						{
+							if (kiv_os_rtl::Get_Working_Dir(directory, buffer_size, chars_written))
+							{
+
+							}
+							else
+							{
+								const char* print = "Couldn't read working directory\n";
+								kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
+							}
+						}
+						else
+						{
+							const char* print = "Directory not found\n";
+							kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
+						}
+					}
+					else
+					{
+						const char* print = "Directory not specified\n";
+						kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
+
 					}
 				}
 			}
