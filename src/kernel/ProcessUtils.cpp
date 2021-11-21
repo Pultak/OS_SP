@@ -108,13 +108,15 @@ void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TTh
     //maybe different for thread?
     Process* thisProcess = pcb->getProcess(handle);
 
+    thisProcess->state = ProcessState::Terminated;
     handles::Remove_Handle(handle);
 
-    thisProcess->state = ProcessState::Terminated;
     thisProcess->listenersLock->lock();
     for (auto const& listener : thisProcess->listeners) {
         //wake up the slave
-        listener->lock->unlock();
+        if (!listener->notified) {
+            listener->lock->unlock();
+        }
     }
     thisProcess->listeners.clear();
     thisProcess->listenersLock->unlock();
@@ -138,35 +140,34 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
     }
     kiv_os::THandle actualHandle = kiv_os::Invalid_Handle;
 
-    std::vector<SleepListener*> listeners(handleCount, new SleepListener(thisHandle));
+    auto listener = new SleepListener(thisHandle);  ;
     for (int i = 0; i < handleCount; ++i) {
         actualHandle = handles[i];
         if (handles::Resolve_kiv_os_Handle(actualHandle) == INVALID_HANDLE_VALUE) {
             //found invalid handle!
-            invalidWaitForRequest(i, handles, thisHandle);
+            //invalidWaitForRequest(i, handles, thisHandle);
+            delete listener;
+            registers.rax.l = i;
             return;
         }
         else {
             Process* process = pcb->getProcess(actualHandle);
             if (process->state != ProcessState::Terminated) {
                 process->listenersLock->lock();
-                process->listeners.push_back(listeners[i]);
+                process->listeners.push_back(listener);
                 process->listenersLock->unlock();
             }
             else {
                 //process is already dead -> no reason to keep listener locked
-                listeners[i]->lock->unlock();
+                delete listener;
+                registers.rax.l = i;
+                return;
             }
         }
     }
     int index = 0;
-    for (; index < handleCount; index++) {
-        //wait until notified
-        listeners[index]->lock->lock();
-        //reference to listener from the process is already removed
-        delete listeners[index];
-    }
-    listeners.clear();
+    listener->lock->lock();
+    delete listener;
     //return last index of handle
     registers.rax.l = index;
 

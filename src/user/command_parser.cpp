@@ -343,15 +343,14 @@ void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegis
 
 		processes_handles.erase(it + signal_ret);
 	}*/
+	while (!processes_handles.empty()) {
+		kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
 
-	kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
-
-	for (auto process : processes_handles)
-	{
-		kiv_os_rtl::Read_Exit_Code(process, exit_code);
+		kiv_os_rtl::Read_Exit_Code(processes_handles[signal_ret], exit_code);
 
 		//print exit code
 		std::cout << "\nexit code: " << exit_code << "\n";
+		processes_handles.erase(processes_handles.begin() + signal_ret);
 	}
 
 	for (auto pipe : pipes_in)
