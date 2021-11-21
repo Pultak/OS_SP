@@ -16,6 +16,7 @@ struct Program {
 	bool redirection_out = false;
 	bool pipe_in = false;
 	bool pipe_out = false;
+	bool file = false;
 
 	Program::Program() {
 		command = "";
