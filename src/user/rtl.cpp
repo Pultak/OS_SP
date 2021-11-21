@@ -50,7 +50,7 @@ bool kiv_os_rtl::Get_Working_Dir(char* buffer, const size_t buffer_size, size_t&
 	return result;
 }
 
-bool kiv_os_rtl::Open_File(char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle &file_handle_ret) {
+bool kiv_os_rtl::Open_File(const char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle &file_handle_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Open_File));
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(file_name);
 	regs.rcx.r = static_cast<decltype(regs.rcx.r)>(file_open);

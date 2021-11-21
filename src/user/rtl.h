@@ -21,7 +21,7 @@ namespace kiv_os_rtl {
 
 	bool Get_Working_Dir(char* buffer, const size_t buffer_size, size_t& chars_written);
 
-	bool Open_File(char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle& file_handle_ret);
+	bool Open_File(const char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle& file_handle_ret);
 
 	bool Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint16_t & position_ret);
 	

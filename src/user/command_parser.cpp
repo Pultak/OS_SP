@@ -81,6 +81,20 @@ static int CountCommands(char* line)
 	return count;
 }
 
+/* Counts number of pipes */
+static int CountPipes(std::vector<Program> vector)
+{
+	int count = 0;
+	for (auto program : vector)
+	{
+		if (program.pipe_out == true)
+		{
+			count++;
+		}
+	}
+	return count;
+}
+
 /* Executes a command - input: char* command, char* argument */
 static void ExecuteCommand(char* command, char* arg)
 {
@@ -241,10 +255,54 @@ std::vector<Program> ProcessLine(char* line)
 
 void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegisters& regs) {
 
-	Program test = program_vector.at(0);
-	kiv_os::THandle process_handle;
+	int index = 0;
+	kiv_os::THandle in = kiv_os::Invalid_Handle;
+	kiv_os::THandle out = kiv_os::Invalid_Handle;
+	kiv_os::THandle current_pipe[2] = { kiv_os::Invalid_Handle, kiv_os::Invalid_Handle };
+	kiv_os::THandle process_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle signal_ret;
 	uint16_t exit_code = 0;
+
+	for (auto program : program_vector)
+	{
+		if (strcmp(program.command.c_str(), "cd") == 0)
+		{
+			continue;
+		}
+		else if (strcmp(program.command.c_str(), "echo") == 0 && 
+				(strcmp(program.argument.c_str(), "on") == 0 || strcmp(program.argument.c_str(), "off") == 0))
+		{
+			continue;
+		}
+		if (program.redirection_in)
+		{
+			//kiv_os_rtl::Open_File(program_vector.at(index+1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, in);
+		}
+		if (program.redirection_out)
+		{
+			//kiv_os_rtl::Open_File(program_vector.at(index+1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, out);
+		}
+		if (program.pipe_in)
+		{
+			in = current_pipe[0];
+		}
+		if (program.pipe_out)
+		{
+			kiv_os_rtl::Create_Pipe(current_pipe);
+			out = current_pipe[1];
+		}
+		program.Print();
+
+		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), in, out, process_handle);
+		if (!success)
+		{
+			std::cout << "\nInvalid argument\n";
+		}
+		index++;
+	}
+
+	/*Program test = program_vector.at(0);
+	kiv_os::THandle process_handle;
 
 	//print program
 	test.Print();
@@ -256,7 +314,7 @@ void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegis
 	if (!success)
 	{
 		std::cout << "\nInvalid argument\n";
-	}
+	}*/
 	kiv_os::THandle handles[1]= { process_handle };
 	kiv_os_rtl::Wait_For(handles, 1, signal_ret);
 	kiv_os_rtl::Read_Exit_Code(handles[signal_ret-1], exit_code);
