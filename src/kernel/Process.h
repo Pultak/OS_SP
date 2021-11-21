@@ -47,6 +47,8 @@ private:
 public:
 
 	void addNewThread(kiv_os::THandle threadHandle);
+	Thread* getThread(kiv_os::THandle threadHandle);
+	void removeThread(kiv_os::THandle threadHandle);
 
 public:
 	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program) : handle(handle), stdInput(stdIn), stdOutput(stdOut), programName(program) {

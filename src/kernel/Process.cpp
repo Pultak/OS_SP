@@ -10,4 +10,23 @@ void Process::addNewThread(kiv_os::THandle threadHandle){
 	tcbLock->unlock();
 }
 
+Thread* Process::getThread(kiv_os::THandle threadHandle){
+	tcbLock->lock();
+	auto it = tcb.find(threadHandle);
+	if (it != tcb.end()) {
+		return it->second.get();
+	}
+	tcbLock->unlock();
+	return nullptr;
+}
+
+void Process::removeThread(kiv_os::THandle threadHandle){
+	tcbLock->lock();
+	auto it = tcb.find(threadHandle);
+	if (it != tcb.end()) {
+		tcb.erase(it);
+	}
+	tcbLock->unlock();
+}
+
 
