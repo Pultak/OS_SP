@@ -326,7 +326,7 @@ void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegis
 
 	auto it = processes_handles.begin();
 
-	while (processes_handles.size())
+	/*while (processes_handles.size())
 	{
 		kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
 		// -1 fix --- remove later
@@ -344,10 +344,25 @@ void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegis
 		}
 
 		processes_handles.erase(it + signal_ret);
+	}*/
+	kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
+	for (auto process : processes_handles)
+	{
+		kiv_os_rtl::Read_Exit_Code(process, exit_code);
+
+		//print exit code
+		std::cout << "\nexit code: " << exit_code << "\n";
+	}
+
+	for (auto pipe : pipes_in)
+	{
+		kiv_os_rtl::Close_Handle(pipe);
+	}
+	for (auto pipe : pipes_out)
+	{
+		kiv_os_rtl::Close_Handle(pipe);
 	}
 
 
-	//print exit code
-	std::cout << "exit code: " << exit_code << "\n";
 
 }
