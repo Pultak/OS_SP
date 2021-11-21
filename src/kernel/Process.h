@@ -10,7 +10,8 @@
 #include "SleepListener.h"
 #include "Synchronization.h"
 #include "../../src/api/api.h"
-
+#include "Blockable.h"
+#include "Thread.h"
 
 enum class ProcessState {
 	Ready = 0,
@@ -22,7 +23,7 @@ enum class ProcessState {
 
 
 
-class Process {
+class Process: public Blockable {
 
 public:
 	/// <summary>
@@ -39,31 +40,25 @@ public:
 
 	std::map<kiv_os::NSignal_Id, kiv_os::TThread_Proc> signalHandlers;
 
-public:
-	/// <summary>
-	/// Internal parameters of process
-	/// </summary>
-	//std::shared_ptr<ThreadControlBlock> tcb;
-	std::list<SleepListener*> listeners;
-
-	Synchronization::Spinlock* listenersLock = new Synchronization::Spinlock(0);
-	/*
-	private:
-
-		void addListener(SleepListener* listener);
-		*/
+private:
+	std::map<kiv_os::THandle, std::unique_ptr<Thread>> tcb;
+	Synchronization::Spinlock* tcbLock;
 
 public:
 
+	void addNewThread(kiv_os::THandle threadHandle);
+
+public:
 	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program) : handle(handle), stdInput(stdIn), stdOutput(stdOut), programName(program) {
-
+		tcbLock = new Synchronization::Spinlock(0);
 		//no other signals are pressent atm
 		//signalHandlers[kiv_os::NSignal_Id::Terminate] = defaultSignalHandler;
 	}
-
 	~Process() {
-		//todo check exit codes by parent -> block process?
-		delete listenersLock;
+		delete tcbLock;
 	}
+
+
+
 
 };
