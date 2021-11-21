@@ -273,6 +273,7 @@ void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegis
 
 	for (auto program : program_vector)
 	{
+		//might need to transfer |
 		if (strcmp(program.command.c_str(), "cd") == 0)
 		{
 			continue;
@@ -288,14 +289,11 @@ void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegis
 		}
 		if (program.redirection_in)
 		{
-			std::cout << "\nfile: ";
-			program_vector.at(index + 1).Print();
-			//kiv_os_rtl::Open_File(program_vector.at(index+1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, in);
+			auto result = kiv_os_rtl::Open_File(program_vector.at(index+1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, in);
+			std::cout << "result: " << result;
 		}
 		if (program.redirection_out)
 		{
-			std::cout << "\nfile: ";
-			program_vector.at(index + 1).Print();
 			//kiv_os_rtl::Open_File(program_vector.at(index+1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, out);
 		}
 		if (program.pipe_in)
@@ -311,7 +309,7 @@ void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegis
 		}
 		program.Print();
 
-		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), in, out, process_handle);
+		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), 100, out, process_handle);
 		if (!success)
 		{
 			std::cout << "\nInvalid argument\n";
@@ -345,7 +343,9 @@ void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegis
 
 		processes_handles.erase(it + signal_ret);
 	}*/
+
 	kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
+
 	for (auto process : processes_handles)
 	{
 		kiv_os_rtl::Read_Exit_Code(process, exit_code);

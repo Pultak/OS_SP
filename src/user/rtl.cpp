@@ -2,6 +2,7 @@
 #include <iostream>
 
 std::atomic<kiv_os::NOS_Error> kiv_os_rtl::Last_Error;
+int index = 0;
 
 kiv_hal::TRegisters Prepare_SysCall_Context(kiv_os::NOS_Service_Major major, uint8_t minor) {
 	kiv_hal::TRegisters regs;
@@ -53,8 +54,8 @@ bool kiv_os_rtl::Get_Working_Dir(char* buffer, const size_t buffer_size, size_t&
 bool kiv_os_rtl::Open_File(const char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle &file_handle_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Open_File));
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(file_name);
-	regs.rcx.r = static_cast<decltype(regs.rcx.r)>(file_open);
-	regs.rdi.r = static_cast<decltype(regs.rcx.r)>(file_attribute);
+	regs.rcx.l = static_cast<decltype(regs.rcx.l)>(file_open);
+	regs.rdi.i = static_cast<decltype(regs.rdi.i)>(file_attribute);
 
 	const bool result = kiv_os::Sys_Call(regs);
 	file_handle_ret = regs.rax.r;
@@ -74,11 +75,14 @@ bool kiv_os_rtl::Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_
 }
 
 bool kiv_os_rtl::Close_Handle(kiv_os::THandle handle) {
+	/*
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Close_Handle));
 	regs.rdx.x = static_cast<decltype(regs.rdx.x)>(handle);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	return result;
+	return result;*/
+	std::cout << "\nclosing handle: " << handle;
+	return 0;
 }
 
 bool kiv_os_rtl::Delete_File(char* file_name) {
@@ -108,11 +112,18 @@ bool kiv_os_rtl::Get_File_Attribute(char* file_name, uint8_t &file_attribute_ret
 }
 
 bool kiv_os_rtl::Create_Pipe(kiv_os::THandle *file_handles) {
-	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Create_Pipe));
+	/*kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Create_Pipe));
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(file_handles);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	return result;
+	return result;*/
+
+	index++;
+	std::cout << "\ncreating pipe: " << 10 + index << " " << index+1	;
+
+	file_handles[0] = 10 +index;
+	file_handles[1] = index + 1;
+	return 0;
 }
 
 bool kiv_os_rtl::Create_Process(const char* process_name,const char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle &process_handle_ret) {
