@@ -37,7 +37,7 @@ namespace kiv_hal {
 	using TInterrupt_Descriptor_Table = TInterrupt_Handler*;					//ziskani ukazatele na tabulku se deje v dllmain.cpp, ktery nemate povoleno menit
 	
 
-	const uint32_t Expected_Tls_IDT_Index = 1;					//k ziskani ukazatele na tabulku vektoru preruseni pouzijeme TLS s ocekavanou hodnotu TLS indexu
+	const uint32_t Expected_Tls_IDT_Index = 2;					//k ziskani ukazatele na tabulku vektoru preruseni pouzijeme TLS s ocekavanou hodnotu TLS indexu
 	
 	struct TRegisters {
 		TGeneral_Register rax, rbx, rcx, rdx;

@@ -10,9 +10,9 @@
 
 size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 {
-	//std::cout << "TEST FREQ"
+	std::cout << "TEST FREQ\n";
 	
-	const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
+	/*const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
 	const kiv_os::THandle std_out = static_cast<kiv_os::THandle>(regs.rbx.x);
 	std::stringstream line_ss;
 	std::string line;
@@ -62,7 +62,7 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 			kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);
 		}
 		
-	}
+	}*/
 	return 0;
 	
 }
