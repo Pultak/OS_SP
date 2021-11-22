@@ -1,5 +1,6 @@
 #include "rtl.h"
 #include <iostream>
+#include <thread>
 
 std::atomic<kiv_os::NOS_Error> kiv_os_rtl::Last_Error;
 int index = 0;
@@ -138,7 +139,7 @@ bool kiv_os_rtl::Create_Process(const char* process_name,const char* argument, k
 	return result;
 }
 
-bool kiv_os_rtl::Create_Thread(char* thread_name, char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& thread_handle_ret) {
+bool kiv_os_rtl::Create_Thread(void* thread_name, void* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& thread_handle_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Clone));
 	regs.rcx.l = static_cast<decltype(regs.rcx.l)>(kiv_os::NClone::Create_Thread);
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(thread_name);

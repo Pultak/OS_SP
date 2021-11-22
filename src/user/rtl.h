@@ -37,7 +37,7 @@ namespace kiv_os_rtl {
 
 	bool Create_Process(const char* process_name,const char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& process_handle_ret);
 	
-	bool Create_Thread(char* thread_name, char* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& thread_handle_ret);
+	bool Create_Thread(void* thread_name, void* argument, kiv_os::THandle stdin_handle, kiv_os::THandle stdout_handle, kiv_os::THandle& thread_handle_ret);
 	
 	bool Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_handles, kiv_os::THandle& handle_signal_ret);
 				

@@ -309,7 +309,7 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		}
 		program.Print();
 
-		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), 100, out, process_handle);
+		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), in, out, process_handle);
 		if (!success)
 		{
 			std::cout << "\nInvalid argument\n";
