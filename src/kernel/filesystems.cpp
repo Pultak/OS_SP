@@ -1,9 +1,5 @@
 #include "filesystems.h"
 #include "fat12fs.h"
-namespace Files {
-    std::map<std::string, std::unique_ptr<VFS>> Filesystems;
-}
-
 
 void InitFilesystems() {
     

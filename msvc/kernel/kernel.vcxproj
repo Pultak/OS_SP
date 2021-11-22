@@ -24,9 +24,11 @@
     <ClCompile Include="..\..\src\kernel\filesystems.cpp" />
     <ClCompile Include="..\..\src\kernel\handles.cpp" />
     <ClCompile Include="..\..\src\kernel\io.cpp" />
+    <ClCompile Include="..\..\src\kernel\IOHandle.cpp" />
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\..\src\kernel\fat12fs.cpp" />
     <ClCompile Include="..\..\src\kernel\fsutils.cpp" />
+    <ClCompile Include="..\..\src\kernel\PipeUtils.cpp" />
     <ClCompile Include="..\..\src\kernel\Process.cpp" />
     <ClCompile Include="..\..\src\kernel\ProcessControlBlock.cpp" />
     <ClCompile Include="..\..\src\kernel\ProcessUtils.cpp" />
@@ -40,6 +42,7 @@
     <ClInclude Include="..\..\src\kernel\filesystems.h" />
     <ClInclude Include="..\..\src\kernel\handles.h" />
     <ClInclude Include="..\..\src\kernel\io.h" />
+    <ClInclude Include="..\..\src\kernel\IOHandle.h" />
     <ClInclude Include="..\..\src\kernel\kernel.h" />
     <ClInclude Include="..\..\src\kernel\PipeUtils.h" />
     <ClInclude Include="..\..\src\kernel\vfs.h" />

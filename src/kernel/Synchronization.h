@@ -45,5 +45,38 @@ namespace Synchronization {
         }
     };
 
+
+    class IntSpinlock {
+
+    private:
+        std::atomic<uint8_t> lockVal = { 0 };
+    public:
+        explicit IntSpinlock(uint8_t val) {
+            lockVal = val;
+        }
+
+        void lock() noexcept {
+            for (;;) {
+                if (lockVal.fetch_sub(1, std::memory_order_acquire)) {
+                    //lockVal--;
+                    return;
+                }
+                while (lockVal.load(std::memory_order_relaxed)) {
+                    std::this_thread::sleep_for(std::chrono::seconds(0));
+                }
+            }
+        }
+
+        bool try_lock() noexcept {
+            return !lockVal.load(std::memory_order_relaxed) &&
+                !lockVal.exchange(true, std::memory_order_acquire);
+        }
+
+        void unlock(uint8_t val) noexcept {
+            lockVal.fetch_add(val, std::memory_order_release);
+        }
+    };
+
+
 };
 
