@@ -1,6 +1,7 @@
 #include "shell.h"
 #include "rtl.h"
 #include "command_parser.h"
+#include "global.h"
 
 #include "freq.h"
 #include <iostream>
@@ -43,6 +44,20 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 					else if (strcmp(it->argument.c_str(), "off") == 0)
 					{
 						echo_on = false;
+					}
+					if (strcmp(it->argument.c_str(), "") == 0)
+					{
+						if (echo_on)
+						{
+							const char* print = "\nECHO is on\n";
+							kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
+						}
+						else
+						{
+							
+							const char* print = "\nECHO is off.\n";
+							kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
+						}
 					}
 				}
 				else if (strcmp(it->command.c_str(), "cd") == 0)
