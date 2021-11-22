@@ -87,7 +87,7 @@ bool kiv_os_rtl::Close_Handle(kiv_os::THandle handle) {
 
 bool kiv_os_rtl::Delete_File(char* file_name) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Delete_File));
-	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(file_name);
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file_name);
 
 	const bool result = kiv_os::Sys_Call(regs);
 	return result;
@@ -95,7 +95,7 @@ bool kiv_os_rtl::Delete_File(char* file_name) {
 
 bool kiv_os_rtl::Set_File_Attribute(char* file_name, kiv_os::NFile_Attributes file_attribute) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Set_File_Attribute));
-	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(file_name);
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file_name);
 	regs.rdi.r = static_cast<decltype(regs.rdi.r)>(file_attribute);
 
 	const bool result = kiv_os::Sys_Call(regs);
@@ -104,7 +104,7 @@ bool kiv_os_rtl::Set_File_Attribute(char* file_name, kiv_os::NFile_Attributes fi
 
 bool kiv_os_rtl::Get_File_Attribute(char* file_name, uint8_t &file_attribute_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Get_File_Attribute));
-	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(file_name);
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file_name);
 
 	const bool result = kiv_os::Sys_Call(regs);
 	file_attribute_ret = regs.rdi.r;
@@ -113,7 +113,7 @@ bool kiv_os_rtl::Get_File_Attribute(char* file_name, uint8_t &file_attribute_ret
 
 bool kiv_os_rtl::Create_Pipe(kiv_os::THandle *file_handles) {
 	/*kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Create_Pipe));
-	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.x)>(file_handles);
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file_handles);
 
 	const bool result = kiv_os::Sys_Call(regs);
 	return result;*/
@@ -171,7 +171,7 @@ bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, uint16_t &exit_c
 
 bool kiv_os_rtl::Exit(uint16_t exit_code) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Exit));
-	regs.rcx.r = static_cast<decltype(regs.rcx.x)>(exit_code);
+	regs.rcx.r = static_cast<decltype(regs.rcx.r)>(exit_code);
 
 	const bool result = kiv_os::Sys_Call(regs);
 	return result;
@@ -186,8 +186,8 @@ bool kiv_os_rtl::Shutdown() {
 
 bool kiv_os_rtl::Register_Signal_Handler(kiv_os::NSignal_Id signal_id, kiv_os::THandle process_handle) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Register_Signal_Handler));
-	regs.rcx.r = static_cast<decltype(regs.rcx.x)>(signal_id);
-	regs.rdx.r = static_cast<decltype(regs.rdx.x)>(process_handle);
+	regs.rcx.r = static_cast<decltype(regs.rcx.r)>(signal_id);
+	regs.rdx.r = static_cast<decltype(regs.rdx.r)>(process_handle);
 
 	const bool result = kiv_os::Sys_Call(regs);
 	return result;
