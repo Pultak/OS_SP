@@ -419,7 +419,7 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 	for (int i = 0; i < path.size(); i++) {
 		dir_item_number = -1;
 		cur_folder_items = retrieve_folders_from_folder(int_fat_table, traversed_sector_folder); 
-		/*
+		
 		printf("\n");
 		for (int i = 0; i < cur_folder_items.size(); i++) {
 			printf("\njmeno slozky: %s ", cur_folder_items[i].filename.c_str());
@@ -428,7 +428,7 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 			printf("size: %d", (int)cur_folder_items[i].filesize);
 		}
 		printf("\n");
-		//*/
+		
 		int j = 0;
 
 		std::string item_to_check = "";  

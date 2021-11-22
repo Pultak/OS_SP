@@ -23,8 +23,8 @@ FAT::FAT(uint8_t disk_num, kiv_hal::TDrive_Parameters params): disk(disk_num), p
     
 }
 
-kiv_os::NOS_Error FAT::rmdir(const char* name) {
-    std::vector<std::string> path = get_directories(name); 
+kiv_os::NOS_Error FAT::rmdir(const char* pth) {
+    std::vector<std::string> path = get_directories(pth);
     directory_item dir_item = retrieve_item(19, int_fat_table, path);
 
     if (dir_item.first_cluster == -1) {
@@ -143,12 +143,12 @@ kiv_os::NOS_Error FAT::rmdir(const char* name) {
     return kiv_os::NOS_Error::Success;
 }
 
-kiv_os::NOS_Error FAT::mkdir(const char* name, uint8_t attr){
-    std::vector<std::string> folders_in_path = get_directories(name);
+kiv_os::NOS_Error FAT::mkdir(const char* pth, uint8_t attr){
+    std::vector<std::string> folders_in_path = get_directories(pth);
     
     std::string new_folder_name = folders_in_path.at(folders_in_path.size() - 1);
     folders_in_path.pop_back(); 
-    int result = create_folder(name, attr, fat_table, int_fat_table);
+    int result = create_folder(pth, attr, fat_table, int_fat_table);
 
     if (result == 0) {
         printf(" podarilo se vytvorit slozku ");
@@ -160,14 +160,14 @@ kiv_os::NOS_Error FAT::mkdir(const char* name, uint8_t attr){
     }
 }
 
-kiv_os::NOS_Error FAT::open(const char* name, kiv_os::NOpen_File flags, uint8_t attributes, File& file) {
+kiv_os::NOS_Error FAT::open(const char* pth, kiv_os::NOpen_File flags, uint8_t attributes, File& file) {
     file = File{};
-    file.name = const_cast<char*>(name);
+    file.name = const_cast<char*>(pth);
     file.position = 0;
 
     int32_t target_cluster;
     
-    std::vector<std::string> folders_in_path = get_directories(name);
+    std::vector<std::string> folders_in_path = get_directories(pth);
     if (folders_in_path.size() > 0 && strcmp(folders_in_path.at(folders_in_path.size() - 1).data(), ".") == 0) {
         printf(" nalezena cesta > 0 ");
         folders_in_path.pop_back();
@@ -185,7 +185,7 @@ kiv_os::NOS_Error FAT::open(const char* name, kiv_os::NOpen_File flags, uint8_t 
             bool created = false;
 
             if (dir_item.attribute == static_cast<uint8_t>(kiv_os::NFile_Attributes::Volume_ID) || dir_item.attribute == static_cast<uint8_t>(kiv_os::NFile_Attributes::Directory)) {
-                kiv_os::NOS_Error result = mkdir(name, attributes);
+                kiv_os::NOS_Error result = mkdir(pth, attributes);
                 if (result == kiv_os::NOS_Error::Not_Enough_Disk_Space) {
                     created = false;
                 }
@@ -226,8 +226,8 @@ kiv_os::NOS_Error FAT::open(const char* name, kiv_os::NOpen_File flags, uint8_t 
     
 }
 
-kiv_os::NOS_Error FAT::dirread(const char* name, std::vector<kiv_os::TDir_Entry>& entries) {
-    std::vector<std::string> folders_in_path = get_directories(name);
+kiv_os::NOS_Error FAT::dirread(const char* pth, std::vector<kiv_os::TDir_Entry>& entries) {
+    std::vector<std::string> folders_in_path = get_directories(pth);
     if (folders_in_path.size() > 0 && strcmp(folders_in_path.at(folders_in_path.size() - 1).data(), ".") == 0) {
         folders_in_path.pop_back();
     }
@@ -255,4 +255,36 @@ kiv_os::NOS_Error FAT::dirread(const char* name, std::vector<kiv_os::TDir_Entry>
     return kiv_os::NOS_Error::Success;
 
 }
+
+bool FAT::file_exist(const char* pth, int32_t d, int32_t& found_d) {
+
+    if (strcmp(pth, "..") == 0) {
+        std::vector<unsigned char> data_first_clust = read_from_fs(d, 1);
+        unsigned char first_byte_addr = data_first_clust.at(58);
+        unsigned char second_byte_addr = data_first_clust.at(59);
+
+        found_d = d;
+        return true;
+    }
+
+    if (strcmp(pth, ".") == 0) { 
+        found_d = d;
+        return true; 
+    }
+    int start_cluster = 19;
+
+    std::vector<std::string> folders_in_path = get_directories(pth);
+
+    directory_item dir_item = retrieve_item(start_cluster, int_fat_table, folders_in_path);
+    found_d = dir_item.first_cluster;
+
+    if (dir_item.first_cluster == -1) {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
+
 
