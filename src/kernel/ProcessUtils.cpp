@@ -142,8 +142,6 @@ void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TTh
     auto handle = handles::getTHandleById(std::this_thread::get_id());
 
     Process* thisProcess = pcb->getProcess(handle);
-    std::filesystem::
-
     handles::Remove_Handle(handle);
 
     thisProcess->state = ProcessState::Terminated;
@@ -180,13 +178,14 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
 
 
     kiv_os::THandle thisHandle = handles::getTHandleById(std::this_thread::get_id());
-    if (thisHandle == kiv_os::Invalid_Handle) {
+    /*if (thisHandle == kiv_os::Invalid_Handle) {
         //todo invalidWaitForRequest(0, handles, thisHandle);
         //thisHandle = 0;
-    }
+    }*/
     kiv_os::THandle actualHandle = kiv_os::Invalid_Handle;
 
     std::vector<SleepListener*> listeners(handleCount, new SleepListener(thisHandle));
+    //todo after merge dont forget to remove listeners on previous processes
     for (int i = 0; i < handleCount; ++i) {
         actualHandle = handles[i];
         if (handles::Resolve_kiv_os_Handle(actualHandle) == INVALID_HANDLE_VALUE) {
@@ -196,12 +195,22 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
         }
         else {
             Process* process = pcb->getProcess(actualHandle);
-            if (process->state != ProcessState::Terminated) {
+            if (process != nullptr && process->state != ProcessState::Terminated) {
                 process->addListener(listeners[i]);
-            }
-            else {
-                //process is already dead -> no reason to keep listener locked
-                listeners[i]->lock->unlock();
+            }else {
+                //handle can be also thread
+                auto parentHandle = handles::getParentTHandleById(std::this_thread::get_id());
+                if (parentHandle == kiv_os::Invalid_Handle) {
+                    //process is already dead -> no reason to keep listener locked
+                    listeners[i]->lock->unlock();
+                }else {
+                    //handle points to thread
+                    Process* process = pcb->getProcess(parentHandle);
+                    auto thread = process != nullptr ? process->getThread(actualHandle): nullptr;
+                    if (thread) {
+                        thread->addListener(listeners[i]);
+                    }
+                }
             }
         }
     }
@@ -217,7 +226,6 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
     registers.rax.l = index;
 
 }
-
 void ProcessUtils::invalidWaitForRequest(const int alreadyDone, const kiv_os::THandle* handles, const kiv_os::THandle thisHandle) {
     for (int i = 0; i < alreadyDone; i++) {
         // load a handle
@@ -247,15 +255,7 @@ void ProcessUtils::exit(kiv_hal::TRegisters& registers) {
             exitingProcess->exitCode = exitCode;
             exitingProcess->state = ProcessState::Terminated;
         }
-        else {
-            //todo what now? Process is missing  
-        }
-
     }
-    else {
-        //todo missing handle
-    }
-
 }
 
 void ProcessUtils::readExitCode(kiv_hal::TRegisters& registers) {
@@ -270,11 +270,8 @@ void ProcessUtils::readExitCode(kiv_hal::TRegisters& registers) {
             pcb->removeProcess(handle);
         }
         else {
-            //todo process missing or not yet finished
+            //todo process missing or not yet finished or the handle is of thread
         }
-    }
-    else {
-        //todo handle missing
     }
     registers.rcx.x = static_cast<uint16_t>(resultExitCode);
 }

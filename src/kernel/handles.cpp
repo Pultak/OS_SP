@@ -55,18 +55,6 @@ kiv_os::THandle handles::getTHandleById(const std::thread::id id) {
 	return result;
 }
 
-kiv_os::THandle handles::getTHandleById(const std::thread::id id) {
-	std::lock_guard<std::mutex> guard(Handles_Guard);
-
-	kiv_os::THandle result = kiv_os::Invalid_Handle;
-	auto it = id2Handle.find(id);
-	if (it != id2Handle.end()) {
-		result = it->second;
-	}
-	return result;
-}
-
-
 kiv_os::THandle handles::getParentTHandleById(const std::thread::id id) {
 	std::lock_guard<std::mutex> guard(Handles_Guard);
 
