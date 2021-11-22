@@ -84,6 +84,8 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\kernel\dir.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\kernel\Process.h">
       <Filter>Header Files</Filter>
     </ClInclude>

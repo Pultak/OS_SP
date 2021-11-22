@@ -194,7 +194,20 @@ kiv_os::NOS_Error FAT::open(const char* pth, kiv_os::NOpen_File flags, uint8_t a
                 }
             }
             else {
-                printf(" vytvareni neceho jineho ");
+                if (!file_name_val(folders_in_path.at(folders_in_path.size() - 1).c_str())) { 
+                    return kiv_os::NOS_Error::Invalid_Argument;
+                }
+
+                int result = create_file(pth, attributes, fat_table, int_fat_table);
+
+                file.size = dir_item.filesize;
+
+                if (result == -1) { 
+                    created = false;
+                }
+                else { 
+                    created = true;
+                }
             }
 
             if (!created) { 

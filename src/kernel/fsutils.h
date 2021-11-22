@@ -52,3 +52,8 @@ int aloc_cluster(int start, std::vector<int>& int_fat_table, std::vector<unsigne
 
 unsigned char char_to_hex(char charar[2]);
 
+bool file_name_val(const char* name);
+
+int create_file(const char* path, uint8_t attr, std::vector<unsigned char>& fat_table, std::vector<int>& int_fat_table);
+
+
