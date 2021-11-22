@@ -255,7 +255,7 @@ std::vector<Program> ProcessLine(char* line)
 	return vector_program_ret;
 }
 
-void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegisters& regs) {
+void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegisters& regs) {
 
 	size_t index = 0;
 	uint16_t exit_code = 0;
@@ -271,7 +271,7 @@ void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegis
 
 
 
-	for (auto program : program_vector)
+	for (auto& program : program_vector)
 	{
 		//might need to transfer |
 		if (strcmp(program.command.c_str(), "cd") == 0)

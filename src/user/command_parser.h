@@ -29,7 +29,7 @@ struct Program {
 };
 
 std::vector<Program> ProcessLine(char* line);
-void Execute_Commands(std::vector<Program> program_vector, const kiv_hal::TRegisters& regs);
+void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegisters& regs);
 
 
 

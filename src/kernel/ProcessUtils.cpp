@@ -73,9 +73,6 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
         newProcessRegs.rbx.x = stdOut;
         //copy program args
         newProcessRegs.rdi.r = registers.rdi.r;
-		char* arg = reinterpret_cast<char*>(newProcessRegs.rdi.r);
-
-		std::cout << "\n" << arg;
 
         Synchronization::Spinlock* synchLock = new Synchronization::Spinlock(true);
         std::thread t1(processStartPoint, newProcessRegs, progFuncAddress, synchLock);
@@ -103,7 +100,7 @@ void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TTh
     lock->lock();
     delete lock;
 
-	char* arg = reinterpret_cast<char*>(registers.rdi.r);
+	const char* arg = reinterpret_cast<char*>(registers.rdi.r);
 
 
     userProgram(registers);
