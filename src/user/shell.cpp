@@ -72,19 +72,19 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 							}
 							else
 							{
-								const char* print = "Couldn't read working directory\n";
+								const char* print = "\nCouldn't read working directory\n";
 								kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 							}
 						}
 						else
 						{
-							const char* print = "Directory not found\n";
+							const char* print = "\nDirectory not found\n";
 							kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 						}
 					}
 					else
 					{
-						const char* print = "Directory not specified\n";
+						const char* print = "\nDirectory not specified\n";
 						kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 
 					}
