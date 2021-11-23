@@ -35,7 +35,6 @@ public:
 
 class PipeIn: public IOHandle{
 public:
-	PipeIn();
 
 	kiv_os::NOS_Error write(const char* buffer, const size_t size, size_t& written) override;
 
@@ -49,6 +48,8 @@ public:
 
 	void close() override;
 
+	~PipeIn()  {
+	}
 private:
 	bool write(char c);
 
@@ -57,7 +58,6 @@ private:
 
 class PipeOut : public IOHandle {
 public:
-	PipeOut();
 
 	kiv_os::NOS_Error write(const char* buffer, const size_t size, size_t& written) override {
 		return kiv_os::NOS_Error::IO_Error;
@@ -70,6 +70,8 @@ public:
 	}
 
 	void close() override;
+	~PipeOut () {
+	}
 private:
 	Pipe* pipe;
 };

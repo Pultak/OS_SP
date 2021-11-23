@@ -6,9 +6,6 @@
 #include<iostream>
 #include "vfs.h"
 
-namespace Files {
-    std::map<std::string, std::unique_ptr<VFS>> Filesystems;
-}
 void InitFilesystems();
 
 void Add_To_Filesystems(const std::string &name, VFS* vfs);

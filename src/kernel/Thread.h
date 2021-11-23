@@ -1,7 +1,7 @@
 #pragma once
 #include "Blockable.h"
 
-class Thread: public Blockable{
+class Thread final: public Blockable{
 public:
 	kiv_os::THandle threadHandle;
 	kiv_os::THandle parentHandle;

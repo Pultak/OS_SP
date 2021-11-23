@@ -108,7 +108,7 @@ void ProcessUtils::cloneThread(kiv_hal::TRegisters& registers) {
 
         //lock to keep the thread locked until initialization done
         Synchronization::Spinlock* synchLock = new Synchronization::Spinlock(true);
-        std::thread t1(ProcessUtils::threadStartPoint, progAddr, threadRegs, synchLock);
+        std::thread t1(ProcessUtils::threadStartPoint, threadRegs, progAddr, synchLock);
 
         auto parentHandle = handles::getTHandleById(std::this_thread::get_id());
         //create new handle with the reference to parent

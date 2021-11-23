@@ -41,7 +41,7 @@ public:
 	std::map<kiv_os::NSignal_Id, kiv_os::TThread_Proc> signalHandlers;
 
 private:
-	std::map<kiv_os::THandle, std::unique_ptr<Thread>> tcb;
+	std::map<kiv_os::THandle, Thread*> tcb;
 	Synchronization::Spinlock* tcbLock;
 
 public:

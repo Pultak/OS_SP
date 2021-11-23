@@ -2,7 +2,7 @@
 
 #include "kernel.h"
 #include "io.h"
-#include "filesystems.h"
+//#include "filesystems.h"
 #include <Windows.h>
 
 HMODULE User_Programs;
@@ -22,7 +22,7 @@ void __stdcall Sys_Call(kiv_hal::TRegisters &regs) {
 	switch (static_cast<kiv_os::NOS_Service_Major>(regs.rax.h)) {
 		
 		case kiv_os::NOS_Service_Major::File_System:		
-			Handle_IO(regs);
+			io::Handle_IO(regs);
 			break;
 		case kiv_os::NOS_Service_Major::Process:
 			ProcessUtils::HandleProcess(regs, User_Programs);

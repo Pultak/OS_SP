@@ -1,11 +1,12 @@
 #include "io.h"
-#include "kernel.h"
-#include "dir.h"
-#include "filesystems.h"
-#include "handles.h"
-#include "PipeUtils.h"
 
-size_t Read_Line_From_Console(char *buffer, const size_t buffer_size) {
+
+
+std::map<kiv_os::THandle, IOHandle*> openedHandles;
+const std::unique_ptr<Synchronization::Spinlock> ioHandleLock = std::make_unique<Synchronization::Spinlock>(0);
+
+
+size_t io::Read_Line_From_Console(char *buffer, const size_t buffer_size) {
 	kiv_hal::TRegisters registers;
 	
 	size_t pos = 0;
@@ -62,6 +63,8 @@ kiv_os::THandle io::addIoHandle(IOHandle* handle) {
 		++it;
 		++result;
 	}
+	openedHandles.emplace(std::make_pair(result, handle));
+
 	ioHandleLock->unlock();
 	return result;
 }
@@ -91,54 +94,55 @@ void io::removeIoHandle(kiv_os::THandle handle) {
 void io::Handle_IO(kiv_hal::TRegisters &regs) {
 	switch (static_cast<kiv_os::NOS_File_System>(regs.rax.l)) {
 		case kiv_os::NOS_File_System::Open_File: {
-			OpenIOHandle(regs);
+			io::OpenIOHandle(regs);
 			break;
 		}
 		case kiv_os::NOS_File_System::Write_File: {
-			WriteIOHandle(regs);
+			io::WriteIOHandle(regs);
 			break;
 		}
 		case kiv_os::NOS_File_System::Read_File: {
-			ReadIOHandle(regs);
+			io::ReadIOHandle(regs);
 			break;
 		}
 		case kiv_os::NOS_File_System::Seek: {
-			SeekIOHandle(regs);
+			io::SeekIOHandle(regs);
 			break;
 		}
 		case kiv_os::NOS_File_System::Close_Handle: {
-			CloseIOHandle(regs);
+			io::CloseIOHandle(regs);
 			break;
 		}
 		case kiv_os::NOS_File_System::Delete_File: {
-			DeleteFsFile(regs);
+			io::DeleteFsFile(regs);
 			break;
 		}
 		
 		case kiv_os::NOS_File_System::Set_Working_Dir: {
-			SetWorkingDirectory(regs);
+			io::SetWorkingDirectory(regs);
 			break;
 		}
 		case kiv_os::NOS_File_System::Get_Working_Dir: {
-			GetWorkingDirectory(regs);
+			io::GetWorkingDirectory(regs);
 			break;
 		}
 		case kiv_os::NOS_File_System::Set_File_Attribute: {
-			SetFileAttribute(regs);
+			io::SetFileAttribute(regs);
 			break;
 		}
 		case kiv_os::NOS_File_System::Get_File_Attribute: {
-			GetFileAttribute(regs);
+			io::GetFileAttribute(regs);
 			break;
 		}
 		case kiv_os::NOS_File_System::Create_Pipe: {
-			CreatePipe(regs);
+			io::CreatePipe(regs);
 			break;
 		}
 	}
 }
 
 void io::OpenIOHandle(kiv_hal::TRegisters& regs){
+	//todo
 	Open_File(regs);
 }
 
@@ -189,8 +193,8 @@ void io::GetFileAttribute(kiv_hal::TRegisters& regs){
 void io::CreatePipe(kiv_hal::TRegisters& regs){
 	Pipe* pipe = new Pipe(1024);
 
-	PipeIn* in = new PipeIn();
-	PipeOut* out = new PipeOut();
+	IOHandle* in = new PipeIn();
+	IOHandle* out = new PipeOut();
 	auto* pipeHandles = reinterpret_cast<kiv_os::THandle*>(regs.rdx.r);
 	pipeHandles[0] = addIoHandle(in);
 	pipeHandles[1] = addIoHandle(out);
