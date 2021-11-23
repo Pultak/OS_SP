@@ -25,6 +25,8 @@ public:
 
     virtual bool file_exist(const char* pth, int32_t d, int32_t& found_d) = 0;
 
+    virtual kiv_os::NOS_Error write(File f, size_t size, size_t offset, const char* buffer, size_t& written) = 0;
+
 	~VFS() {};
 
 };

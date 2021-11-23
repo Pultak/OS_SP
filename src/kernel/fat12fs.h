@@ -17,7 +17,7 @@ public:
 
 	bool file_exist(const char* pth, int32_t d, int32_t& found_d) override;
 
-
+	kiv_os::NOS_Error write(File f, size_t size, size_t offset, const char* buffer, size_t& written) override;
 
 
 	~FAT() {}

@@ -299,5 +299,109 @@ bool FAT::file_exist(const char* pth, int32_t d, int32_t& found_d) {
     }
 }
 
+kiv_os::NOS_Error FAT::write(File f, size_t size, size_t offset, const char* buffer, size_t& written) {
+    std::vector<char> buf(buffer, buffer + size);
+    if (offset > f.size) { 
+        return kiv_os::NOS_Error::IO_Error;
+    }
+    std::vector<int> file_nums = retrieve_sectors_fs(int_fat_table, f.handle); 
+    size_t sector;
+    if (offset == 0) {
+        sector = 1;
+    }
+    else {
+        sector = (offset / 512) + 1;
+    }
+
+    if (sector > file_nums.size()) {
+        int result = aloc_cluster(file_nums.at(0), int_fat_table, fat_table);
+        if (result == -1) {
+            return kiv_os::NOS_Error::Not_Enough_Disk_Space;
+        }
+        file_nums.push_back(result);
+    }
+    int sector_num = file_nums.at(sector - 1);
+    int bytes_to_save_clust = offset % 512;
+
+    std::vector<unsigned char> data_last_clust = read_from_fs(sector_num, 1);
+    std::vector<unsigned char> data_to_write;
+
+    for (int i = 0; i < bytes_to_save_clust; i++) {
+        data_to_write.push_back(data_last_clust.at(i));
+    }
+
+    for (int i = 0; i < buf.size(); i++) {
+        data_to_write.push_back(buf.at(i));
+    }
+    std::string content_clust;
+    for (int i = 0; i < data_to_write.size(); i++) {
+        content_clust.push_back(data_to_write.at(i));
+    }
+
+    size_t written_bytes = 0 - static_cast<size_t>(bytes_to_save_clust);
+    size_t clusters_count = data_to_write.size() / 512 + (data_to_write.size() % 512 != 0);
+
+    std::vector<char> clust_data_write;
+    for (int i = 0; i < clusters_count; i++) {
+        if (i == (clusters_count - 1)) {
+            for (int j = 0; j < data_to_write.size() - (static_cast<size_t>(i) * 512); j++) {
+                clust_data_write.push_back(data_to_write.at(j + (static_cast<size_t>(i) * 512)));
+            }
+        }
+        else { 
+            for (int j = 0; j < 512; j++) {
+                clust_data_write.push_back(data_to_write.at(j + (static_cast<size_t>(i) * 512)));
+            }
+        }
+        if (sector - 1 + i < file_nums.size()) {
+            write_to_fs(file_nums.at(sector_num - 1 + i), clust_data_write);
+            written_bytes += clust_data_write.size();
+        }
+        else {
+            int free_clust_index = retrieve_free_index(int_fat_table);
+            if (free_clust_index == -1) {
+                save_fat(fat_table); 
+                size_t written_size = (offset + written_bytes) - f.size; 
+                if (written_size > 0) {
+                    update_file_size(f.name, offset, f.size, written_size, int_fat_table);
+                    f.size = f.size + written_size;
+                    written = written_bytes;
+                }
+                return kiv_os::NOS_Error::Not_Enough_Disk_Space; 
+            }
+           
+            int index_to_edit = file_nums.at(file_nums.size() - 1); 
+            int first_index_hex_tab = static_cast<int>(static_cast<double>(index_to_edit) * 1.5); 
+            char free_cluster_index_first = fat_table.at(first_index_hex_tab);
+            char free_cluster_index_sec = fat_table.at(static_cast<size_t>(first_index_hex_tab) + 1);
+            int_fat_table.at(file_nums.at(file_nums.size() - 1)) = free_clust_index;
+            int_fat_table.at(free_clust_index) = 4095;
+            std::vector<unsigned char> modified_bytes = num_to_bytes_fs(index_to_edit, fat_table, free_clust_index);
+            fat_table.at(static_cast<int>(static_cast<double>(index_to_edit) * 1.5)) = modified_bytes.at(0);
+            fat_table.at((static_cast<size_t>(static_cast<double>(index_to_edit) * 1.5)) + 1) = modified_bytes.at(1);
+
+            
+            first_index_hex_tab = static_cast<int>(static_cast<double>(free_clust_index) * 1.5); 
+            free_cluster_index_first = fat_table.at(first_index_hex_tab);
+            free_cluster_index_sec = fat_table.at(static_cast<size_t>(first_index_hex_tab) + 1);
+            modified_bytes = num_to_bytes_fs(free_clust_index, fat_table, 4095);
+            fat_table.at(static_cast<int>(static_cast<double>(free_clust_index) * 1.5)) = modified_bytes.at(0);
+            fat_table.at((static_cast<size_t>(static_cast<double>(free_clust_index) * 1.5)) + 1) = modified_bytes.at(1);
+           
+            write_to_fs(free_clust_index, clust_data_write); 
+            written_bytes += clust_data_write.size();
+        }
+        clust_data_write.clear();
+    }
+    save_fat(fat_table);
+    size_t written_size = (offset + written_bytes) - f.size;
+    if (written_size > 0) {
+        update_file_size(f.name, offset, f.size, written_size, int_fat_table);
+        f.size = f.size + written_size;
+    }
+    written = written_bytes;
+    return kiv_os::NOS_Error::Success;
+}
+
 
 

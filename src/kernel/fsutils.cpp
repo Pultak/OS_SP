@@ -897,3 +897,78 @@ int create_file(const char* path, uint8_t attr, std::vector<unsigned char>& fat_
 	}
 	return 0; 
 }
+
+void update_file_size(char* path, size_t offset, size_t org_size, size_t new_bytes_size, std::vector<int> int_fat_table) {
+	std::vector<std::string> folders = get_directories(path); 
+	std::string filename = folders.at(folders.size() - 1);
+	folders.pop_back();
+
+	int start_sector = -1;
+	std::vector<int> sectors_nums; 
+	if (folders.size() == 0) {
+		start_sector = 19;
+		for (int i = 19; i < 33; i++) {
+			sectors_nums.push_back(i);
+		}
+	}
+	else { 
+		directory_item target_folder = retrieve_item(19, int_fat_table, folders);
+		sectors_nums = retrieve_sectors_fs(int_fat_table, target_folder.first_cluster);
+		start_sector = sectors_nums.at(0);
+	}
+	std::vector<directory_item> items_folder = retrieve_folders_from_folder(int_fat_table, start_sector);
+
+	int target_index = -1;
+	for (int i = 0; i < items_folder.size(); i++) { 
+		std::string item_to_check = ""; 
+		directory_item dir_item = items_folder.at(i);
+		if (!dir_item.extension.empty()) {
+			item_to_check = dir_item.filename + "." + dir_item.extension;
+		}
+		else {
+			item_to_check = dir_item.filename;
+		}
+
+		if (item_to_check.compare(filename) == 0) {
+			target_index = i;
+			break;
+		}
+	}
+
+	if (folders.size() == 0) { 
+		target_index += 1;
+	}
+	else {
+		target_index += 2;
+	}
+
+	std::vector<unsigned char> new_file_size = dec_to_hex(org_size + new_bytes_size); 
+	int cluster_num = (target_index) / 16; 
+	int item_num_clust_rel = (target_index) % 16; 
+
+	std::vector<unsigned char> data_fol; 
+	if (folders.size() == 0) {
+		data_fol = read_from_fs(sectors_nums.at(cluster_num) - 31, 1);
+		data_fol.at(static_cast<size_t>(item_num_clust_rel) * 32 + 28) = new_file_size.at(0);
+		data_fol.at(static_cast<size_t>(item_num_clust_rel) * 32 + 29) = new_file_size.at(1);
+		data_fol.at(static_cast<size_t>(item_num_clust_rel) * 32 + 30) = new_file_size.at(2);
+		data_fol.at(static_cast<size_t>(item_num_clust_rel) * 32 + 31) = new_file_size.at(3);
+		std::vector<char> data_to_save;
+		for (int i = 0; i < data_fol.size(); i++) {
+			data_to_save.push_back(data_fol.at(i));
+		}
+		write_to_fs(sectors_nums.at(cluster_num) - 31, data_to_save);
+	}
+	else {
+		data_fol = read_from_fs(sectors_nums.at(cluster_num), 1);
+		data_fol.at(static_cast<size_t>(item_num_clust_rel) * 32 + 28) = new_file_size.at(0);
+		data_fol.at(static_cast<size_t>(item_num_clust_rel) * 32 + 29) = new_file_size.at(1);
+		data_fol.at(static_cast<size_t>(item_num_clust_rel) * 32 + 30) = new_file_size.at(2);
+		data_fol.at(static_cast<size_t>(item_num_clust_rel) * 32 + 31) = new_file_size.at(3);
+		std::vector<char> data_to_save;
+		for (int i = 0; i < data_fol.size(); i++) {
+			data_to_save.push_back(data_fol.at(i));
+		}
+		write_to_fs(sectors_nums.at(cluster_num), data_to_save);
+	}
+}
