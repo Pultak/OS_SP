@@ -19,6 +19,9 @@ public:
 
 	kiv_os::NOS_Error write(File f, size_t size, size_t offset, const char* buffer, size_t& written) override;
 
+	kiv_os::NOS_Error read(File f, size_t size, size_t offset, std::vector<char>& out) override;
+
+	std::vector<char> convert_dirs_to_chars(const std::vector<kiv_os::TDir_Entry>& directories) override;
 
 	~FAT() {}
 
