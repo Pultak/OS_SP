@@ -55,5 +55,7 @@ extern "C" size_t __stdcall rgen(const kiv_hal::TRegisters& regs)
 		counter++;
 	}
 
+	kiv_os_rtl::Close_Handle(stdin_thread);
+
 	return 0;
 }

@@ -17,6 +17,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 	char directory[buffer_size];
 	size_t counter;
 	std::vector<Program> program_vector;
+	bool continue_flag = true;
 	
 	const char* intro = "Vitejte v kostre semestralni prace z KIV/OS.\n" \
 						"Shell zobrazuje echo zadaneho retezce. Prikaz exit ukonci shell.\n";
@@ -35,7 +36,11 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 			program_vector = ProcessLine(buffer);
 			for (auto it = program_vector.begin(); it != program_vector.end(); it++)
 			{
-				if (strcmp(it->command.c_str(), "echo") == 0)
+				if (strcmp(it->command.c_str(), "exit") == 0) {
+					continue_flag = false;
+					break;
+				}
+				else if (strcmp(it->command.c_str(), "echo") == 0)
 				{
 					if (strcmp(it->argument.c_str(), "on") == 0)
 					{
@@ -105,7 +110,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 		}
 		else
 			break;	//EOF
-	} while (strcmp(buffer, "exit") != 0);
+	} while (continue_flag);
 
 	
 
