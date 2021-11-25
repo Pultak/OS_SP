@@ -100,7 +100,6 @@ static void ExecuteCommand(char* command, char* arg)
 {
 	if (strcmp(command, "echo") == 0)
 	{
-		echo_prot(arg);
 	}
 }
 

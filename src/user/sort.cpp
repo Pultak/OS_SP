@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include <queue>
-#include <locale>
 #include <iostream>
 
 extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
@@ -12,15 +11,15 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 	const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
 	const kiv_os::THandle std_out = static_cast<kiv_os::THandle>(regs.rbx.x);
 	const char* path = reinterpret_cast<const char*>(regs.rdi.r);
-	kiv_os::THandle file_handle;
+	kiv_os::THandle file_handle = kiv_os::Invalid_Handle;
 	bool read_from_file = false;
 	bool flag_continue = true;
 	std::vector<std::string> files;
 	const size_t buffer_size = 256;
 	char buffer[buffer_size];
-	size_t counter;
-	std::string file;
-	size_t written;
+	size_t counter = 0;
+	std::string file = "";
+	size_t written = 0;
 	const char* new_line = "\n";
 
 
