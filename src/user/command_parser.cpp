@@ -81,12 +81,25 @@ static int CountCommands(char* line)
 	return count;
 }
 
+/* Counts number of pipes */
+static int CountPipes(std::vector<Program> vector)
+{
+	int count = 0;
+	for (auto program : vector)
+	{
+		if (program.pipe_out == true)
+		{
+			count++;
+		}
+	}
+	return count;
+}
+
 /* Executes a command - input: char* command, char* argument */
 static void ExecuteCommand(char* command, char* arg)
 {
 	if (strcmp(command, "echo") == 0)
 	{
-		echo_prot(arg);
 	}
 }
 
@@ -120,12 +133,14 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 	{
 		program_ret.command = command;
 		program_ret.redirection_in = true;
+		program_ret.file = true;
 		return program_ret;
 	}
 	if (operation_left == '<')
 	{
 		program_ret.command = command;
 		program_ret.redirection_out = true;
+		program_ret.file = true;
 		return program_ret;
 	}
 	//set redirection and pipe flags for other cases
@@ -174,7 +189,7 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 	RemoveLeadingWhitespace(argument_result);
 	program_ret.argument = argument_result;
 
-	ExecuteCommand(command_result, argument_result);
+	//ExecuteCommand(command_result, argument_result);
 	return program_ret;
 }
 
@@ -239,23 +254,113 @@ std::vector<Program> ProcessLine(char* line)
 	return vector_program_ret;
 }
 
-void Execute_Commands(std::vector<Program> program_vector) {
+void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegisters& regs) {
 
-	Program test = program_vector.at(0);
-	kiv_os::THandle process_handle;
-	kiv_os::THandle signal_ret;
+	size_t index = 0;
 	uint16_t exit_code = 0;
+	kiv_os::THandle in = regs.rax.x;
+	kiv_os::THandle out = regs.rbx.x;
+	kiv_os::THandle current_pipe[2] = { kiv_os::Invalid_Handle, kiv_os::Invalid_Handle };
+	kiv_os::THandle process_handle = kiv_os::Invalid_Handle;
+	kiv_os::THandle signal_ret;
+	std::vector<kiv_os::THandle> processes_handles;
+	std::vector<kiv_os::THandle> pipes_in;
+	std::vector<kiv_os::THandle> pipes_out;
+	std::vector<Program> running_processes;
 
-	//print program
-	test.Print();
 
-	kiv_os_rtl::Create_Process(test.command.c_str(), test.argument.c_str(), kiv_os::Invalid_Handle, kiv_os::Invalid_Handle, process_handle);
 
-	kiv_os::THandle handles[1]= { process_handle };
-	kiv_os_rtl::Wait_For(handles, 1, signal_ret);
-	kiv_os_rtl::Read_Exit_Code(signal_ret, exit_code);
+	for (auto& program : program_vector)
+	{
+		//might need to transfer |
+		if (strcmp(program.command.c_str(), "cd") == 0)
+		{
+			continue;
+		}
+		else if (strcmp(program.command.c_str(), "echo") == 0 && 
+				(strcmp(program.argument.c_str(), "on") == 0 || strcmp(program.argument.c_str(), "off") == 0))
+		{
+			continue;
+		}
+		else if(program.file)
+		{
+			continue;
+		}
+		if (program.redirection_in)
+		{
+			auto result = kiv_os_rtl::Open_File(program_vector.at(index+1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, in);
+			std::cout << "result: " << result;
+		}
+		if (program.redirection_out)
+		{
+			//kiv_os_rtl::Open_File(program_vector.at(index+1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, out);
+		}
+		if (program.pipe_in)
+		{
+			in = current_pipe[0];
+			pipes_in.push_back(in);
+		}
+		if (program.pipe_out)
+		{
+			kiv_os_rtl::Create_Pipe(current_pipe);
+			out = current_pipe[1];
+			pipes_out.push_back(out);
+		}
+		program.Print();
 
-	//print exit code
-	std::cout << "exit code: " << exit_code << "\n";
+		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), in, out, process_handle);
+		if (!success)
+		{
+			std::cout << "\nInvalid argument\n";
+		}
+		else
+		{
+			processes_handles.push_back(process_handle);
+			running_processes.push_back(program);
+		}
+		index++;
+	}
+
+	auto it = processes_handles.begin();
+
+	/*while (processes_handles.size())
+	{
+		kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
+		// -1 fix --- remove later
+		kiv_os_rtl::Read_Exit_Code(processes_handles.at(signal_ret-1), exit_code);
+
+		if (running_processes.at(signal_ret - 1).pipe_in)
+		{
+			kiv_os_rtl::Close_Handle(pipes_in.at(0));
+			pipes_in.erase(pipes_in.begin());
+		}
+		if (running_processes.at(signal_ret - 1).pipe_out)
+		{
+			kiv_os_rtl::Close_Handle(pipes_out.at(0));
+			pipes_out.erase(pipes_out.begin());
+		}
+
+		processes_handles.erase(it + signal_ret);
+	}*/
+	while (!processes_handles.empty()) {
+		kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
+
+		kiv_os_rtl::Read_Exit_Code(processes_handles[signal_ret], exit_code);
+
+		//print exit code
+		std::cout << "\nexit code: " << exit_code << "\n";
+		processes_handles.erase(processes_handles.begin() + signal_ret);
+	}
+
+	for (auto pipe : pipes_in)
+	{
+		kiv_os_rtl::Close_Handle(pipe);
+	}
+	for (auto pipe : pipes_out)
+	{
+		kiv_os_rtl::Close_Handle(pipe);
+	}
+
+
 
 }

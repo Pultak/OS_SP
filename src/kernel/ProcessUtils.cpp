@@ -139,6 +139,10 @@ void ProcessUtils::cloneThread(kiv_hal::TRegisters& registers) {
 void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock) {
     lock->lock();
     delete lock;
+
+	const char* arg = reinterpret_cast<char*>(registers.rdi.r);
+
+
     userProgram(registers);
 
     //after program is finished:
@@ -149,7 +153,6 @@ void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TTh
 
     thisProcess->state = ProcessState::Terminated;
     thisProcess->notifyRemoveListeners();
-    
 }
 
 void ProcessUtils::threadStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock) {

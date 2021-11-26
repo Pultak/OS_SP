@@ -1,4 +1,4 @@
 #pragma once
 #include "rtl.h"
 
-void echo_prot(char* input);
+extern "C" size_t __stdcall echo(const kiv_hal::TRegisters& regs);
