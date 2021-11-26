@@ -5,16 +5,15 @@ size_t __stdcall ProcessUtils::defaultSignalHandler(const kiv_hal::TRegisters& r
 
     switch (signal_id) {
         case kiv_os::NSignal_Id::Terminate: {
-            //todo kill the system or something idk
-            printf("Terminate called!");
+            //kill the system or something idk
+            shutdown();
             break;
         }
         default: {
-            printf("Default signal handler called!");
+            //Default signal handler called
             break;
         }
     }
-
     return 0;
 };
 
@@ -40,21 +39,25 @@ void ProcessUtils::HandleProcess(kiv_hal::TRegisters& registers, HMODULE user_pr
         registerSignalHandler(registers);
         break;
     default:
+        registers.flags.carry = 1;
+        registers.rax.r = static_cast<uint64_t>(kiv_os::NOS_Error::Invalid_Argument);
         break;
     }
 }
 
 void ProcessUtils::clone(kiv_hal::TRegisters& registers, HMODULE userSpaceLib) {
     switch (static_cast<kiv_os::NClone>(registers.rcx.l)) {
-    case kiv_os::NClone::Create_Process: {
-        //spousteni noveho programu 
-        cloneProcess(registers, userSpaceLib);
-        break;
-    }
-    case kiv_os::NClone::Create_Thread: {
-        //todo usefull?
-        break;
-    }
+        case kiv_os::NClone::Create_Process: {
+            cloneProcess(registers, userSpaceLib);
+            break;
+        }
+        case kiv_os::NClone::Create_Thread: {
+            cloneThread(registers);
+            break;
+        }default:
+            registers.flags.carry = 1;
+            registers.rax.r = static_cast<uint64_t>(kiv_os::NOS_Error::Invalid_Argument);
+            return;
     }
 }
 
@@ -63,8 +66,9 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
     auto programName = (char*)registers.rdx.r;
     auto progFuncAddress = (kiv_os::TThread_Proc)GetProcAddress(userSpaceLib, programName);
 
-    //does this function even exist?
+    //does the user function even exist?
     if (progFuncAddress) {
+        //get the passed input and output handles
         kiv_os::THandle stdIn = (registers.rbx.e >> 16) & 0xFFFF;
         kiv_os::THandle stdOut = registers.rbx.e & 0xFFFF;
 
@@ -76,17 +80,19 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
 
         Synchronization::Spinlock* synchLock = new Synchronization::Spinlock(true);
         std::thread t1(processStartPoint, newProcessRegs, progFuncAddress, synchLock);
-        auto tHandle = handles::Convert_Native_Handle(t1.get_id(), t1.native_handle());
 
+        //init the handle of the new process
+        auto tHandle = handles::Convert_Native_Handle(t1.get_id(), t1.native_handle(), kiv_os::Invalid_Handle);
         auto thisHandle = handles::getTHandleById(std::this_thread::get_id());
         //is actual process inside pcb?
         Process* thisProcess = pcb->getProcess(thisHandle);
-        std::filesystem::path workingDir = thisProcess ? thisProcess->workingDirectory : "C://";
+        std::filesystem::path workingDir = thisProcess ? thisProcess->workingDirectory : "C:\\";
 
         pcb->AddNewProcess(tHandle, stdIn, stdOut, programName, workingDir);
 
         // return new process handle
-        registers.rax.x = tHandle;
+        registers.rax.x = tHandle; 
+        registers.flags.carry = 0;
         synchLock->unlock();
         t1.detach();
     }
@@ -95,6 +101,40 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
         registers.rax.x = (uint16_t)kiv_os::NOS_Error::Invalid_Argument;
     }
 }
+void ProcessUtils::cloneThread(kiv_hal::TRegisters& registers) {
+    kiv_os::TThread_Proc progAddr = (kiv_os::TThread_Proc)registers.rdx.r;
+
+    //does the user function even exist?
+    if(progAddr){
+        kiv_hal::TRegisters threadRegs{};
+        //copy parameters from process
+        threadRegs.rdi.r = registers.rdi.r;
+
+        //lock to keep the thread locked until initialization done
+        Synchronization::Spinlock* synchLock = new Synchronization::Spinlock(true);
+        std::thread t1(ProcessUtils::threadStartPoint, threadRegs, progAddr, synchLock);
+
+        auto parentHandle = handles::getTHandleById(std::this_thread::get_id());
+        //create new handle with the reference to parent
+        auto threadHandle = handles::Convert_Native_Handle(t1.get_id(), t1.native_handle(), parentHandle);
+
+        auto parentProcess = pcb->getProcess(parentHandle);
+        if (parentProcess) {
+            parentProcess->addNewThread(threadHandle);
+        }
+        //return new handle to the userspace
+        registers.rax.x = threadHandle;
+        registers.flags.carry = 0;
+
+        synchLock->unlock();
+        t1.detach();
+    }
+    else {
+        registers.flags.carry = 1;
+        registers.rax.x = (uint16_t)kiv_os::NOS_Error::Invalid_Argument;
+    }
+}
+
 
 void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock) {
     lock->lock();
@@ -106,29 +146,36 @@ void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TTh
     userProgram(registers);
 
     //after program is finished:
-
     auto handle = handles::getTHandleById(std::this_thread::get_id());
 
-    //maybe different for thread?
     Process* thisProcess = pcb->getProcess(handle);
-
-    thisProcess->state = ProcessState::Terminated;
     handles::Remove_Handle(handle);
 
-    thisProcess->listenersLock->lock();
-    for (auto const& listener : thisProcess->listeners) {
-        //wake up the slave
-        if (!listener->notified) {
-            listener->lock->unlock();
-        }
-    }
-    thisProcess->listeners.clear();
-    thisProcess->listenersLock->unlock();
+    thisProcess->state = ProcessState::Terminated;
+    thisProcess->notifyRemoveListeners();
 }
 
-void ProcessUtils::threadStartPoint() {
-    //todo thread_clone implementation needed first
+void ProcessUtils::threadStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock) {
+    lock->lock();
+    delete lock;
+    userProgram(registers);
 
+    //instructions after program end:
+    kiv_os::THandle threadHandle = handles::getTHandleById(std::this_thread::get_id());
+
+    auto parentHandle = handles::getParentTHandleById(std::this_thread::get_id());
+    handles::removeHandleById(std::this_thread::get_id(), true);
+    if (parentHandle != kiv_os::Invalid_Handle) {
+        //get parent process to remove thread from process tcb
+        auto parentProcess = pcb->getProcess(parentHandle);
+        if (parentProcess){
+            auto thread = parentProcess->getThread(threadHandle);
+            if (thread) {
+                thread->notifyRemoveListeners();
+            }
+            parentProcess->removeThread(threadHandle);
+        }
+    }
 }
 
 
@@ -138,18 +185,15 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
 
 
     kiv_os::THandle thisHandle = handles::getTHandleById(std::this_thread::get_id());
-    if (thisHandle == kiv_os::Invalid_Handle) {
-        //todo invalidWaitForRequest(0, handles, thisHandle);
-        //thisHandle = 0;
-    }
     kiv_os::THandle actualHandle = kiv_os::Invalid_Handle;
 
-    auto listener = new SleepListener(thisHandle);  ;
-    for (int i = 0; i < handleCount; ++i) {
-        actualHandle = handles[i];
+    auto listener = new SleepListener(thisHandle); 
+    int index = 0;
+    for (index = 0; index < handleCount; ++index) {
+        actualHandle = handles[index];
         if (handles::Resolve_kiv_os_Handle(actualHandle) == INVALID_HANDLE_VALUE) {
             //found invalid handle!
-            //invalidWaitForRequest(i, handles, thisHandle);
+            removeAssignedListener(i, handles, thisHandle);
             delete listener;
             registers.rax.l = i;
             return;
@@ -157,51 +201,33 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
         else {
             Process* process = pcb->getProcess(actualHandle);
             if (process->state != ProcessState::Terminated) {
-                process->listenersLock->lock();
-                process->listeners.push_back(listener);
-                process->listenersLock->unlock();
+                process->addListener(listener);
             }
             else {
                 //process is already dead -> no reason to keep listener locked
+                removeAssignedListener(index, handles, thisHandle);
                 delete listener;
-                registers.rax.l = i;
+                registers.rax.l = index;
                 return;
             }
         }
     }
-    int index = 0;
     listener->lock->lock();
+    auto notifiedHandle = listener->sleeperHandle;
     delete listener;
     //return last index of handle
     registers.rax.l = index;
 
 }
-
-void ProcessUtils::invalidWaitForRequest(const int alreadyDone, const kiv_os::THandle* handles, const kiv_os::THandle thisHandle) {
+void ProcessUtils::removeAssignedListener(const int alreadyDone, const kiv_os::THandle* handles, const kiv_os::THandle thisHandle) {
     for (int i = 0; i < alreadyDone; i++) {
         // load a handle
         auto handle = handles[i];
         Process* process = pcb->getProcess(handle);
         if (process) {
-            process->listenersLock->lock();
-            auto i = process->listeners.begin();
-            while (i != process->listeners.end()) {
-                //remove all inserted listeners
-                if ((*i)->sleeperHandle == thisHandle) {
-
-                    process->listeners.erase(i++);
-                }
-            }
-            process->listenersLock->unlock();
-        }
-        else {
-            //process already finished
+            process->removeListener(thisHandle);
         }
     }
-
-    //todo set flags?
-
-
 }
 
 
@@ -215,20 +241,12 @@ void ProcessUtils::exit(kiv_hal::TRegisters& registers) {
             exitingProcess->exitCode = exitCode;
             exitingProcess->state = ProcessState::Terminated;
         }
-        else {
-            //todo what now? Process is missing  
-        }
-
     }
-    else {
-        //todo missing handle
-    }
-
 }
 
 void ProcessUtils::readExitCode(kiv_hal::TRegisters& registers) {
     auto resultExitCode = kiv_os::NOS_Error::Unknown_Error;
-    kiv_os::THandle handle = registers.rdx.x;
+    kiv_os::THandle handle = static_cast<kiv_os::THandle>(registers.rdx.x);
 
     //is handle of active thread?
     if (handle != kiv_os::Invalid_Handle) {
@@ -238,11 +256,13 @@ void ProcessUtils::readExitCode(kiv_hal::TRegisters& registers) {
             pcb->removeProcess(handle);
         }
         else {
-            //todo process missing or not yet finished
+            //process missing or not yet finished or the handle is of thread
+            registers.flags.carry = 1;
         }
     }
     else {
-        //todo handle missing
+        resultExitCode = kiv_os::NOS_Error::Invalid_Argument;
+        registers.flags.carry = 1;
     }
     registers.rcx.x = static_cast<uint16_t>(resultExitCode);
 }
@@ -253,7 +273,6 @@ void ProcessUtils::shutdown() {
     pcb->signalProcesses(kiv_os::NSignal_Id::Terminate);
 
     //todo jeste neco? zavrit files?
-
 
 }
 
