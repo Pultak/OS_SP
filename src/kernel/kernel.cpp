@@ -10,7 +10,7 @@ HMODULE User_Programs;
 
 void Initialize_Kernel() {
 	User_Programs = LoadLibraryW(L"user.dll");
-	InitFilesystems();
+	filesystems::InitFilesystems();
 }
 
 void Shutdown_Kernel() {

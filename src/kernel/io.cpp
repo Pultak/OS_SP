@@ -238,7 +238,7 @@ void io::SeekFsFile(kiv_hal::TRegisters& regs){
 
 	//todo instanceof working?
 	//non null and is handle of file
-	if (ioHandle != nullptr && std::is_base_of<FileHandle, ioHandle>::value) {
+	if (ioHandle != nullptr && instanceof<FileHandle>(ioHandle)) {
 		FileHandle* fileHandle = dynamic_cast<FileHandle*>(ioHandle);
 		auto type = static_cast<kiv_os::NFile_Seek>(regs.rcx.l);
 		auto operation = static_cast<kiv_os::NFile_Seek>(regs.rcx.h);
@@ -246,7 +246,7 @@ void io::SeekFsFile(kiv_hal::TRegisters& regs){
 
 		size_t resultPosition;
 
-		errorCode = fileHandle.seek(position, type, operation, resultPosition);
+		errorCode = fileHandle->seek(position, type, operation, resultPosition);
 		//is everything ok?
 		if (errorCode == kiv_os::NOS_Error::Success) {
 			if (operation == kiv_os::NFile_Seek::Get_Position) {
@@ -281,7 +281,14 @@ void io::CloseIOHandle(kiv_hal::TRegisters& regs){
 }
 
 void io::DeleteFsFile(kiv_hal::TRegisters& regs){
+	char* file_name = reinterpret_cast<char*>(regs.rdx.r);
 
+	kiv_os::NOS_Error errorCode = kiv_os::NOS_Error::Unknown_Error;
+
+	//todo join every shit together
+
+	regs.rax.r = static_cast<uint64_t>(errorCode);
+	regs.flags.carry = 1;
 }
 
 void io::SetWorkingDirectory(kiv_hal::TRegisters& regs){
@@ -346,9 +353,49 @@ void io::GetWorkingDirectory(kiv_hal::TRegisters& regs) {
 	regs.flags.carry = 1;
 }
 void io::SetFileAttribute(kiv_hal::TRegisters& regs){
+	char* file = reinterpret_cast<char*>(regs.rdx.r);
+	auto attributes = static_cast<kiv_os::NFile_Attributes>(regs.rdi.i);
+
+	std::filesystem::path inputPath = file;
+	std::string fileName = inputPath.filename().string();
+	auto fs = filesystems::Filesystem_exists(inputPath);
+	//error if everything fails
+	kiv_os::NOS_Error errorCode = kiv_os::NOS_Error::Unknown_Error;
+	if (fs) {
+		//toodo some kind of relative path
+		errorCode = fs->set_file_attribute(inputPath.relative_path().string().c_str(), attributes);
+		if (errorCode == kiv_os::NOS_Error::Success) {
+
+			return;
+		}
+	}else {
+		errorCode = kiv_os::NOS_Error::Unknown_Filesystem;
+	}
+	regs.rax.r = static_cast<uint64_t>(errorCode);
+	regs.flags.carry = 1;
+
 }
 
 void io::GetFileAttribute(kiv_hal::TRegisters& regs){
+	char* file = reinterpret_cast<char*>(regs.rdx.r);
+
+	std::filesystem::path inputPath = file;
+	std::string fileName = inputPath.filename().string();
+	auto fs = filesystems::Filesystem_exists(inputPath);
+	//error if everything fails
+	kiv_os::NOS_Error errorCode = kiv_os::NOS_Error::Unknown_Error;
+	if (fs) {
+		kiv_os::NFile_Attributes attr;
+		errorCode = fs->get_file_attribute(inputPath.relative_path().string().c_str(), attr);
+		if (errorCode == kiv_os::NOS_Error::Success) {
+			regs.rdi.i = static_cast<uint16_t>(attr);
+			return;
+		}
+	}else {
+		errorCode = kiv_os::NOS_Error::Unknown_Filesystem;
+	}
+	regs.rax.r = static_cast<uint64_t>(errorCode);
+	regs.flags.carry = 1;
 }
 
 void io::CreatePipe(kiv_hal::TRegisters& regs){

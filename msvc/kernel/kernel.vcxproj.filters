@@ -16,6 +16,7 @@
     <ClCompile Include="..\..\src\kernel\Synchronization.cpp" />
     <ClCompile Include="..\..\src\kernel\PipeUtils.cpp" />
     <ClCompile Include="..\..\src\kernel\IOHandle.cpp" />
+    <ClCompile Include="..\..\src\kernel\FileHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
@@ -37,5 +38,6 @@
     <ClInclude Include="..\..\src\kernel\IOHandle.h" />
     <ClInclude Include="..\..\src\kernel\Thread.h" />
     <ClInclude Include="..\..\src\kernel\VGAHandle.h" />
+    <ClCompile Include="..\..\src\kernel\FileHandle.h" />
   </ItemGroup>
 </Project>

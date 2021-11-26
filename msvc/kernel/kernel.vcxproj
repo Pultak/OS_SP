@@ -34,6 +34,7 @@
     <ClCompile Include="..\..\src\kernel\ProcessUtils.cpp" />
     <ClCompile Include="..\..\src\kernel\SleepListener.cpp" />
     <ClCompile Include="..\..\src\kernel\Synchronization.cpp" />
+    <ClCompile Include="..\..\src\kernel\FileHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
@@ -55,6 +56,7 @@
     <ClInclude Include="..\..\src\kernel\Synchronization.h" />
     <ClInclude Include="..\..\src\kernel\Thread.h" />
     <ClInclude Include="..\..\src\kernel\VGAHandle.h" />
+    <ClCompile Include="..\..\src\kernel\FileHandle.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B4305463-59C5-40C3-9A1A-92976A40562D}</ProjectGuid>

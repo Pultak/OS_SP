@@ -12,10 +12,14 @@
 #include "VGAHandle.h"
 #include "KeyboardHandle.h"
 #include <string>
+#include "FileHandle.h"
 
 namespace io{
 	//std::set<int> used;
-
+	template<typename Base, typename T>
+	inline bool instanceof(const T*) {
+		return std::is_base_of<Base, T>::value;
+	}
 
 	kiv_os::THandle addIoHandle(IOHandle* handle);
 	IOHandle* getIoHandle(kiv_os::THandle handle);
@@ -28,7 +32,7 @@ namespace io{
 	void OpenIOHandle(kiv_hal::TRegisters& regs);
 	void WriteIOHandle(kiv_hal::TRegisters& regs);
 	void ReadIOHandle(kiv_hal::TRegisters& regs);
-	void SeekIOHandle(kiv_hal::TRegisters& regs);
+	void SeekFsFile(kiv_hal::TRegisters& regs);
 	void CloseIOHandle(kiv_hal::TRegisters& regs);
 	void DeleteFsFile(kiv_hal::TRegisters& regs);
 	void SetWorkingDirectory(kiv_hal::TRegisters& regs);
