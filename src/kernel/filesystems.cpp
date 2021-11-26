@@ -74,7 +74,6 @@ VFS* filesystems::Filesystem_exists(std::filesystem::path path, std::filesystem:
 IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File flags, uint8_t attributes, kiv_os::NOS_Error& error) {
 	std::filesystem::path resolved_path_relative_to_fs;
 	std::filesystem::path absolute_path;
-
 	std::filesystem::path input_path = input_file_name;
 	std::string file_name = input_path.filename().string();
 	auto fs = Filesystem_exists(input_path, resolved_path_relative_to_fs, absolute_path);
@@ -85,7 +84,8 @@ IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File
 		strcpy_s(name, length, resolved_path_relative_to_fs.string().c_str());
 		
 		File f{};
-		auto result = fs->open("slozka4\\slozka5\\slozka6", flags, attributes, f);
+		auto result = fs->open("slozka4\\slozka5", flags, attributes, f);
+		//auto result = fs->rmdir("slozka4\\slozka5");
 		if (result == kiv_os::NOS_Error::Success) {
 			printf(" pridan soubor ");
 		}
