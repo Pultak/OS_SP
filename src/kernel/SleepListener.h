@@ -12,7 +12,7 @@ public:
 public:
 	kiv_os::THandle sleeperHandle;
 	std::unique_ptr<Synchronization::Spinlock> lock;
+	bool notified = false;
 
 
 };
-

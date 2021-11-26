@@ -37,13 +37,29 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 
 	kiv_hal::TRegisters regs{};
 	
-	
+	//get address of shell function
 	kiv_os::TThread_Proc shell = (kiv_os::TThread_Proc)GetProcAddress(User_Programs, "shell");
 	if (shell) {
+		//first open STDIN and STDOUT
+		regs.rdx.r = reinterpret_cast<uint64_t>("\\stdout\\");
+		io::OpenIOHandle(regs);
+		if (regs.flags.carry) {
+			//something failed -> copy error code
+			context.flags.carry = 1;
+			context.rax.r = regs.rax.x;
+			return;
+		}
+		kiv_os::THandle std_out = regs.rax.x;
 
-		//todo get STDIN and STDOUT
-		kiv_os::THandle std_out = 1;
-		kiv_os::THandle std_in = 2;
+		regs.rdx.r = reinterpret_cast<uint64_t>("\\stdout\\");
+		io::OpenIOHandle(regs);
+		if (regs.flags.carry) {
+			//something failed -> copy error code
+			context.flags.carry = 1;
+			context.rax.r = regs.rax.x;
+			return;
+		}
+		kiv_os::THandle std_in = regs.rax.x;
 
 		char* shellFunction = "shell";
 		//rax for HandleProcess switch -> not needed now 
@@ -53,24 +69,54 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 		regs.rdi.r = reinterpret_cast<uint64_t>(""); //no arguments atm
 
 		ProcessUtils::clone(regs, User_Programs);	
-		
+		if (regs.flags.carry) {
+			//something failed -> copy error code
+			context.flags.carry = 1;
+			context.rax.r = regs.rax.x;
+			return;
+		}
 		
 		auto processHandle = static_cast<kiv_os::THandle>(regs.rax.x); //get the handle of the newly created process
 		kiv_os::THandle handles[1];
 		handles[0] = processHandle;
 		regs.rcx.l = 1; // Only one handle
 		regs.rdx.r = reinterpret_cast<uint64_t>(handles);
+		//waiting for the child process
 		ProcessUtils::waitFor(regs);
-
 
 		regs.rdx.x = processHandle;
 		ProcessUtils::readExitCode(regs);
+		if (regs.flags.carry) {
+			//something failed -> copy error code
+			context.flags.carry = 1;
+			context.rax.r = regs.rax.x;
+			return;
+		}
 
-		//todo close STDIN and STDOUT
+		//close STDIN and STDOUT
+		regs.rdx.x = std_in;
+		io::CloseIOHandle(regs);
+		if (regs.flags.carry) {
+			//something failed -> copy error code
+			context.flags.carry = 1;
+			context.rax.r = regs.rax.x;
+			return;
+		}
+
+		regs.rdx.x = std_out;
+		io::CloseIOHandle(regs);
+		if (regs.flags.carry) {
+			//something failed -> copy error code
+			context.flags.carry = 1;
+			context.rax.r = regs.rax.x;
+			return;
+		}
 
 	}
-
-
+	else {
+		//shell function not found
+		Set_Error(true, context);
+	}
 	Shutdown_Kernel();
 }
 
