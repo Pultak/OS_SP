@@ -23,6 +23,10 @@ public:
 
 	std::vector<char> convert_dirs_to_chars(const std::vector<kiv_os::TDir_Entry>& directories) override;
 
+	kiv_os::NOS_Error set_file_attribute(const char* name, uint8_t attribute) override;
+
+	kiv_os::NOS_Error get_file_attribute(const char* name, uint8_t& out_attribute) override;
+
 	~FAT() {}
 
 private:

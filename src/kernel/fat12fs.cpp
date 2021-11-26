@@ -480,7 +480,139 @@ kiv_os::NOS_Error FAT::write(File f, size_t size, size_t offset, const char* buf
     return kiv_os::NOS_Error::Success;
 }
 
+kiv_os::NOS_Error FAT::set_file_attribute(const char* name, uint8_t attribute) {
+    std::vector<std::string> folders = get_directories(name); 
+    std::string filename = folders.at(folders.size() - 1);
+    folders.pop_back();
 
+    int start = -1;
+    std::vector<int> sectors;
+    if (folders.size() == 0) {
+        start = 19;
+        for (int i = 19; i < 33; i++) {
+            sectors.push_back(i);
+        }
+    }
+    else {
+        directory_item target = retrieve_item(19, int_fat_table, folders);
+        sectors = retrieve_sectors_fs(int_fat_table, target.first_cluster);
+        start = sectors.at(0);
+    }
+    if (start == -1) {
+        return kiv_os::NOS_Error::File_Not_Found;
+    }
 
+    int target_index = 0;
+    std::vector<directory_item> item_folder = retrieve_folders_from_folder(int_fat_table, start);
+    for (int i = 0; i < item_folder.size(); i++) {
+        std::string item_to_check = "";
+        directory_item dir_item = item_folder.at(i);
 
+        if (!dir_item.extension.empty()) {
+            item_to_check = dir_item.filename + "." + dir_item.extension;
+        }
+        else {
+            item_to_check = dir_item.filename;
+        }
 
+        if (item_to_check.compare(filename) == 0) { 
+            target_index = i;
+            break;
+        }
+    }
+    if (target_index == 0) {
+        return kiv_os::NOS_Error::File_Not_Found;
+    }
+    if (folders.size() == 0) {
+        target_index += 1;
+    }
+    else {
+        target_index += 2;
+    }
+
+    int clust_num = (target_index) / 16; 
+    int clust_rel = (target_index) % 16;
+    std::vector<unsigned char> data_fol; 
+    if (folders.size() == 0) {
+        data_fol = read_from_fs(sectors.at(clust_num) - 31, 1);
+        data_fol.at(static_cast<size_t>(clust_rel) * 32 + 11) = attribute;
+        std::vector<char> data_to_save;
+        for (int i = 0; i < data_fol.size(); i++) {
+            data_to_save.push_back(data_fol.at(i));
+        }
+        write_to_fs(sectors.at(clust_num) - 31, data_to_save);
+    }
+    else {
+        data_fol = read_from_fs(sectors.at(clust_num), 1);
+        data_fol.at(static_cast<size_t>(clust_rel) * 32 + 11) = attribute;
+        std::vector<char> data_to_save;
+        for (int i = 0; i < data_fol.size(); i++) {
+            data_to_save.push_back(data_fol.at(i));
+        }
+        write_to_fs(sectors.at(clust_num), data_to_save);
+    }
+    return kiv_os::NOS_Error::Success;
+}
+
+kiv_os::NOS_Error FAT::get_file_attribute(const char* name, uint8_t& out_attribute) {
+    std::vector<std::string> folders = get_directories(name);
+    std::string filename = folders.at(folders.size() - 1);
+    folders.pop_back();
+
+    int start = -1;
+    std::vector<int> sectors_data;
+    if (folders.size() == 0) {
+        start = 19;
+        for (int i = 19; i < 33; i++) {
+            sectors_data.push_back(i);
+        }
+    }
+    else {
+        directory_item target_folder = retrieve_item(19, int_fat_table, folders);
+        sectors_data = retrieve_sectors_fs(int_fat_table, target_folder.first_cluster);
+        start = sectors_data.at(0);
+    }
+    if (start == -1) {
+        return kiv_os::NOS_Error::File_Not_Found;
+    }
+
+    std::vector<directory_item> folder = retrieve_folders_from_folder(int_fat_table, start);
+
+    int target_index = 0;
+    for (int i = 0; i < folder.size(); i++) {
+        std::string item_to_check = "";
+        directory_item dir_item = folder.at(i);
+        if (!dir_item.extension.empty()) {
+            item_to_check = dir_item.filename + "." + dir_item.extension;
+        }
+        else {
+            item_to_check = dir_item.filename;
+        }
+        if (item_to_check.compare(filename) == 0) {
+            target_index = i;
+            break;
+        }
+    }
+    if (target_index == -1) {
+        return kiv_os::NOS_Error::File_Not_Found;
+    }
+    if (folders.size() == 0) {
+        target_index += 1;
+    }
+    else {
+        target_index += 2;
+    }
+
+    int clust_num = (target_index) / 16;
+    int clust_rel = (target_index) % 16;
+    std::vector<unsigned char> data_fol;
+    if (folders.size() == 0) {
+        data_fol = read_from_fs(sectors_data.at(clust_num) - 31, 1);
+        out_attribute = data_fol.at(static_cast<size_t>(clust_rel) * 32 + 11);
+    }
+    else {
+        data_fol = read_from_fs(sectors_data.at(clust_num), 1);
+        out_attribute = data_fol.at(static_cast<size_t>(clust_rel) * 32 + 11);
+    }
+    return kiv_os::NOS_Error::Success;
+}
