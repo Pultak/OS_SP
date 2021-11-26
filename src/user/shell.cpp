@@ -3,6 +3,9 @@
 #include "rtl.h"
 #include "command_parser.h"
 
+#include "freq.h"
+#include <iostream>
+
 size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 
 	const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
@@ -11,6 +14,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 	const size_t buffer_size = 256;
 	char buffer[buffer_size];
 	size_t counter;
+	std::vector<Program> program_vector;
 	
 	const char* intro = "Vitejte v kostre semestralni prace z KIV/OS.\n" \
 						"Shell zobrazuje echo zadaneho retezce. Prikaz exit ukonci shell.\n";
@@ -25,7 +29,8 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 			if ((counter > 0) && (counter == buffer_size)) counter--;
 			buffer[counter] = 0;	//udelame z precteneho vstup null-terminated retezec
 
-			ProcessLine(buffer);
+			program_vector = ProcessLine(buffer);
+			Execute_Commands(program_vector);
 
 			const char* new_line = "\n";
 			if (echo_on)

@@ -2,7 +2,6 @@
 
 #include "command_parser.h"
 #include "echo.h"
-#include <iostream>
 
 /* Function to remove leading spaces from a command/line */
 static void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
@@ -106,42 +105,62 @@ static int FindPipeOrRedirect(int index, char* line)
 }
 
 /* Processes a single command - bounded by |<> */
-static char* ProcessCommand(char* command)
+static Program ProcessCommand(char* command, char operation_left, char operation_right)
 {
+	Program program_ret;
+	RemoveWhitespace(command);
+
+	//return empty empty program if there is no input
 	if (command[0] == 0)
 	{
-		return 0;
+		return program_ret;
 	}
-	RemoveWhitespace(command);
+	//load whole command string into program if it's a file
+	if (operation_left == '>')
+	{
+		program_ret.command = command;
+		program_ret.redirection_in = true;
+		return program_ret;
+	}
+	if (operation_left == '<')
+	{
+		program_ret.command = command;
+		program_ret.redirection_out = true;
+		return program_ret;
+	}
+	//set redirection and pipe flags for other cases
+	if (operation_left == '|')
+	{
+		program_ret.pipe_in = true;
+	}
+	if (operation_right == '|')
+	{
+		program_ret.pipe_out = true;
+	}
+	if (operation_right == '<')
+	{
+		program_ret.redirection_in = true;
+	}
+		if (operation_right == '>')
+	{
+		program_ret.redirection_out = true;
+	}
+
 	int index = 0;
 	int index_arg = 0;
-	char command_result[9];
+	char command_result[256];
 	char argument_result[256];
 	//load command into command_result - check for string of letters only
 	while (command[index] >= 65 && command[index] <= 90 || command[index] >= 97 && command[index] <= 122)
 	{
-		//longest command is 8 chars
-		if (index >= 8)
-		{
-			std::cout << "ERROR: command too long" << "\n";
-			break;
-		}
 		command_result[index] = command[index];
 		index++;
 	}
-	//if input ends after command - no argument - should be handled for each command differently
-	if (command[index] == 0)
-	{
-		std::cout << "No argument" << "\n";
-	}
-	//command has to be followed by a space or a dot - really only these two cases? could also be handled separately for each command
-	else if (!(command[index] == ' ' || command[index] == '.'))
-	{
-		std::cout << "ERROR: command not recognized" << "\n";
-	}
-	//null terminate command result
+
+	//null terminate command result and load into program struct
 	command_result[index] = 0;
-	
+	program_ret.command = command_result;
+
 	//load argument into argument_result
 	while (command[index])
 	{
@@ -150,35 +169,45 @@ static char* ProcessCommand(char* command)
 		index_arg++;
 	}
 
-	//null terminate argument result
+	//null terminate argument result, remove additional whitespace and load into program struct
 	argument_result[index_arg] = 0;
 	RemoveLeadingWhitespace(argument_result);
-	ExecuteCommand(command_result, argument_result);
-	std::cout << "cmd: " << command_result << "\n";
-	std::cout << "arg: " << argument_result << "\n";
-	return command_result;
+	program_ret.argument = argument_result;
 
+	ExecuteCommand(command_result, argument_result);
+	return program_ret;
 }
 
 /* Processes a whole line of input */
-void ProcessLine(char* line)
+std::vector<Program> ProcessLine(char* line)
 {
 	int index_line = 0;
 	int index_end_cmd = 0;
 	int index_cmd = 0;
 	int index_arg = 0;
 	char command[256];
+	char op_left = 0;
+	char op_right = 0;
+	Program program_ret;
+	std::vector<Program> vector_program_ret;
 
-	std::cout << "\n";
 
 	//loop through commands until EOL
 	while(line[index_line])
 	{
 		index_cmd = 0;
 
+		//load left operation |<>
+		if (index_line == 0)
+		{
+			op_left = 0;
+		}
+		else
+		{
+			op_left = op_right;
+		}
+
 		index_end_cmd = FindPipeOrRedirect(index_line, line);
-		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
-		
 
 		//copy chars from line to command
 		while(index_line <index_end_cmd && line[index_line])
@@ -188,17 +217,45 @@ void ProcessLine(char* line)
 			index_line++;
 		}
 
-		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
-
 		//null terminate command
 		command[index_cmd] = 0;
-		//skip the |<> if not EOL
+
+		//load right operation |<>
 		if (line[index_line])
 		{
+			op_right = line[index_line];
 			index_line++;
 		}
+		else
+		{
+			op_right = 0;
+		}
+		program_ret = ProcessCommand(command, op_left, op_right);
+		//program_ret.Print();
 
-		ProcessCommand(command);
-
+		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
+		vector_program_ret.push_back(program_ret);
 	}
+	return vector_program_ret;
+}
+
+void Execute_Commands(std::vector<Program> program_vector) {
+
+	Program test = program_vector.at(0);
+	kiv_os::THandle process_handle;
+	kiv_os::THandle signal_ret;
+	uint16_t exit_code = 0;
+
+	//print program
+	test.Print();
+
+	kiv_os_rtl::Create_Process(test.command.c_str(), test.argument.c_str(), kiv_os::Invalid_Handle, kiv_os::Invalid_Handle, process_handle);
+
+	kiv_os::THandle handles[1]= { process_handle };
+	kiv_os_rtl::Wait_For(handles, 1, signal_ret);
+	kiv_os_rtl::Read_Exit_Code(signal_ret, exit_code);
+
+	//print exit code
+	std::cout << "exit code: " << exit_code << "\n";
+
 }

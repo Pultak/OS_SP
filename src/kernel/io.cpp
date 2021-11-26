@@ -1,10 +1,13 @@
 #include "io.h"
-#include "kernel.h"
-#include "dir.h"
-#include "filesystems.h"
-#include "handles.h"
 
-size_t Read_Line_From_Console(char *buffer, const size_t buffer_size) {
+
+
+std::map<kiv_os::THandle, IOHandle*> openedHandles;
+const std::unique_ptr<Synchronization::Spinlock> ioHandleLock = std::make_unique<Synchronization::Spinlock>(0);
+
+
+size_t io::Read_Line_From_Console(char *buffer, const size_t buffer_size) {
+	//todo remove
 	kiv_hal::TRegisters registers;
 	
 	size_t pos = 0;
@@ -51,67 +54,309 @@ size_t Read_Line_From_Console(char *buffer, const size_t buffer_size) {
 
 }
 
-void Handle_IO(kiv_hal::TRegisters &regs) {
-
-	//V ostre verzi pochopitelne do switche dejte volani funkci a ne primo vykonny kod
-	
-
-	switch (static_cast<kiv_os::NOS_File_System>(regs.rax.l)) {
-		
-		case kiv_os::NOS_File_System::Read_File: {
-				//viz uvodni komentar u Write_File
-				regs.rax.r = Read_Line_From_Console(reinterpret_cast<char*>(regs.rdi.r), regs.rcx.r);
-				}
-				break;
-
-		
-		case kiv_os::NOS_File_System::Write_File: {
-					//Spravne bychom nyni meli pouzit interni struktury kernelu a zadany handle resolvovat na konkretni objekt, ktery pise na konkretni zarizeni/souboru/roury.
-					//Ale protoze je tohle jenom kostra, tak to rovnou biosem posleme na konzoli.
-					kiv_hal::TRegisters registers;
-					registers.rax.h = static_cast<decltype(registers.rax.h)>(kiv_hal::NVGA_BIOS::Write_String);
-					registers.rdx.r = regs.rdi.r;
-					registers.rcx = regs.rcx;
-		
-					//preklad parametru dokoncen, zavolame sluzbu
-					kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::VGA_BIOS, registers);
-
-					regs.flags.carry |= (registers.rax.r == 0 ? 1 : 0);	//jestli jsme nezapsali zadny znak, tak jiste doslo k nejake chybe
-					regs.rax = registers.rcx;	//VGA BIOS nevraci pocet zapsanych znaku, tak predpokladame, ze zapsal vsechny
-				}
-				break; //Write_File
-		case kiv_os::NOS_File_System::Set_Working_Dir: {
-			bool result = Set_Working_Dir(regs);
-			if (!result) regs.flags.carry = 1;
-			break;
-		}
-		case kiv_os::NOS_File_System::Open_File: {
-			Open_File(regs);
-			break;
-		}
-
-
-
-	/* Nasledujici dve vetve jsou ukazka, ze starsiho zadani, ktere ukazuji, jak mate mapovat Windows HANDLE na kiv_os handle a zpet, vcetne jejich alokace a uvolneni
-
-		case kiv_os::scCreate_File: {
-			HANDLE result = CreateFileA((char*)regs.rdx.r, GENERIC_READ | GENERIC_WRITE, (DWORD)regs.rcx.r, 0, OPEN_EXISTING, 0, 0);
-			//zde je treba podle Rxc doresit shared_read, shared_write, OPEN_EXISING, etc. podle potreby
-			regs.flags.carry = result == INVALID_HANDLE_VALUE;
-			if (!regs.flags.carry) regs.rax.x = Convert_Native_Handle(result);
-			else regs.rax.r = GetLastError();
-		}
-									break;	//scCreateFile
-
-		case kiv_os::scClose_Handle: {
-				HANDLE hnd = Resolve_kiv_os_Handle(regs.rdx.x);
-				regs.flags.carry = !CloseHandle(hnd);
-				if (!regs.flags.carry) Remove_Handle(regs.rdx.x);				
-					else regs.rax.r = GetLastError();
-			}
-
-			break;	//CloseFile
-
-	*/
+kiv_os::THandle io::addIoHandle(IOHandle* handle) {
+	ioHandleLock->lock();
+	kiv_os::THandle result = 0;
+	auto it = openedHandles.begin();
+	//iterate though handles until you find free handle (map is ordered)
+	while (it->first == result) {
+		//todo does it work though?
+		++it;
+		++result;
 	}
+	openedHandles.emplace(std::make_pair(result, handle));
+
+	ioHandleLock->unlock();
+	return result;
+}
+
+IOHandle* io::getIoHandle(kiv_os::THandle handle) {
+	ioHandleLock->lock();
+	auto it = openedHandles.find(handle);
+	IOHandle* result = nullptr;
+	if (it != openedHandles.end()) {
+		result = it->second;
+	}
+	ioHandleLock->unlock();
+	return result;
+}
+
+void io::removeIoHandle(kiv_os::THandle handle) {
+	ioHandleLock->lock();
+	auto it = openedHandles.find(handle);
+	IOHandle* result = nullptr;
+	delete it->second;
+	if (it != openedHandles.end()) {
+		openedHandles.erase(it);
+	}
+	ioHandleLock->unlock();
+}
+
+
+void io::Handle_IO(kiv_hal::TRegisters &regs) {
+	switch (static_cast<kiv_os::NOS_File_System>(regs.rax.l)) {
+		case kiv_os::NOS_File_System::Open_File: {
+			io::OpenIOHandle(regs);
+			break;
+		}
+		case kiv_os::NOS_File_System::Write_File: {
+			io::WriteIOHandle(regs);
+			break;
+		}
+		case kiv_os::NOS_File_System::Read_File: {
+			io::ReadIOHandle(regs);
+			break;
+		}
+		case kiv_os::NOS_File_System::Seek: {
+			io::SeekFsFile(regs);
+			break;
+		}
+		case kiv_os::NOS_File_System::Close_Handle: {
+			io::CloseIOHandle(regs);
+			break;
+		}
+		case kiv_os::NOS_File_System::Delete_File: {
+			io::DeleteFsFile(regs);
+			break;
+		}
+		
+		case kiv_os::NOS_File_System::Set_Working_Dir: {
+			io::SetWorkingDirectory(regs);
+			break;
+		}
+		case kiv_os::NOS_File_System::Get_Working_Dir: {
+			io::GetWorkingDirectory(regs);
+			break;
+		}
+		case kiv_os::NOS_File_System::Set_File_Attribute: {
+			io::SetFileAttribute(regs);
+			break;
+		}
+		case kiv_os::NOS_File_System::Get_File_Attribute: {
+			io::GetFileAttribute(regs);
+			break;
+		}
+		case kiv_os::NOS_File_System::Create_Pipe: {
+			io::CreatePipe(regs);
+			break;
+		}
+	}
+}
+
+void io::OpenIOHandle(kiv_hal::TRegisters& regs){
+	//todo needed synch?
+	char* file_name = reinterpret_cast<char*>(regs.rdx.r);
+	auto flags = static_cast<kiv_os::NOpen_File>(regs.rcx.l);
+	auto attributes = static_cast<uint8_t>(regs.rdi.i);
+
+	kiv_os::NOS_Error returnCode = kiv_os::NOS_Error::Success;
+	IOHandle* ioHandle = nullptr;
+	//opening stdout?
+	if (strcmp(file_name, "\\stdout\\") == 0) {
+		ioHandle = new VGAHandle();
+	}
+	//opening stdin?
+	else if (strcmp(file_name, "\\stdin\\") == 0) {
+		ioHandle = new KeyboardHandle();
+	}
+	//opening file from fs
+	else {
+		ioHandle = filesystems::Open_File(file_name, flags, attributes, returnCode);
+	}
+	auto resultHandle = ioHandle == nullptr ? kiv_os::Invalid_Handle : io::addIoHandle(ioHandle);
+	if (returnCode == kiv_os::NOS_Error::Success) {
+		regs.rax.x = resultHandle;
+	}
+	else {
+		regs.flags.carry = 1;
+		regs.rax.x = static_cast<uint16_t>(returnCode);
+	}
+}
+
+void io::WriteIOHandle(kiv_hal::TRegisters& regs){
+	//get passed handle and its counterpart IOHandle
+	kiv_os::THandle handle = regs.rdx.x;
+	IOHandle* iohandle = io::getIoHandle(handle);
+
+	if (iohandle != nullptr) {
+		//get the passed arguments
+		size_t size = static_cast<size_t>(regs.rcx.r);
+		char* buffer = reinterpret_cast<char*>(regs.rdi.r);
+
+		size_t writeCount;
+		auto returnCode = iohandle->write(buffer, size, writeCount);
+		
+		if (returnCode == kiv_os::NOS_Error::Success) {
+			regs.rax.r = writeCount;
+		}else{
+			regs.flags.carry = 1;
+			regs.rax.r = static_cast<decltype(regs.rax.r)>(returnCode);
+		}
+	}
+	else {
+		//handle not opened
+		regs.rax.r = static_cast<decltype(regs.rax.r)>(kiv_os::NOS_Error::File_Not_Found);
+		regs.flags.carry = 1;
+	}
+
+}
+
+void io::ReadIOHandle(kiv_hal::TRegisters& regs){
+	//get passed handle and its counterpart IOHandle
+	kiv_os::THandle handle = regs.rdx.x;
+	IOHandle* ioHandle = io::getIoHandle(handle);
+
+	if (ioHandle != nullptr) {
+		//get the passed arguments
+		char* buffer = reinterpret_cast<char*>(regs.rdi.r);
+		auto size = static_cast<size_t>(regs.rcx.r);
+		
+		size_t readCount;
+		auto returnCode = ioHandle->read(size, buffer, readCount);
+
+		if (returnCode == kiv_os::NOS_Error::Success) {
+			regs.rax.r = readCount;
+		}else{
+			regs.rax.r = static_cast<decltype(regs.rax.r)>(returnCode);
+			regs.flags.carry = 1;
+		}
+	}
+	else {
+		//handle not opened
+		regs.rax.r = static_cast<uint64_t>(kiv_os::NOS_Error::File_Not_Found);
+		regs.flags.carry = 1;
+	}
+}
+
+void io::SeekFsFile(kiv_hal::TRegisters& regs){
+	//get passed handle and its counterpart IOHandle
+	kiv_os::THandle handle = regs.rdx.x;
+	IOHandle* ioHandle = io::getIoHandle(handle);
+
+	//error if everything fails
+	kiv_os::NOS_Error errorCode = kiv_os::NOS_Error::Unknown_Error;
+
+	//todo instanceof working?
+	//non null and is handle of file
+	if (ioHandle != nullptr && std::is_base_of<FileHandle, ioHandle>::value) {
+		FileHandle* fileHandle = dynamic_cast<FileHandle*>(ioHandle);
+		auto type = static_cast<kiv_os::NFile_Seek>(regs.rcx.l);
+		auto operation = static_cast<kiv_os::NFile_Seek>(regs.rcx.h);
+		auto position = static_cast<size_t>(regs.rdi.r);
+
+		size_t resultPosition;
+
+		errorCode = fileHandle.seek(position, type, operation, resultPosition);
+		//is everything ok?
+		if (errorCode == kiv_os::NOS_Error::Success) {
+			if (operation == kiv_os::NFile_Seek::Get_Position) {
+				regs.rax.r = resultPosition;
+			}
+			return;
+		}
+	}else {
+		//handle not opened
+		errorCode = kiv_os::NOS_Error::Invalid_Argument;
+	}
+
+	regs.rax.r = static_cast<uint64_t>(errorCode);
+	regs.flags.carry = 1;
+}
+
+void io::CloseIOHandle(kiv_hal::TRegisters& regs){
+	//get passed handle and its counterpart IOHandle
+	kiv_os::THandle handle = regs.rdx.x;
+	IOHandle* ioHandle = io::getIoHandle(handle);
+	if (ioHandle) {
+		// close and remove opened handle
+		ioHandle->close();
+		//freeing of memory is done in the function
+		io::removeIoHandle(handle);
+	}
+	else {
+		regs.flags.carry = 1;
+		regs.rax.r = static_cast<decltype(regs.rax.r)>(kiv_os::NOS_Error::File_Not_Found);
+	}
+
+}
+
+void io::DeleteFsFile(kiv_hal::TRegisters& regs){
+
+}
+
+void io::SetWorkingDirectory(kiv_hal::TRegisters& regs){
+	//todo synch
+	auto path = reinterpret_cast<char*>(regs.rdx.r);
+	std::filesystem::path inputPath = path;
+	std::string fileName = inputPath.filename().string();
+	auto fs = filesystems::Filesystem_exists(input_path);
+	//error if everything fails
+	kiv_os::NOS_Error errorCode = kiv_os::NOS_Error::Unknown_Error;
+	//todo handle relative path?
+	if (fs) {
+		if (fs->file_exist(fileName)) {
+			auto processHandle = handles::getTHandleById(std::this_thread::get_id());
+			auto process = processHandle == kiv_os::Invalid_Handle ? nullptr : 
+				ProcessUtils::pcb->getProcess(processHandle);
+			if (process) {
+				process->workingDirectory = inputPath;
+				//dir set -> everything ok
+				return;
+			}else {
+				errorCode = kiv_os::NOS_Error::Unknown_Error;
+			}
+		}else {
+			errorCode = kiv_os::NOS_Error::File_Not_Found;
+		}
+	}else {
+		errorCode = kiv_os::NOS_Error::Unknown_Filesystem;
+	}
+	regs.rax.r = static_cast<uint64_t>(errorCode);
+	regs.flags.carry = 1;
+}
+void io::GetWorkingDirectory(kiv_hal::TRegisters& regs) {
+	//todo synch
+	size_t size = static_cast<size_t>(regs.rcx.r);
+	char* buffer = reinterpret_cast<char*>(regs.rdx.r);
+	size_t writeCount;
+	auto processHandle = handles::getTHandleById(std::this_thread::get_id());
+	auto process = processHandle == kiv_os::Invalid_Handle ? nullptr :
+		ProcessUtils::pcb->getProcess(processHandle);
+	//error if everything fails
+	kiv_os::NOS_Error errorCode = kiv_os::NOS_Error::Unknown_Error;
+	if (process) {
+		std::string wd = process->workingDirectory.string().c_str();
+		if (size < wd.length()) {
+			//something horrible happened -> small buffer
+			errorCode = kiv_os::NOS_Error::Invalid_Argument;
+		}else {
+			auto error = strcpy_s(buffer, size, wd.c_str());
+			if (error) {
+				//error during copying
+				errorCode = kiv_os::NOS_Error::IO_Error;
+			}else {
+				regs.rax.r = wd.length();
+				//all written => all ok
+				return;
+			}
+		}
+	}
+
+	regs.rax.r = static_cast<uint64_t>(errorCode);
+	regs.flags.carry = 1;
+}
+void io::SetFileAttribute(kiv_hal::TRegisters& regs){
+}
+
+void io::GetFileAttribute(kiv_hal::TRegisters& regs){
+}
+
+void io::CreatePipe(kiv_hal::TRegisters& regs){
+	Pipe* pipe = new Pipe(1024);
+
+	IOHandle* in = new PipeIn();
+	IOHandle* out = new PipeOut();
+	auto* pipeHandles = reinterpret_cast<kiv_os::THandle*>(regs.rdx.r);
+	pipeHandles[0] = addIoHandle(in);
+	pipeHandles[1] = addIoHandle(out);
 }
