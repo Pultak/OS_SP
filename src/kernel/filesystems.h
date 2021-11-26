@@ -5,15 +5,18 @@
 #include<memory>
 #include<iostream>
 #include "vfs.h"
+#include "IOHandle.h"
 
-void InitFilesystems();
+namespace filesystems {
 
-void Add_To_Filesystems(const std::string &name, VFS* vfs);
+	void InitFilesystems();
 
-VFS* Filesystem_exists(std::filesystem::path path, std::filesystem::path& path_relative_to_fs, std::filesystem::path& absolute_path);
+	void Add_To_Filesystems(const std::string& name, VFS* vfs);
 
-VFS* Get_Filesystem(const std::string& file_name);
+	VFS* Filesystem_exists(std::filesystem::path path, std::filesystem::path& path_relative_to_fs, std::filesystem::path& absolute_path);
 
-void Open_File(kiv_hal::TRegisters& registers);
+	VFS* Get_Filesystem(const std::string& file_name);
 
-kiv_os::THandle Open_File(const char* input_file_name, kiv_os::NOpen_File flags, uint8_t attributes, kiv_os::NOS_Error& error);
+	IOHandle* Open_File(const char* input_file_name, kiv_os::NOpen_File flags, uint8_t attributes, kiv_os::NOS_Error& error);
+
+}

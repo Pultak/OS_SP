@@ -36,5 +36,6 @@
     <ClInclude Include="..\..\src\kernel\PipeUtils.h" />
     <ClInclude Include="..\..\src\kernel\IOHandle.h" />
     <ClInclude Include="..\..\src\kernel\Thread.h" />
+    <ClInclude Include="..\..\src\kernel\VGAHandle.h" />
   </ItemGroup>
 </Project>

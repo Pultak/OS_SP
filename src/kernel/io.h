@@ -9,6 +9,9 @@
 #include "filesystems.h"
 #include "handles.h"
 #include "PipeUtils.h"
+#include "VGAHandle.h"
+#include "KeyboardHandle.h"
+#include <string>
 
 namespace io{
 	//std::set<int> used;

@@ -42,9 +42,6 @@ public:
 		return kiv_os::NOS_Error::IO_Error;
 	};
 
-	kiv_os::NOS_Error seek(size_t value, kiv_os::NFile_Seek position, kiv_os::NFile_Seek op, size_t& res) override {
-		return kiv_os::NOS_Error::IO_Error;
-	};
 
 	void close() override;
 
@@ -65,9 +62,6 @@ public:
 
 	kiv_os::NOS_Error read(const size_t size, char* out_buffer, size_t& read) override;
 
-	kiv_os::NOS_Error seek(size_t value, kiv_os::NFile_Seek position, kiv_os::NFile_Seek op, size_t& res) override {
-		return kiv_os::NOS_Error::IO_Error;
-	}
 
 	void close() override;
 	~PipeOut () {
