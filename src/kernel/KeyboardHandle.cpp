@@ -54,3 +54,5 @@ kiv_os::NOS_Error KeyboardHandle::read(const size_t size, char* buffer, size_t& 
 	read = pos;
 	return kiv_os::NOS_Error::Success;
 }
+
+void KeyboardHandle::close() {}

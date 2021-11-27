@@ -898,7 +898,7 @@ int create_file(const char* path, uint8_t attr, std::vector<unsigned char>& fat_
 	return 0; 
 }
 
-void update_file_size(char* path, size_t offset, size_t org_size, size_t new_bytes_size, std::vector<int> int_fat_table) {
+void update_file_size(const char* path, size_t offset, size_t org_size, size_t new_bytes_size, std::vector<int> int_fat_table) {
 	std::vector<std::string> folders = get_directories(path); 
 	std::string filename = folders.at(folders.size() - 1);
 	folders.pop_back();

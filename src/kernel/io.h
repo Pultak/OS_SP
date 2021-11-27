@@ -41,6 +41,8 @@ namespace io{
 	void GetFileAttribute(kiv_hal::TRegisters& regs);
 	void CreatePipe(kiv_hal::TRegisters& regs);
 
+	void resolvePath(std::filesystem::path& resultPath, char* fileName);
+
 }
 
 

@@ -14,5 +14,5 @@ public:
 
 	virtual kiv_os::NOS_Error write(const char* buffer, const size_t size, size_t& written) = 0;
 	virtual kiv_os::NOS_Error read(const size_t size, char* buffer, size_t& read) = 0;
-	virtual void close() { }
+	virtual void close() = 0;
 };

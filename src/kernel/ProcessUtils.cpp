@@ -218,7 +218,7 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
     removeAssignedListener(index, handles, thisHandle);
     delete listener;
 
-    int index = -1;
+    index = -1;
     //lets find notifier handle in the handle array
     for (int i = 0; i < handleCount; ++i) {
         if (handles[i] == notifiedHandle) {

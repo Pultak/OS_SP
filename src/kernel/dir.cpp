@@ -9,7 +9,7 @@ bool Set_Working_Dir(kiv_hal::TRegisters& regs) {
         std::filesystem::path resolved_path_relative_to_fs;
         std::filesystem::path absolute_path;
         
-        if (Filesystem_exists(f_path, resolved_path_relative_to_fs, absolute_path) != nullptr) {
+        if (filesystems::Filesystem_exists(f_path) != nullptr) {
             return true;
         }
     }
