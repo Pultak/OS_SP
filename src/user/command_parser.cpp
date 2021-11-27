@@ -258,8 +258,10 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 
 	size_t index = 0;
 	uint16_t exit_code = 0;
-	kiv_os::THandle in = regs.rax.x;
-	kiv_os::THandle out = regs.rbx.x;
+	kiv_os::THandle in_reg = regs.rax.x;
+	kiv_os::THandle out_reg = regs.rbx.x;
+	kiv_os::THandle in = in_reg;
+	kiv_os::THandle out = out_reg;
 	kiv_os::THandle current_pipe[2] = { kiv_os::Invalid_Handle, kiv_os::Invalid_Handle };
 	kiv_os::THandle process_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle signal_ret;
@@ -272,6 +274,8 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 
 	for (auto& program : program_vector)
 	{
+		in = in_reg;
+		out = out_reg;
 		//might need to transfer |
 		if (strcmp(program.command.c_str(), "cd") == 0)
 		{
@@ -323,26 +327,25 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 
 	auto it = processes_handles.begin();
 
-	/*while (processes_handles.size())
+	while (processes_handles.size())
 	{
 		kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
-		// -1 fix --- remove later
-		kiv_os_rtl::Read_Exit_Code(processes_handles.at(signal_ret-1), exit_code);
+		kiv_os_rtl::Read_Exit_Code(processes_handles.at(signal_ret), exit_code);
 
-		if (running_processes.at(signal_ret - 1).pipe_in)
+		if (running_processes.at(signal_ret).pipe_in)
 		{
 			kiv_os_rtl::Close_Handle(pipes_in.at(0));
 			pipes_in.erase(pipes_in.begin());
 		}
-		if (running_processes.at(signal_ret - 1).pipe_out)
+		if (running_processes.at(signal_ret).pipe_out)
 		{
 			kiv_os_rtl::Close_Handle(pipes_out.at(0));
 			pipes_out.erase(pipes_out.begin());
 		}
 
 		processes_handles.erase(it + signal_ret);
-	}*/
-	while (!processes_handles.empty()) {
+	}
+	/*while (!processes_handles.empty()) {
 		kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
 
 		kiv_os_rtl::Read_Exit_Code(processes_handles[signal_ret], exit_code);
@@ -350,7 +353,7 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		//print exit code
 		std::cout << "\nexit code: " << exit_code << "\n";
 		processes_handles.erase(processes_handles.begin() + signal_ret);
-	}
+	}*/
 
 	for (auto pipe : pipes_in)
 	{

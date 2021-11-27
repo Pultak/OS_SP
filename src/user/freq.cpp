@@ -32,7 +32,7 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 			{
 				char c = buffer[i];
 
-				if (c == 'q')
+				if (c == 'q' || c == 4)
 				{
 					flag_continue = false;
 					break;
@@ -42,6 +42,10 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 					chars.at(c)++;
 				}
 			}
+		}
+		else
+		{
+			break;
 		}
 	}
 

@@ -76,13 +76,11 @@ bool kiv_os_rtl::Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_
 }
 
 bool kiv_os_rtl::Close_Handle(kiv_os::THandle handle) {
-	/*
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Close_Handle));
 	regs.rdx.x = static_cast<decltype(regs.rdx.x)>(handle);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	return result;*/
-	std::cout << "\nclosing handle: " << handle;
+	return result;
 	return 0;
 }
 
@@ -93,7 +91,7 @@ bool kiv_os_rtl::Delete_File(char* file_name) {
 	const bool result = kiv_os::Sys_Call(regs);
 	return result;
 }
-/*
+
 bool kiv_os_rtl::Set_File_Attribute(char* file_name, kiv_os::NFile_Attributes file_attribute) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Set_File_Attribute));
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file_name);
@@ -111,19 +109,19 @@ bool kiv_os_rtl::Get_File_Attribute(char* file_name, uint8_t &file_attribute_ret
 	file_attribute_ret = regs.rdi.r;
 	return result;
 }
-*/
+
 bool kiv_os_rtl::Create_Pipe(kiv_os::THandle *file_handles) {
-	/*kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Create_Pipe));
+	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Create_Pipe));
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file_handles);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	return result;*/
-
+	return result;
+	/*
 	index++;
 	std::cout << "\ncreating pipe: " << 10 + index << " " << index+1	;
 
 	file_handles[0] = 10 +index;
-	file_handles[1] = index + 1;
+	file_handles[1] = index + 1;*/
 	return 0;
 }
 

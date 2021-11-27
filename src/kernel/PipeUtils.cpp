@@ -1,11 +1,11 @@
 #include "PipeUtils.h"
 
 
-bool PipeIn::write(const char c){
+bool PipeOut::write(const char c){
     if (pipe->writeClosed) {
         return false;
     }
-    pipe->writeLock->lock();
+    pipe->writeLock->unlock(1);
 
     //check again -> handle could get closed in the sleeptime
     if (pipe->writeClosed) {
@@ -20,7 +20,7 @@ bool PipeIn::write(const char c){
     return true;
 }
 
-kiv_os::NOS_Error PipeIn::write(const char* buffer, const size_t size, size_t& written){
+kiv_os::NOS_Error PipeOut::write(const char* buffer, const size_t size, size_t& written){
     //write all characters from buffer
     for (written = 0; written < size && write(buffer[written]); ++written);
     if (written > 0) {
@@ -32,14 +32,14 @@ kiv_os::NOS_Error PipeIn::write(const char* buffer, const size_t size, size_t& w
 }
 
 
-void PipeIn::close() {
+void PipeOut::close() {
     //write the EOT(end of transmission) char to pipe
 	write((char)(kiv_hal::NControl_Codes::EOT));
 	pipe->writeClosed = true;
 }
 
 
-kiv_os::NOS_Error PipeOut::read(const size_t size, char* out_buffer, size_t& read) {
+kiv_os::NOS_Error PipeIn::read(const size_t size, char* out_buffer, size_t& read) {
     kiv_os::NOS_Error resultSignal = kiv_os::NOS_Error::Success;
     // write contents of vector<char> to the given buffer
     for (size_t i = 0; i < size; ++i) {
@@ -73,7 +73,7 @@ kiv_os::NOS_Error PipeOut::read(const size_t size, char* out_buffer, size_t& rea
     return resultSignal;
 }
 
-void PipeOut::close() {
+void PipeIn::close() {
 	pipe->readClosed = true;
 	pipe->writeLock->unlock(1);
 	pipe->readLock->unlock(1);

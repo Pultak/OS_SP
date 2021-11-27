@@ -429,8 +429,8 @@ void io::GetFileAttribute(kiv_hal::TRegisters& regs){
 void io::CreatePipe(kiv_hal::TRegisters& regs){
 	Pipe* pipe = new Pipe(1024);
 
-	IOHandle* in = new PipeIn();
-	IOHandle* out = new PipeOut();
+	IOHandle* in = new PipeIn(pipe);
+	IOHandle* out = new PipeOut(pipe);
 	auto* pipeHandles = reinterpret_cast<kiv_os::THandle*>(regs.rdx.r);
 	pipeHandles[0] = addIoHandle(in);
 	pipeHandles[1] = addIoHandle(out);

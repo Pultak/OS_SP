@@ -21,9 +21,9 @@ public:
 	Pipe(const size_t size) : pipeSize(size) {
 		buffer = new char[size];
 		//
-		readLock = new Synchronization::IntSpinlock(0);
+		readLock = new Synchronization::IntSpinlock(size);
 		//input can write until buffer full
-		writeLock = new Synchronization::IntSpinlock(size);
+		writeLock = new Synchronization::IntSpinlock(0);
 	}
 
 	~Pipe() {
@@ -33,7 +33,7 @@ public:
 	}
 };
 
-class PipeIn: public IOHandle{
+class PipeOut: public IOHandle{
 public:
 
 	kiv_os::NOS_Error write(const char* buffer, const size_t size, size_t& written) override;
@@ -45,7 +45,9 @@ public:
 
 	void close() override;
 
-	~PipeIn()  {
+	PipeOut(Pipe * pip): pipe(pip) {	}
+
+	~PipeOut()  {
 	}
 private:
 	bool write(char c);
@@ -53,7 +55,7 @@ private:
 	Pipe* pipe;
 };
 
-class PipeOut : public IOHandle {
+class PipeIn : public IOHandle {
 public:
 
 	kiv_os::NOS_Error write(const char* buffer, const size_t size, size_t& written) override {
@@ -64,7 +66,11 @@ public:
 
 
 	void close() override;
-	~PipeOut () {
+	
+
+	PipeIn(Pipe* pip) : pipe(pip) {	}
+
+	~PipeIn() {
 	}
 private:
 	Pipe* pipe;
