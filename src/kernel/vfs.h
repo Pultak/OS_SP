@@ -25,7 +25,7 @@ public:
 
     virtual bool file_exist(const char* pth) = 0;
 
-    virtual kiv_os::NOS_Error write(File f, size_t size, size_t offset, const char* buffer, size_t& written) = 0;
+    virtual kiv_os::NOS_Error write(File f, size_t size, size_t offset, std::vector<char> buffer, size_t& written) = 0;
 
     virtual std::vector<char> convert_dirs_to_chars(const std::vector<kiv_os::TDir_Entry>& directories) = 0;
 
