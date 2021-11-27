@@ -27,7 +27,7 @@ namespace kiv_os_rtl{
 	
 	bool Close_Handle(kiv_os::THandle handle);
 
-	bool Delete_File(char* file_name);
+	bool Delete_File(const char* file_name);
 
 	bool Set_File_Attribute(char* file_name, kiv_os::NFile_Attributes file_attribute);
 

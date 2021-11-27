@@ -188,13 +188,14 @@ void io::OpenIOHandle(kiv_hal::TRegisters& regs){
 void io::WriteIOHandle(kiv_hal::TRegisters& regs){
 	//get passed handle and its counterpart IOHandle
 	kiv_os::THandle handle = regs.rdx.x;
+	
 	IOHandle* iohandle = io::getIoHandle(handle);
-
+	printf("%d", handle);
 	if (iohandle != nullptr) {
 		//get the passed arguments
 		size_t size = static_cast<size_t>(regs.rcx.r);
 		char* buffer = reinterpret_cast<char*>(regs.rdi.r);
-
+		printf("%s", buffer);
 		size_t writeCount;
 		auto returnCode = iohandle->write(buffer, size, writeCount);
 		

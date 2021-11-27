@@ -179,6 +179,7 @@ kiv_os::NOS_Error FAT::open(const char* pth, kiv_os::NOpen_File flags, uint8_t a
         }
         else { 
             dir_item.attribute = attributes;
+			
             dir_item.filesize = 0;
 
             bool created = false;
@@ -218,7 +219,6 @@ kiv_os::NOS_Error FAT::open(const char* pth, kiv_os::NOpen_File flags, uint8_t a
         }
     }
     else if ((dir_item.attribute & static_cast<uint8_t>(kiv_os::NFile_Attributes::Directory)) && ((attributes & static_cast<uint8_t>(kiv_os::NFile_Attributes::Directory)) == 0)) {
-        
         return kiv_os::NOS_Error::Permission_Denied;
     }
     file.attributes = dir_item.attribute;
@@ -357,15 +357,17 @@ bool FAT::file_exist(const char* pth) {
     }
 }
 
-kiv_os::NOS_Error FAT::write(File f, size_t size, size_t offset, std::vector<char> buffer, size_t& written) {
-
-	std::vector<char> buf = buffer;
-	buf.reserve(buffer.size() + size);
+kiv_os::NOS_Error FAT::write(File f, size_t size, size_t offset, std::vector<char> buf, size_t& written) {
+	printf("test5");
+	//std::vector<char> buf = buffer;
+	//buf.reserve(buffer.size() + size);
 
     if (offset > f.size) { 
+		printf("test1");
         return kiv_os::NOS_Error::IO_Error;
     }
     std::vector<int> file_nums = retrieve_sectors_fs(int_fat_table, f.handle); 
+	printf("test7");
     size_t sector;
     if (offset == 0) {
         sector = 1;
@@ -377,6 +379,7 @@ kiv_os::NOS_Error FAT::write(File f, size_t size, size_t offset, std::vector<cha
     if (sector > file_nums.size()) {
         int result = aloc_cluster(file_nums.at(0), int_fat_table, fat_table);
         if (result == -1) {
+			printf("test2");
             return kiv_os::NOS_Error::Not_Enough_Disk_Space;
         }
         file_nums.push_back(result);
@@ -414,6 +417,7 @@ kiv_os::NOS_Error FAT::write(File f, size_t size, size_t offset, std::vector<cha
                 clust_data_write.push_back(data_to_write.at(j + (static_cast<size_t>(i) * 512)));
             }
         }
+		printf("test9");
         if (sector - 1 + i < file_nums.size()) {
             write_to_fs(file_nums.at(sector_num - 1 + i), clust_data_write);
             written_bytes += clust_data_write.size();
@@ -452,6 +456,7 @@ kiv_os::NOS_Error FAT::write(File f, size_t size, size_t offset, std::vector<cha
             write_to_fs(free_clust_index, clust_data_write); 
             written_bytes += clust_data_write.size();
         }
+		printf("test123");
         clust_data_write.clear();
     }
     save_fat(fat_table);

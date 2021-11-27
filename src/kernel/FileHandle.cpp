@@ -35,8 +35,9 @@ kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& wri
         return kiv_os::NOS_Error::Permission_Denied;
     }
     std::vector<char> buf(buffer, buffer + size);
-
+	printf("Skocim sem?");
     auto result = vfs->write(file, size, file.position, buf, written);
+	printf("Prosim ne");
     file.position += written;
     file.size += written;
 
