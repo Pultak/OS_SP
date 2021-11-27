@@ -296,7 +296,7 @@ void io::SetWorkingDirectory(kiv_hal::TRegisters& regs){
 	auto path = reinterpret_cast<char*>(regs.rdx.r);
 	std::filesystem::path inputPath = path;
 	std::string fileName = inputPath.filename().string();
-	auto fs = filesystems::Filesystem_exists(input_path);
+	auto fs = filesystems::Filesystem_exists(inputPath);
 	//error if everything fails
 	kiv_os::NOS_Error errorCode = kiv_os::NOS_Error::Unknown_Error;
 	//todo handle relative path?

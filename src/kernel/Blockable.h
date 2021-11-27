@@ -28,11 +28,16 @@ public:
 	}
 
 
-	void notifyRemoveListeners() {
+	void notifyRemoveListeners(kiv_os::THandle actualHandle) {
 		listenersLock->lock();
 		for (auto const& listener : listeners) {
 			//wake up the slave
-			listener->lock->unlock();
+			if (!listener->notified) {
+				listener->notified = true;
+				listener->notifierHandle = actualHandle;
+				listener->lock->unlock();
+				
+			}
 		}
 		listeners.clear();
 		listenersLock->unlock();

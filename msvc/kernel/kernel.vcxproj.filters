@@ -17,6 +17,7 @@
     <ClCompile Include="..\..\src\kernel\PipeUtils.cpp" />
     <ClCompile Include="..\..\src\kernel\IOHandle.cpp" />
     <ClCompile Include="..\..\src\kernel\FileHandle.cpp" />
+    <ClInclude Include="..\..\src\kernel\VGAHandle.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />

@@ -40,16 +40,25 @@ void ProcessControlBlock::signalProcesses(kiv_os::NSignal_Id signal) {
 	lockMaster->lock();
 
 	for (const auto& entry : table) {
-		std::map<kiv_os::NSignal_Id, kiv_os::TThread_Proc> handlers = entry.second->signalHandlers;
+		auto handlers = entry.second->signalHandlers;
+		//get assigned subrutine handler to the signal
 		auto handler = handlers.find(signal);
 		if (handler != handlers.end()) {
-			//lets call the correct interrupt
+			//call the interrupt
 			kiv_hal::TRegisters regs{};
 			regs.rcx.l = static_cast<decltype(regs.rcx.l)>(signal);
 			handler->second(regs);
 		}
 	}
+	lockMaster->unlock();
+}
 
+void ProcessControlBlock::notifyAllListeners(){
+	lockMaster->lock();
+	for (const auto& entry : table) {
+		entry.second->notifyAllThreads();
+		entry.second->notifyRemoveListeners(entry.second->handle);
+	}
 
 	lockMaster->unlock();
 }

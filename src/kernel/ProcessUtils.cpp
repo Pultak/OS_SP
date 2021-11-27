@@ -54,7 +54,8 @@ void ProcessUtils::clone(kiv_hal::TRegisters& registers, HMODULE userSpaceLib) {
         case kiv_os::NClone::Create_Thread: {
             cloneThread(registers);
             break;
-        }default:
+        }
+        default:
             registers.flags.carry = 1;
             registers.rax.r = static_cast<uint64_t>(kiv_os::NOS_Error::Invalid_Argument);
             return;
@@ -152,7 +153,7 @@ void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TTh
     handles::Remove_Handle(handle);
 
     thisProcess->state = ProcessState::Terminated;
-    thisProcess->notifyRemoveListeners();
+    thisProcess->notifyRemoveListeners(handle);
 }
 
 void ProcessUtils::threadStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock) {
@@ -171,7 +172,7 @@ void ProcessUtils::threadStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThr
         if (parentProcess){
             auto thread = parentProcess->getThread(threadHandle);
             if (thread) {
-                thread->notifyRemoveListeners();
+                thread->notifyRemoveListeners(threadHandle);
             }
             parentProcess->removeThread(threadHandle);
         }
@@ -193,9 +194,9 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
         actualHandle = handles[index];
         if (handles::Resolve_kiv_os_Handle(actualHandle) == INVALID_HANDLE_VALUE) {
             //found invalid handle!
-            removeAssignedListener(i, handles, thisHandle);
+            removeAssignedListener(index, handles, thisHandle);
             delete listener;
-            registers.rax.l = i;
+            registers.rax.l = index;
             return;
         }
         else {
@@ -213,9 +214,18 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
         }
     }
     listener->lock->lock();
-    auto notifiedHandle = listener->sleeperHandle;
+    auto notifiedHandle = listener->notifierHandle;
+    removeAssignedListener(index, handles, thisHandle);
     delete listener;
-    //return last index of handle
+
+    int index = -1;
+    //lets find notifier handle in the handle array
+    for (int i = 0; i < handleCount; ++i) {
+        if (handles[i] == notifiedHandle) {
+            index = i;
+        }
+    }
+    //return index of notifier handle
     registers.rax.l = index;
 
 }
@@ -241,6 +251,10 @@ void ProcessUtils::exit(kiv_hal::TRegisters& registers) {
             exitingProcess->exitCode = exitCode;
             exitingProcess->state = ProcessState::Terminated;
         }
+    }else {
+        //missing handle
+        registers.flags.carry = 1;
+        registers.rcx.x = static_cast<uint16_t>(kiv_os::NOS_Error::Invalid_Argument);
     }
 }
 
@@ -252,6 +266,7 @@ void ProcessUtils::readExitCode(kiv_hal::TRegisters& registers) {
     if (handle != kiv_os::Invalid_Handle) {
         Process* process = pcb->getProcess(handle);
         if (process && process->state == ProcessState::Terminated) {
+            //process already terminated -> OK
             resultExitCode = process->exitCode;
             pcb->removeProcess(handle);
         }
@@ -270,6 +285,7 @@ void ProcessUtils::readExitCode(kiv_hal::TRegisters& registers) {
 
 void ProcessUtils::shutdown() {
 
+    pcb->notifyAllListeners();
     pcb->signalProcesses(kiv_os::NSignal_Id::Terminate);
 
     //todo jeste neco? zavrit files?
@@ -282,19 +298,21 @@ void ProcessUtils::registerSignalHandler(kiv_hal::TRegisters& registers) {
 
     if (handle != kiv_os::Invalid_Handle) {
         Process* actualProcess = pcb->getProcess(handle);
-        if (actualProcess == nullptr) {
-            //todo missing process
-        }
-        else {
+        if (actualProcess) {
             auto signal = static_cast<kiv_os::NSignal_Id>(registers.rcx.l);
             //read program address of the signal handler
             auto progAddress = reinterpret_cast<kiv_os::TThread_Proc>(registers.rdx.r);
             if (progAddress == nullptr)progAddress = defaultSignalHandler;
             actualProcess->signalHandlers[signal] = progAddress;
+        }else{
+            //missing process
+            registers.flags.carry = 1;
+            registers.rcx.x = static_cast<uint16_t>(kiv_os::NOS_Error::Unknown_Error);
         }
-    }
-    else {
-        //todo missing handle
+    }else {
+        //missing handle
+        registers.flags.carry = 1;
+        registers.rcx.x = static_cast<uint16_t>(kiv_os::NOS_Error::Invalid_Argument);
     }
 }
 

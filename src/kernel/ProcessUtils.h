@@ -22,12 +22,35 @@ namespace ProcessUtils {
 
 	void cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpaceLib);
 	void cloneThread(kiv_hal::TRegisters& registers);
+
+	/// <summary>
+	/// Starting function of the newly created process
+	/// </summary>
+	/// <param name="registers">Process registers</param>
+	/// <param name="userProgram">executable program from userspace</param>
+	/// <param name="lock">synchronization lock to unlock when the initialization is done</param>
 	void processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock);
+	
+	/// <summary>
+	/// Starting function of the newly created thread
+	/// </summary>
+	/// <param name="registers">Thread registers</param>
+	/// <param name="userProgram">executable program from userspace</param>
+	/// <param name="lock">synchronization lock to unlock when the initialization is done</param>
 	void threadStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock);
 
-	void invalidWaitForRequest(const int alreadyDone, const kiv_os::THandle* handles, const kiv_os::THandle thisHandle);
+	/// <summary>
+	/// Function used for WaitFor
+	/// Removes assigned listener from all passed handles
+	/// </summary>
+	/// <param name="alreadyDone">count of already passed handles</param>
+	/// <param name="handles">array of passed handles</param>
+	/// <param name="thisHandle">handle of the waiting process</param>
+	void removeAssignedListener(const int alreadyDone, const kiv_os::THandle* handles, const kiv_os::THandle thisHandle);
 
-
+	/// <summary>
+	/// Process control block
+	/// </summary>
 	const std::unique_ptr<ProcessControlBlock> pcb = std::make_unique<ProcessControlBlock>();
 
 

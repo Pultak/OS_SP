@@ -32,4 +32,12 @@ void Process::removeThread(kiv_os::THandle threadHandle){
 	tcbLock->unlock();
 }
 
+void Process::notifyAllThreads(){
+	tcbLock->lock();
+	for (const auto& entry : tcb) {
+		entry.second->notifyRemoveListeners(entry.second->threadHandle);
+	}
+	tcbLock->unlock();
+}
+
 

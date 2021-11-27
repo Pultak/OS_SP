@@ -35,6 +35,7 @@
     <ClCompile Include="..\..\src\kernel\SleepListener.cpp" />
     <ClCompile Include="..\..\src\kernel\Synchronization.cpp" />
     <ClCompile Include="..\..\src\kernel\FileHandle.cpp" />
+    <ClInclude Include="..\..\src\kernel\VGAHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
