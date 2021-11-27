@@ -20,3 +20,4 @@ kiv_os::NOS_Error VGAHandle::write(const char* buffer, const size_t size, size_t
 kiv_os::NOS_Error VGAHandle::read(const size_t size, char* buffer, size_t& read){
 	return kiv_os::NOS_Error::IO_Error;
 }
+void VGAHandle::close() {}

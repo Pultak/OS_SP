@@ -2,7 +2,8 @@
 #include "IOHandle.h"
 
 class KeyboardHandle : public IOHandle {
-
+public:
+	explicit KeyboardHandle() {};
 	kiv_os::NOS_Error write(const char* buffer, const size_t size, size_t& written) override;
 	/// <summary>
 	/// 
@@ -13,7 +14,8 @@ class KeyboardHandle : public IOHandle {
 	/// <returns></returns>
 	kiv_os::NOS_Error read(const size_t size, char* buffer, size_t& read) override;
 
-	void close() { }
+	void close() override;
 
+	~KeyboardHandle() {	}
 
 };

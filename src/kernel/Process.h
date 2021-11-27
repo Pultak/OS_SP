@@ -49,12 +49,13 @@ public:
 	void addNewThread(kiv_os::THandle threadHandle);
 	Thread* getThread(kiv_os::THandle threadHandle);
 	void removeThread(kiv_os::THandle threadHandle);
+	void notifyAllThreads();
 
 public:
 	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program) : handle(handle), stdInput(stdIn), stdOutput(stdOut), programName(program) {
 		tcbLock = new Synchronization::Spinlock(0);
 		//no other signals are pressent atm
-		//signalHandlers[kiv_os::NSignal_Id::Terminate] = defaultSignalHandler;
+		//signalHandlers[kiv_os::NSignal_Id::Terminate] = ProcessUtils::defaultSignalHandler;
 	}
 	~Process() {
 		delete tcbLock;

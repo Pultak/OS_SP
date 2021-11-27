@@ -15,7 +15,7 @@ public:
 
 	kiv_os::NOS_Error open(const char* pth, kiv_os::NOpen_File flags, uint8_t attributes, File& file) override;
 
-	bool file_exist(const char* pth, int32_t d, int32_t& found_d) override;
+	bool file_exist(const char* pth) override;
 
 	kiv_os::NOS_Error write(File f, size_t size, size_t offset, const char* buffer, size_t& written) override;
 

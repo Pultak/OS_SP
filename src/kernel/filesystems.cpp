@@ -4,6 +4,9 @@
 namespace Files {
 	std::map<std::string, std::unique_ptr<VFS>> Filesystems;
 }
+
+
+
 void filesystems::InitFilesystems() {
     
     kiv_hal::TRegisters regs{};
@@ -45,10 +48,9 @@ void filesystems::Add_To_Filesystems(const std::string& name, VFS* vfs) {
 	Files::Filesystems[name] = std::unique_ptr<VFS>(vfs);
 }
 
-VFS* filesystems::Filesystem_exists(std::filesystem::path path, std::filesystem::path& path_relative_to_fs, std::filesystem::path& absolute_path) {
+VFS* filesystems::Filesystem_exists(std::filesystem::path path) {
 	auto current_path = path.root_path();
 	VFS* current_fs = filesystems::Get_Filesystem(current_path.string());
-	
 	if (current_fs != nullptr) {
 		return current_fs;
 	}
@@ -57,20 +59,21 @@ VFS* filesystems::Filesystem_exists(std::filesystem::path path, std::filesystem:
 
 IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File flags, uint8_t attributes, kiv_os::NOS_Error& error) {
 	std::filesystem::path resolved_path_relative_to_fs;
-	std::filesystem::path absolute_path;
 	std::filesystem::path input_path = input_file_name;
 	std::string file_name = input_path.filename().string();
-	auto fs = Filesystem_exists(input_path, resolved_path_relative_to_fs, absolute_path);
+	IOHandle* file = nullptr;
+	auto fs = Filesystem_exists(input_path);
 	if (fs != nullptr) {
 		printf(" fs nalezen ");
+		/*
 		auto length = resolved_path_relative_to_fs.string().length() + 1;
 		char* name = new char[length];
 		strcpy_s(name, length, resolved_path_relative_to_fs.string().c_str());
-		
+		*/
 		File f{};
-		auto result = fs->open("slozka4\\slozka5", flags, attributes, f);
-		//auto result = fs->rmdir("slozka4\\slozka5");
+		auto result = fs->open(input_path.relative_path().string().c_str(), flags, attributes, f);
 		if (result == kiv_os::NOS_Error::Success) {
+			file = new FileHandle(fs, f);
 			printf(" pridan soubor ");
 		}
 		else {
@@ -80,6 +83,44 @@ IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File
 	else {
 		error = kiv_os::NOS_Error::File_Not_Found;
 	}
-	return kiv_os::Invalid_Handle;
+	return file;
+}
 
+void filesystems::parse_path(const char* abs_path, const char* rel_path, std::string& result) {
+	std::vector<std::string> abs;
+	std::string pth = abs_path;
+	std::string delim = "\\";
+	size_t pos = 0;
+	std::string dir;
+	while ((pos = pth.find(delim)) != std::string::npos) {
+		dir = pth.substr(0, pos);
+		abs.push_back(dir);
+		pth.erase(0, pos + delim.length());
+	}
+	abs.push_back(pth);
+	std::vector<std::string> rel;
+	std::string pth1 = rel_path;
+	std::string delim1 = "\\";
+	size_t pos1 = 0;
+	std::string dir1;
+	while ((pos1 = pth1.find(delim1)) != std::string::npos) {
+		dir1 = pth1.substr(0, pos1);
+		rel.push_back(dir1);
+		pth1.erase(0, pos1 + delim1.length());
+	}
+	rel.push_back(pth1);
+	for (int i = 0; i < rel.size(); i++) {
+		if (strcmp(rel[i].c_str(), "..") == 0) {
+			abs.pop_back();
+		}
+		else if (strcmp(rel[i].c_str(), ".") == 0) {}
+		else {
+			abs.push_back(rel[i]);
+		}
+
+	}
+	for (int i = 0; i < abs.size() - 1; i++) {
+		result += abs[i] + "\\";
+	}
+	result += abs[abs.size() - 1];
 }

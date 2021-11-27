@@ -164,7 +164,6 @@ kiv_os::NOS_Error FAT::open(const char* pth, kiv_os::NOpen_File flags, uint8_t a
     file = File{};
     file.name = const_cast<char*>(pth);
     file.position = 0;
-
     int32_t target_cluster;
     
     std::vector<std::string> folders_in_path = get_directories(pth);
@@ -346,28 +345,10 @@ std::vector<char> FAT::convert_dirs_to_chars(const std::vector<kiv_os::TDir_Entr
     return res;
 }
 
-bool FAT::file_exist(const char* pth, int32_t d, int32_t& found_d) {
-
-    if (strcmp(pth, "..") == 0) {
-        std::vector<unsigned char> data_first_clust = read_from_fs(d, 1);
-        unsigned char first_byte_addr = data_first_clust.at(58);
-        unsigned char second_byte_addr = data_first_clust.at(59);
-
-        found_d = d;
-        return true;
-    }
-
-    if (strcmp(pth, ".") == 0) { 
-        found_d = d;
-        return true; 
-    }
+bool FAT::file_exist(const char* pth) {
     int start_cluster = 19;
-
     std::vector<std::string> folders_in_path = get_directories(pth);
-
     directory_item dir_item = retrieve_item(start_cluster, int_fat_table, folders_in_path);
-    found_d = dir_item.first_cluster;
-
     if (dir_item.first_cluster == -1) {
         return false;
     }

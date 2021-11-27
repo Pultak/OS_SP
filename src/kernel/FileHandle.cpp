@@ -7,7 +7,7 @@ kiv_os::NOS_Error FileHandle::seek(size_t new_pos, kiv_os::NFile_Seek position, 
 	return kiv_os::NOS_Error::Success;
 }
 
-kiv_os::NOS_Error FileHandle::write(char* buffer, size_t size, size_t& written) {
+kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& written) {
 	return kiv_os::NOS_Error::Success;
 }
 
