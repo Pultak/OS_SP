@@ -19,7 +19,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 	std::vector<Program> program_vector;
 	bool continue_flag = true;
 	
-	const char* intro = "Vitejte v kostre semestralni prace z KIV/OS.\n" \
+	const char* intro = "Vitejte v semestralni praci z KIV/OS.\n" \
 						"Shell zobrazuje echo zadaneho retezce. Prikaz exit ukonci shell.\n";
 	kiv_os_rtl::Write_File(std_out, intro, strlen(intro), counter);
 

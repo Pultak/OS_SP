@@ -357,8 +357,11 @@ bool FAT::file_exist(const char* pth) {
     }
 }
 
-kiv_os::NOS_Error FAT::write(File f, size_t size, size_t offset, const char* buffer, size_t& written) {
-    std::vector<char> buf(buffer, buffer + size);
+kiv_os::NOS_Error FAT::write(File f, size_t size, size_t offset, std::vector<char> buffer, size_t& written) {
+
+	std::vector<char> buf = buffer;
+	buf.reserve(buffer.size() + size);
+
     if (offset > f.size) { 
         return kiv_os::NOS_Error::IO_Error;
     }

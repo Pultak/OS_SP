@@ -17,7 +17,7 @@ public:
 
 	bool file_exist(const char* pth) override;
 
-	kiv_os::NOS_Error write(File f, size_t size, size_t offset, const char* buffer, size_t& written) override;
+	kiv_os::NOS_Error write(File f, size_t size, size_t offset, std::vector<char> buffer, size_t& written) override;
 
 	kiv_os::NOS_Error read(File f, size_t size, size_t offset, std::vector<char>& out) override;
 

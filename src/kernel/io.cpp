@@ -57,13 +57,25 @@ size_t io::Read_Line_From_Console(char *buffer, const size_t buffer_size) {
 kiv_os::THandle io::addIoHandle(IOHandle* handle) {
 	ioHandleLock->lock();
 	kiv_os::THandle result = 0;
-	auto it = openedHandles.begin();
-	//iterate though handles until you find free handle (map is ordered)
-	while (it->first == result) {
-		//todo does it work though?
-		++it;
-		++result;
+	if (!openedHandles.empty()) {
+		//auto it = openedHandles.begin();
+		//iterate though handles until you find free handle (map is ordered)
+
+		for (const auto& it : openedHandles)
+		{
+			if (it.first != result) {
+				break;
+			}
+			result++;
+		}
+
+	/*	while (it->first == result) {
+			//todo does it work though?
+			++it;
+			++result;
+		}*/
 	}
+
 	openedHandles.emplace(std::make_pair(result, handle));
 
 	ioHandleLock->unlock();
@@ -211,7 +223,7 @@ void io::ReadIOHandle(kiv_hal::TRegisters& regs){
 		char* buffer = reinterpret_cast<char*>(regs.rdi.r);
 		auto size = static_cast<size_t>(regs.rcx.r);
 		
-		size_t readCount;
+		size_t readCount = 0;
 		auto returnCode = ioHandle->read(size, buffer, readCount);
 
 		if (returnCode == kiv_os::NOS_Error::Success) {

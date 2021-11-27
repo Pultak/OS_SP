@@ -51,7 +51,7 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 		}
 		kiv_os::THandle std_out = regs.rax.x;
 
-		regs.rdx.r = reinterpret_cast<uint64_t>("\\stdout\\");
+		regs.rdx.r = reinterpret_cast<uint64_t>("\\stdin\\");
 		io::OpenIOHandle(regs);
 		if (regs.flags.carry) {
 			//something failed -> copy error code
