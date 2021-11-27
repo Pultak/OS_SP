@@ -24,14 +24,17 @@
     <ClCompile Include="..\..\src\kernel\filesystems.cpp" />
     <ClCompile Include="..\..\src\kernel\handles.cpp" />
     <ClCompile Include="..\..\src\kernel\io.cpp" />
+    <ClCompile Include="..\..\src\kernel\IOHandle.cpp" />
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\..\src\kernel\fat12fs.cpp" />
     <ClCompile Include="..\..\src\kernel\fsutils.cpp" />
+    <ClCompile Include="..\..\src\kernel\PipeUtils.cpp" />
     <ClCompile Include="..\..\src\kernel\Process.cpp" />
     <ClCompile Include="..\..\src\kernel\ProcessControlBlock.cpp" />
     <ClCompile Include="..\..\src\kernel\ProcessUtils.cpp" />
     <ClCompile Include="..\..\src\kernel\SleepListener.cpp" />
     <ClCompile Include="..\..\src\kernel\Synchronization.cpp" />
+    <ClCompile Include="..\..\src\kernel\FileHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
@@ -40,7 +43,9 @@
     <ClInclude Include="..\..\src\kernel\filesystems.h" />
     <ClInclude Include="..\..\src\kernel\handles.h" />
     <ClInclude Include="..\..\src\kernel\io.h" />
+    <ClInclude Include="..\..\src\kernel\IOHandle.h" />
     <ClInclude Include="..\..\src\kernel\kernel.h" />
+    <ClInclude Include="..\..\src\kernel\PipeUtils.h" />
     <ClInclude Include="..\..\src\kernel\vfs.h" />
     <ClInclude Include="..\..\src\kernel\fat12fs.h" />
     <ClInclude Include="..\..\src\kernel\fsutils.h" />
@@ -49,6 +54,9 @@
     <ClInclude Include="..\..\src\kernel\ProcessUtils.h" />
     <ClInclude Include="..\..\src\kernel\SleepListener.h" />
     <ClInclude Include="..\..\src\kernel\Synchronization.h" />
+    <ClInclude Include="..\..\src\kernel\Thread.h" />
+    <ClInclude Include="..\..\src\kernel\VGAHandle.h" />
+    <ClCompile Include="..\..\src\kernel\FileHandle.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B4305463-59C5-40C3-9A1A-92976A40562D}</ProjectGuid>

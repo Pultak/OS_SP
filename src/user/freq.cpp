@@ -8,7 +8,7 @@
 
 //comments missing
 
-void freq_prot(const kiv_hal::TRegisters& regs)
+size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 {
 	const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
 	const kiv_os::THandle std_out = static_cast<kiv_os::THandle>(regs.rbx.x);
@@ -25,6 +25,7 @@ void freq_prot(const kiv_hal::TRegisters& regs)
 
 	while (flag_continue)
 	{
+
 		if (kiv_os_rtl::Read_File(std_in, buffer, buffer_size, counter))
 		{
 			for (int i = 0; i < counter; i++)
@@ -44,14 +45,13 @@ void freq_prot(const kiv_hal::TRegisters& regs)
 		}
 	}
 
-	//change the format of the output
 	for (int i = 0; i < 128; i++) {
 		int ch = chars.at(i);
 		char c = i;
 		if (ch)
 		{
 			line_ss.str(std::string());
-			line_ss << "char: " << c << " " << ch;
+			line_ss << "0x" << std::hex << (int)c << "x :" << ch;
 			line = line_ss.str();
 
 			kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);
@@ -60,5 +60,6 @@ void freq_prot(const kiv_hal::TRegisters& regs)
 		}
 		
 	}
-
+	return 0;
+	
 }
