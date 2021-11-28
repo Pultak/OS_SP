@@ -55,13 +55,15 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 						if (echo_on)
 						{
 							const char* print = "\nECHO is on\n";
-							kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
+							it->argument=print;
+							//kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 						}
 						else
 						{
 							
 							const char* print = "\nECHO is off.\n";
-							kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
+							it->argument = print;
+							//kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 						}
 					}
 				}

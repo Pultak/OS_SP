@@ -263,14 +263,11 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 	kiv_os::THandle in = in_reg;
 	kiv_os::THandle out = out_reg;
 	kiv_os::THandle current_pipe[2] = { kiv_os::Invalid_Handle, kiv_os::Invalid_Handle };
-	kiv_os::THandle process_handle = kiv_os::Invalid_Handle;
+	kiv_os::THandle program_handle = kiv_os::Invalid_Handle;
+	kiv_os::THandle signaled_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle signal_ret;
-	std::vector<kiv_os::THandle> processes_handles;
-	std::vector<kiv_os::THandle> pipes_in;
-	std::vector<kiv_os::THandle> pipes_out;
-	std::vector<Program> running_processes;
-
-
+	Program signaled_program = Program();
+	std::vector<kiv_os::THandle> active_handles;
 
 	for (auto& program : program_vector)
 	{
@@ -301,68 +298,61 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		if (program.pipe_in)
 		{
 			in = current_pipe[0];
-			pipes_in.push_back(in);
+			program.pipe_in_handle = in;
 		}
 		if (program.pipe_out)
 		{
 			kiv_os_rtl::Create_Pipe(current_pipe);
 			out = current_pipe[1];
-			pipes_out.push_back(out);
+			program.pipe_out_handle = out;
 		}
 		program.Print();
 
-		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), in, out, process_handle);
+		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), in, out, program_handle);
 		if (!success)
 		{
 			std::cout << "\nInvalid argument\n";
 		}
 		else
 		{
-			processes_handles.push_back(process_handle);
-			running_processes.push_back(program);
+			program.handle = program_handle;
+			active_handles.push_back(program_handle);
 		}
 		index++;
 	}
 
-	auto it = processes_handles.begin();
 
-	while (processes_handles.size())
+	while (active_handles.size())
 	{
-		kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
-		kiv_os_rtl::Read_Exit_Code(processes_handles.at(signal_ret), exit_code);
+		auto it_program_vector = program_vector.begin();
+		auto it_active_handles = active_handles.begin();
 
-		if (running_processes.at(signal_ret).pipe_in)
+		index = 0;
+
+		kiv_os_rtl::Wait_For(active_handles.data(), active_handles.size(), signal_ret);
+		signaled_handle = active_handles.at(signal_ret);
+		kiv_os_rtl::Read_Exit_Code(signaled_handle, exit_code);
+
+		for (auto& program : program_vector)
 		{
-			kiv_os_rtl::Close_Handle(pipes_in.at(0));
-			pipes_in.erase(pipes_in.begin());
+			if (program.handle == signaled_handle)
+			{
+				signaled_program = program;
+				break;
+			}
+			index++;
 		}
-		if (running_processes.at(signal_ret).pipe_out)
+
+		if (signaled_program.pipe_in)
 		{
-			kiv_os_rtl::Close_Handle(pipes_out.at(0));
-			pipes_out.erase(pipes_out.begin());
+			kiv_os_rtl::Close_Handle(signaled_program.pipe_in_handle);
 		}
+		if (signaled_program.pipe_out)
+		{
+			kiv_os_rtl::Close_Handle(signaled_program.pipe_out_handle);
+		}
+		program_vector.erase(it_program_vector + index);
 
-		processes_handles.erase(it + signal_ret);
+		active_handles.erase(it_active_handles + signal_ret);
 	}
-	/*while (!processes_handles.empty()) {
-		kiv_os_rtl::Wait_For(processes_handles.data(), processes_handles.size(), signal_ret);
-
-		kiv_os_rtl::Read_Exit_Code(processes_handles[signal_ret], exit_code);
-
-		//print exit code
-		std::cout << "\nexit code: " << exit_code << "\n";
-		processes_handles.erase(processes_handles.begin() + signal_ret);
-	}*/
-
-	for (auto pipe : pipes_in)
-	{
-		kiv_os_rtl::Close_Handle(pipe);
-	}
-	for (auto pipe : pipes_out)
-	{
-		kiv_os_rtl::Close_Handle(pipe);
-	}
-
-
-
 }
