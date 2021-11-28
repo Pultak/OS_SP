@@ -54,6 +54,7 @@ void ProcessControlBlock::signalProcesses(kiv_os::NSignal_Id signal) {
 			regs.rcx.l = static_cast<decltype(regs.rcx.l)>(signal);
 			handler->second(regs);
 		}
+		++it;
 	}
 	lockMaster->unlock();
 }
@@ -65,6 +66,7 @@ void ProcessControlBlock::notifyAllListeners(){
 	while (it != table.rend()) {
 		it->second->notifyAllThreads();
 		it->second->notifyRemoveListeners(it->second->handle);
+		++it;
 	}
 	lockMaster->unlock();
 }
