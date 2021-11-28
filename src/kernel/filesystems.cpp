@@ -60,7 +60,6 @@ VFS* filesystems::Filesystem_exists(std::filesystem::path path) {
 IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File flags, uint8_t attributes, kiv_os::NOS_Error& error) {
 	std::filesystem::path resolved_path_relative_to_fs;
 	std::filesystem::path input_path = input_file_name;
-	printf("%s", input_file_name);
 	std::string file_name = input_path.filename().string();
 	IOHandle* file = nullptr;
 	auto fs = Filesystem_exists(input_path);

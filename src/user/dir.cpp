@@ -35,9 +35,13 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 		{
 			std::cout << "\nWRITE FAILED: " << ret_code << std::endl;
 		}
+		
 		if (auto ret_code = kiv_os_rtl::Read_File(file_handle, buffer, 256, read))
 		{
-			std::cout << buffer <<"\n";
+			for (int i = 0; i < read; i++) {
+				printf("%c", buffer[i]);
+			}
+			//std::cout << buffer <<"\n";
 		}
 		else
 		{

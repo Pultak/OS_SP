@@ -45,9 +45,12 @@ kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& wri
 kiv_os::NOS_Error FileHandle::read(size_t size, char* buffer, size_t& read) {
     std::vector<char> out;
     size = std::min(size, file.size - 0);
-    if (size <= 0) {
+    if (size < 0) {
+        printf("slozena");
         return kiv_os::NOS_Error::IO_Error;
     }
+    printf("%d", file.handle);
+    //printf("%s", static_cast<const char*>(file.name));
     auto result = vfs->read(file, size, file.position, out);
     for (size_t i = 0; i < out.size(); i++) {
         buffer[i] = out.at(i);

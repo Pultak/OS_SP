@@ -240,13 +240,17 @@ kiv_os::NOS_Error FAT::open(const char* pth, kiv_os::NOpen_File flags, uint8_t a
 
 kiv_os::NOS_Error FAT::read(File f, size_t size, size_t offset, std::vector<char>& out) {
     if (((f.attributes & static_cast<uint8_t>(kiv_os::NFile_Attributes::Volume_ID)) != 0) || ((f.attributes & static_cast<uint8_t>(kiv_os::NFile_Attributes::Directory)) != 0)) {
+        offset = static_cast<uint8_t>(0);
         std::vector<kiv_os::TDir_Entry> folders;
         std::vector<char> folders_char;
-
+        printf("kokotlolecko");
         kiv_os::NOS_Error read_dir_res = dirread(f.name, folders);
-
+        printf("lolecko");
         if (read_dir_res == kiv_os::NOS_Error::Success) {
             folders_char = convert_dirs_to_chars(folders); 
+        }
+        for (int i = 0; i < folders_char.size(); i++) {
+            printf("%c", folders_char[i]);
         }
         if ((offset + size) <= (folders_char.size() * sizeof(kiv_os::TDir_Entry))) { 
             for (int i = 0; i < size; i++) {
@@ -298,12 +302,17 @@ kiv_os::NOS_Error FAT::read(File f, size_t size, size_t offset, std::vector<char
                 }
             }
         }
+        
         return kiv_os::NOS_Error::Success;
     }
 }
 
 kiv_os::NOS_Error FAT::dirread(const char* pth, std::vector<kiv_os::TDir_Entry>& entries) {
     std::vector<std::string> folders_in_path = get_directories(pth);
+    for (int i = 0; i < folders_in_path.size(); i++) {
+        printf("%s", folders_in_path[i].c_str());
+    }
+    printf("test1");
     if (folders_in_path.size() > 0 && strcmp(folders_in_path.at(folders_in_path.size() - 1).data(), ".") == 0) {
         folders_in_path.pop_back();
     }
@@ -316,8 +325,10 @@ kiv_os::NOS_Error FAT::dirread(const char* pth, std::vector<kiv_os::TDir_Entry>&
     }
     directory_item dir_item = retrieve_item(19, int_fat_table, folders_in_path);
     int first_cluster_fol = dir_item.first_cluster;
-
+    printf("test2");
+    printf("%d", first_cluster_fol);
     std::vector<int> folder_cluster_nums = retrieve_sectors_fs(int_fat_table, first_cluster_fol);
+    printf("test4");
     std::vector<unsigned char> one_clust_data;
     std::vector<unsigned char> all_clust_data;
     for (int i = 0; i < folder_cluster_nums.size(); i++) {
@@ -326,8 +337,9 @@ kiv_os::NOS_Error FAT::dirread(const char* pth, std::vector<kiv_os::TDir_Entry>&
             all_clust_data.push_back(one_clust_data.at(j));
         }
     }
+    printf("test5");
     entries = get_os_dir_content(folder_cluster_nums.size(), all_clust_data, false);
-
+    printf("test3");
     return kiv_os::NOS_Error::Success;
 
 }

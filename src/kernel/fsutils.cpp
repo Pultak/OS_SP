@@ -445,6 +445,9 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 			if (!cur_folder_items[i].extension.empty()) {
 				printf(".%s ", cur_folder_items[i].extension.c_str());
 			}
+			else {
+				printf(" ");
+			}
 			printf("attr: %c ", cur_folder_items[i].attribute);
 			printf("first cluster: %d ", cur_folder_items[i].first_cluster);
 			printf("size: %d", (int)cur_folder_items[i].filesize);
