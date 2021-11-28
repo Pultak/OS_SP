@@ -22,6 +22,16 @@ enum class ProcessState {
 
 
 
+struct PCB_Entry {
+	kiv_os::THandle handle;
+	kiv_os::THandle stdIn;
+	kiv_os::THandle stdOut;
+	ProcessState status;
+	kiv_os::NOS_Error exitCode;
+	char program_name[42];
+	char working_directory[256];
+};
+
 
 class Process: public Blockable {
 
@@ -55,7 +65,6 @@ public:
 	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program) : handle(handle), stdInput(stdIn), stdOutput(stdOut), programName(program) {
 		tcbLock = new Synchronization::Spinlock(0);
 		//no other signals are pressent atm
-		//signalHandlers[kiv_os::NSignal_Id::Terminate] = ProcessUtils::defaultSignalHandler;
 	}
 	~Process() {
 		delete tcbLock;

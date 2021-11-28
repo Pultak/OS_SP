@@ -1,21 +1,23 @@
 #include "ProcessUtils.h"
+#include "io.h"
+
 
 size_t __stdcall ProcessUtils::defaultSignalHandler(const kiv_hal::TRegisters& regs) {
     auto signal_id = static_cast<kiv_os::NSignal_Id>(regs.rcx.l);
 
     switch (signal_id) {
-        case kiv_os::NSignal_Id::Terminate: {
-            //kill the system or something idk
-            shutdown();
-            break;
-        }
-        default: {
-            //Default signal handler called
-            break;
-        }
+    case kiv_os::NSignal_Id::Terminate: {
+        //kill the process
+        break;
+    }
+    default: {
+        //Default signal handler called
+        break;
+    }
     }
     return 0;
 };
+
 
 void ProcessUtils::HandleProcess(kiv_hal::TRegisters& registers, HMODULE user_programs) {
 
@@ -140,10 +142,6 @@ void ProcessUtils::cloneThread(kiv_hal::TRegisters& registers) {
 void ProcessUtils::processStartPoint(kiv_hal::TRegisters& registers, kiv_os::TThread_Proc userProgram, Synchronization::Spinlock* lock) {
     lock->lock();
     delete lock;
-
-	const char* arg = reinterpret_cast<char*>(registers.rdi.r);
-
-
     userProgram(registers);
 
     //after program is finished:
@@ -285,10 +283,9 @@ void ProcessUtils::readExitCode(kiv_hal::TRegisters& registers) {
 
 void ProcessUtils::shutdown() {
 
-    pcb->notifyAllListeners();
+    io::removeAllIoHandles();
     pcb->signalProcesses(kiv_os::NSignal_Id::Terminate);
-
-    //todo jeste neco? zavrit files?
+    pcb->notifyAllListeners();
 
 }
 

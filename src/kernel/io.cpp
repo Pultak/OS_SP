@@ -96,9 +96,21 @@ IOHandle* io::getIoHandle(kiv_os::THandle handle) {
 void io::removeIoHandle(kiv_os::THandle handle) {
 	ioHandleLock->lock();
 	auto it = openedHandles.find(handle);
-	IOHandle* result = nullptr;
 	delete it->second;
 	if (it != openedHandles.end()) {
+		it->second->close();
+		openedHandles.erase(it);
+	}
+	ioHandleLock->unlock();
+}
+
+void io::removeAllIoHandles(){
+	ioHandleLock->lock();
+	auto it = openedHandles.begin();
+	
+	if (it != openedHandles.end()) {
+		it->second->close();
+		delete it->second;
 		openedHandles.erase(it);
 	}
 	ioHandleLock->unlock();
