@@ -43,8 +43,9 @@ bool ProcessControlBlock::removeProcess(kiv_os::THandle handle) {
 void ProcessControlBlock::signalProcesses(kiv_os::NSignal_Id signal) {
 	lockMaster->lock();
 
-	for (const auto& entry : table) {
-		auto handlers = entry.second->signalHandlers;
+	auto it = table.rbegin();
+	while (it != table.rend()) {
+		const auto& handlers = it->second->signalHandlers;
 		//get assigned subrutine handler to the signal
 		auto handler = handlers.find(signal);
 		if (handler != handlers.end()) {
@@ -53,16 +54,19 @@ void ProcessControlBlock::signalProcesses(kiv_os::NSignal_Id signal) {
 			regs.rcx.l = static_cast<decltype(regs.rcx.l)>(signal);
 			handler->second(regs);
 		}
+		++it;
 	}
 	lockMaster->unlock();
 }
 
 void ProcessControlBlock::notifyAllListeners(){
 	lockMaster->lock();
-	for (const auto& entry : table) {
-		entry.second->notifyAllThreads();
-		entry.second->notifyRemoveListeners(entry.second->handle);
-	}
 
+	auto it = table.rbegin();
+	while (it != table.rend()) {
+		it->second->notifyAllThreads();
+		it->second->notifyRemoveListeners(it->second->handle);
+		++it;
+	}
 	lockMaster->unlock();
 }

@@ -24,6 +24,8 @@ namespace io{
 	kiv_os::THandle addIoHandle(IOHandle* handle);
 	IOHandle* getIoHandle(kiv_os::THandle handle);
 	void removeIoHandle(kiv_os::THandle handle);
+	void removeAllIoHandles();
+
 
 	size_t Read_Line_From_Console(char* buffer, const size_t buffer_size);
 
