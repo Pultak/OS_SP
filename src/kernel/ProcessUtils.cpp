@@ -284,7 +284,7 @@ void ProcessUtils::readExitCode(kiv_hal::TRegisters& registers) {
 void ProcessUtils::shutdown() {
 
     io::removeAllIoHandles();
-    pcb->signalProcesses(kiv_os::NSignal_Id::Terminate);
+	pcb->signalProcesses(kiv_os::NSignal_Id::Terminate);
     pcb->notifyAllListeners();
 
 }

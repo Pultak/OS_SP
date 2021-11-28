@@ -37,8 +37,8 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 	}
 	else
 	{
-		std::cout << "EXIT";
 		kiv_os_rtl::Exit((uint16_t)kiv_os::NOS_Error::Invalid_Argument);
+		return 0;
 	}
 
 	if (path_c && strlen(path_c))
