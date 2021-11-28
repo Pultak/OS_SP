@@ -1,4 +1,5 @@
 #include "echo.h"
+#include <iostream>
 
 size_t __stdcall echo(const kiv_hal::TRegisters& regs) {
 	const kiv_os::THandle std_out = static_cast<kiv_os::THandle>(regs.rbx.x);

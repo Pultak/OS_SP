@@ -18,6 +18,11 @@ struct Program {
 	bool pipe_out = false;
 	bool file = false;
 
+	kiv_os::THandle handle = kiv_os::Invalid_Handle;
+	kiv_os::THandle pipe_in_handle = kiv_os::Invalid_Handle;
+	kiv_os::THandle pipe_out_handle = kiv_os::Invalid_Handle;
+
+
 	Program::Program() {
 		command = "";
 		argument = "";
