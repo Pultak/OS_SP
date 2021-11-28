@@ -58,20 +58,18 @@ VFS* filesystems::Filesystem_exists(std::filesystem::path path) {
 }
 
 IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File flags, uint8_t attributes, kiv_os::NOS_Error& error) {
-	std::filesystem::path resolved_path_relative_to_fs;
+	//std::filesystem::path resolved_path_relative_to_fs;
 	std::filesystem::path input_path = input_file_name;
 	std::string file_name = input_path.filename().string();
 	IOHandle* file = nullptr;
 	auto fs = Filesystem_exists(input_path);
 	if (fs != nullptr) {
 		printf(" fs nalezen ");
-		/*
-		auto length = resolved_path_relative_to_fs.string().length() + 1;
+		auto length = input_path.relative_path().string().length() + 1;
 		char* name = new char[length];
-		strcpy_s(name, length, resolved_path_relative_to_fs.string().c_str());
-		*/
-		File f{};
-		auto result = fs->open(input_path.relative_path().string().c_str(), flags, attributes, f);
+		strcpy_s(name, length, input_path.relative_path().string().c_str());
+		File* f = new File();
+		auto result = fs->open(name, flags, attributes, f);
 		if (result == kiv_os::NOS_Error::Success) {
 			file = new FileHandle(fs, f);
 			printf(" pridan soubor ");
