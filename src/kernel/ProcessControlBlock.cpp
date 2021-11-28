@@ -1,15 +1,19 @@
 #include "ProcessControlBlock.h"
 
+/// <summary>
+/// pcb
+/// </summary>
+std::map<kiv_os::THandle, Process*> table;
 
 void ProcessControlBlock::AddNewProcess(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program, std::filesystem::path actualDir) {
 	lockMaster->lock();
-	auto newProcess = new Process(handle, stdIn, stdOut, program);
+	auto newProcess = new Process(handle, stdIn, stdOut, program, actualDir);
 
 	table.emplace(std::make_pair(handle, newProcess));
 	lockMaster->unlock();
 }
 
-Process* ProcessControlBlock::getProcess(kiv_os::THandle handle) {
+Process* ProcessControlBlock::getProcess(kiv_os::THandle handle) const{
 	lockMaster->lock();
 	auto it = table.find(handle);
 	if (it != table.end()) {

@@ -158,10 +158,13 @@ void io::Handle_IO(kiv_hal::TRegisters &regs) {
 void io::OpenIOHandle(kiv_hal::TRegisters& regs){
 	//todo needed synch?
 	char* file_name = reinterpret_cast<char*>(regs.rdx.r);
+	
 	auto flags = static_cast<kiv_os::NOpen_File>(regs.rcx.l);
 	auto attributes = static_cast<uint8_t>(regs.rdi.i);
-
-	kiv_os::NOS_Error returnCode = kiv_os::NOS_Error::Success;
+	/*auto processHandle = handles::getTHandleById(std::this_thread::get_id());
+	/*auto process = processHandle == kiv_os::Invalid_Handle ? nullptr :
+		ProcessUtils::pcb->getProcess(processHandle);
+	*/kiv_os::NOS_Error returnCode = kiv_os::NOS_Error::Success;
 	IOHandle* ioHandle = nullptr;
 	//opening stdout?
 	if (strcmp(file_name, "\\stdout\\") == 0) {
@@ -173,7 +176,9 @@ void io::OpenIOHandle(kiv_hal::TRegisters& regs){
 	}
 	//opening file from fs
 	else {
-		ioHandle = filesystems::Open_File(file_name, flags, attributes, returnCode);
+		std::filesystem::path inputPath = file_name;
+		resolvePath(inputPath, file_name);
+		ioHandle = filesystems::Open_File(inputPath.string().c_str(), flags, attributes, returnCode);
 	}
 	auto resultHandle = ioHandle == nullptr ? kiv_os::Invalid_Handle : io::addIoHandle(ioHandle);
 	if (returnCode == kiv_os::NOS_Error::Success) {
@@ -190,12 +195,10 @@ void io::WriteIOHandle(kiv_hal::TRegisters& regs){
 	kiv_os::THandle handle = regs.rdx.x;
 	
 	IOHandle* iohandle = io::getIoHandle(handle);
-	printf("%d", handle);
 	if (iohandle != nullptr) {
 		//get the passed arguments
 		size_t size = static_cast<size_t>(regs.rcx.r);
 		char* buffer = reinterpret_cast<char*>(regs.rdi.r);
-		printf("%s", buffer);
 		size_t writeCount;
 		auto returnCode = iohandle->write(buffer, size, writeCount);
 		
@@ -218,15 +221,12 @@ void io::ReadIOHandle(kiv_hal::TRegisters& regs){
 	//get passed handle and its counterpart IOHandle
 	kiv_os::THandle handle = regs.rdx.x;
 	IOHandle* ioHandle = io::getIoHandle(handle);
-
 	if (ioHandle != nullptr) {
 		//get the passed arguments
 		char* buffer = reinterpret_cast<char*>(regs.rdi.r);
 		auto size = static_cast<size_t>(regs.rcx.r);
-		
 		size_t readCount = 0;
 		auto returnCode = ioHandle->read(size, buffer, readCount);
-
 		if (returnCode == kiv_os::NOS_Error::Success) {
 			regs.rax.r = readCount;
 		}else{

@@ -52,7 +52,8 @@ public:
 	void notifyAllThreads();
 
 public:
-	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program) : handle(handle), stdInput(stdIn), stdOutput(stdOut), programName(program) {
+	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program, std::filesystem::path wd)
+		: handle(handle), stdInput(stdIn), stdOutput(stdOut), programName(program), workingDirectory(wd) {
 		tcbLock = new Synchronization::Spinlock(0);
 		//no other signals are pressent atm
 		//signalHandlers[kiv_os::NSignal_Id::Terminate] = ProcessUtils::defaultSignalHandler;

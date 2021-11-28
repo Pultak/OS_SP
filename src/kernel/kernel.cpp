@@ -15,6 +15,8 @@ void Initialize_Kernel() {
 
 void Shutdown_Kernel() {
 	FreeLibrary(User_Programs);
+	//todo clear processes
+	//delete ProcessUtils::pcb;
 }
 
 void __stdcall Sys_Call(kiv_hal::TRegisters &regs) {
@@ -47,6 +49,7 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 			//something failed -> copy error code
 			context.flags.carry = 1;
 			context.rax.r = regs.rax.x;
+			Shutdown_Kernel();
 			return;
 		}
 		kiv_os::THandle std_out = regs.rax.x;
@@ -57,6 +60,7 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 			//something failed -> copy error code
 			context.flags.carry = 1;
 			context.rax.r = regs.rax.x;
+			Shutdown_Kernel();
 			return;
 		}
 		kiv_os::THandle std_in = regs.rax.x;
@@ -73,6 +77,7 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 			//something failed -> copy error code
 			context.flags.carry = 1;
 			context.rax.r = regs.rax.x;
+			Shutdown_Kernel();
 			return;
 		}
 		
@@ -90,6 +95,7 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 			//something failed -> copy error code
 			context.flags.carry = 1;
 			context.rax.r = regs.rax.x;
+			Shutdown_Kernel();
 			return;
 		}
 
@@ -100,6 +106,7 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 			//something failed -> copy error code
 			context.flags.carry = 1;
 			context.rax.r = regs.rax.x;
+			Shutdown_Kernel();
 			return;
 		}
 
@@ -109,6 +116,7 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 			//something failed -> copy error code
 			context.flags.carry = 1;
 			context.rax.r = regs.rax.x;
+			Shutdown_Kernel();
 			return;
 		}
 

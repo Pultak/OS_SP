@@ -24,7 +24,7 @@ public:
 	/// <param name="program">process running program name</param>
 	/// <param name="actualDir">actual directory location</param>
 	void AddNewProcess(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program, std::filesystem::path actualDir);
-	Process* getProcess(kiv_os::THandle handle);
+	Process* getProcess(kiv_os::THandle handle) const;
 	
 	bool removeProcess(kiv_os::THandle handle);
 	
@@ -40,10 +40,6 @@ public:
 	void notifyAllListeners();
 
 private:
-	/// <summary>
-	/// pcb
-	/// </summary>
-	std::map<kiv_os::THandle, Process*> table;
 
 	Synchronization::Spinlock* lockMaster;
 

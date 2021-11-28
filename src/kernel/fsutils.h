@@ -40,6 +40,8 @@ std::vector<unsigned char> num_to_bytes_fs(int target, std::vector<unsigned char
 
 std::vector<unsigned char> dec_to_hex(int start);
 
+std::vector<unsigned char> dec_t_to_hex(size_t val);
+
 void save_fat(std::vector<unsigned char> fat_table);
 
 std::vector<kiv_os::TDir_Entry> get_os_dir_content(size_t sectors, std::vector<unsigned char> clusters, bool is_root);

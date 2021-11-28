@@ -323,6 +323,25 @@ std::vector<unsigned char> dec_to_hex(int start) {
 
 }
 
+std::vector<unsigned char> dec_t_to_hex(size_t val) {
+	unsigned char bytes[4];
+	size_t num = val;
+
+	bytes[0] = (num >> 24) & 0xFF;
+	bytes[1] = (num >> 16) & 0xFF;
+	bytes[2] = (num >> 8) & 0xFF;
+	bytes[3] = num & 0xFF;
+
+	//vracime obracene, pro ulozeni do souboru
+	std::vector<unsigned char> ret;
+	ret.push_back(bytes[3]);
+	ret.push_back(bytes[2]);
+	ret.push_back(bytes[1]);
+	ret.push_back(bytes[0]);
+
+	return ret;
+}
+
 int retrieve_free_index(std::vector<int> int_fat_table) {
 	for (int i = 0; i < 2848; i++) {
 		if (int_fat_table.at(i) == 0) {
@@ -422,7 +441,10 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 		
 		printf("\n");
 		for (int i = 0; i < cur_folder_items.size(); i++) {
-			printf("\njmeno slozky: %s ", cur_folder_items[i].filename.c_str());
+			printf("\njmeno slozky: %s", cur_folder_items[i].filename.c_str());
+			if (!cur_folder_items[i].extension.empty()) {
+				printf(".%s ", cur_folder_items[i].extension.c_str());
+			}
 			printf("attr: %c ", cur_folder_items[i].attribute);
 			printf("first cluster: %d ", cur_folder_items[i].first_cluster);
 			printf("size: %d", (int)cur_folder_items[i].filesize);
@@ -902,7 +924,6 @@ void update_file_size(const char* path, size_t offset, size_t org_size, size_t n
 	std::vector<std::string> folders = get_directories(path); 
 	std::string filename = folders.at(folders.size() - 1);
 	folders.pop_back();
-
 	int start_sector = -1;
 	std::vector<int> sectors_nums; 
 	if (folders.size() == 0) {
@@ -917,7 +938,6 @@ void update_file_size(const char* path, size_t offset, size_t org_size, size_t n
 		start_sector = sectors_nums.at(0);
 	}
 	std::vector<directory_item> items_folder = retrieve_folders_from_folder(int_fat_table, start_sector);
-
 	int target_index = -1;
 	for (int i = 0; i < items_folder.size(); i++) { 
 		std::string item_to_check = ""; 
@@ -934,18 +954,15 @@ void update_file_size(const char* path, size_t offset, size_t org_size, size_t n
 			break;
 		}
 	}
-
 	if (folders.size() == 0) { 
 		target_index += 1;
 	}
 	else {
 		target_index += 2;
 	}
-
-	std::vector<unsigned char> new_file_size = dec_to_hex(org_size + new_bytes_size); 
+	std::vector<unsigned char> new_file_size = dec_t_to_hex(org_size + new_bytes_size); 
 	int cluster_num = (target_index) / 16; 
 	int item_num_clust_rel = (target_index) % 16; 
-
 	std::vector<unsigned char> data_fol; 
 	if (folders.size() == 0) {
 		data_fol = read_from_fs(sectors_nums.at(cluster_num) - 31, 1);

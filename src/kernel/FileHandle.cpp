@@ -35,9 +35,7 @@ kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& wri
         return kiv_os::NOS_Error::Permission_Denied;
     }
     std::vector<char> buf(buffer, buffer + size);
-	printf("Skocim sem?");
     auto result = vfs->write(file, size, file.position, buf, written);
-	printf("Prosim ne");
     file.position += written;
     file.size += written;
 
@@ -46,7 +44,7 @@ kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& wri
 
 kiv_os::NOS_Error FileHandle::read(size_t size, char* buffer, size_t& read) {
     std::vector<char> out;
-    size = std::min(size, file.size - file.position);
+    size = std::min(size, file.size - 0);
     if (size <= 0) {
         return kiv_os::NOS_Error::IO_Error;
     }
@@ -55,7 +53,7 @@ kiv_os::NOS_Error FileHandle::read(size_t size, char* buffer, size_t& read) {
         buffer[i] = out.at(i);
     }
     read = out.size();
-    file.position += read;
+    //file.position += read;
 
     if (read > 0 && result == kiv_os::NOS_Error::Success) {
         return kiv_os::NOS_Error::Success;
