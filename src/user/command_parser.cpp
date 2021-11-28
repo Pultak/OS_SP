@@ -128,22 +128,7 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 	{
 		return program_ret;
 	}
-	//load whole command string into program if it's a file
-	if (operation_left == '>')
-	{
-		program_ret.command = command;
-		program_ret.redirection_in = true;
-		program_ret.file = true;
-		return program_ret;
-	}
-	if (operation_left == '<')
-	{
-		program_ret.command = command;
-		program_ret.redirection_out = true;
-		program_ret.file = true;
-		return program_ret;
-	}
-	//set redirection and pipe flags for other cases
+	//set redirection and pipe flags
 	if (operation_left == '|')
 	{
 		program_ret.pipe_in = true;
@@ -156,10 +141,24 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 	{
 		program_ret.redirection_in = true;
 	}
-		if (operation_right == '>')
+	if (operation_right == '>')
 	{
 		program_ret.redirection_out = true;
 	}
+	//load whole command string into program if it's a file
+	if (operation_left == '>')
+	{
+		program_ret.command = command;
+		program_ret.file = true;
+		return program_ret;
+	}
+	if (operation_left == '<')
+	{
+		program_ret.command = command;
+		program_ret.file = true;
+		return program_ret;
+	}
+
 
 	int index = 0;
 	int index_arg = 0;
@@ -287,24 +286,34 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		{
 			continue;
 		}
-		if (program.redirection_in)
-		{
-			auto result = kiv_os_rtl::Open_File(program_vector.at(index+1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, in);
-		}
-		if (program.redirection_out)
-		{
-			kiv_os_rtl::Open_File(program_vector.at(index+1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, out);
-		}
 		if (program.pipe_in)
 		{
 			in = current_pipe[0];
 			program.pipe_in_handle = in;
 		}
-		if (program.pipe_out)
+		//if this is the last program, ignore redirection and pipe out
+		if (program_vector.size() > index + 1)
 		{
-			kiv_os_rtl::Create_Pipe(current_pipe);
-			out = current_pipe[1];
-			program.pipe_out_handle = out;
+			if (program.redirection_in)
+			{
+				auto result = kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, in);
+				//if there is a pipe after the file and there is a program to pipe it into, we want to pipe the current program out
+				if (program_vector.at(index + 1).pipe_out && (program_vector.size() > index + 2))
+				{
+					program.pipe_out = true;
+				}
+			}
+			if (program.redirection_out)
+			{
+				kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, out);
+			}
+
+			if (program.pipe_out)
+			{
+				kiv_os_rtl::Create_Pipe(current_pipe);
+				out = current_pipe[1];
+				program.pipe_out_handle = out;
+			}
 		}
 		program.Print();
 
