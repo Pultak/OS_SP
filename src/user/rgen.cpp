@@ -3,6 +3,7 @@
 #include "rgen.h"
 #include <ctime>
 #include <iostream>
+#include <string>
 
 bool eof = false;
 
@@ -42,20 +43,26 @@ extern "C" size_t __stdcall rgen(const kiv_hal::TRegisters& regs)
 
 	srand(static_cast <unsigned> (time(0)));
 
+	std::string rand_num;
+	size_t written;
+
 	eof = false;
 	kiv_os::THandle stdin_thread;
-	kiv_os_rtl::Create_Thread(&stdin_read, &eof, std_in, std_out, stdin_thread);
+	//kiv_os_rtl::Create_Thread(&stdin_read, &eof, std_in, std_out, stdin_thread);
 
 	float a = 5.0;
 
 	int counter = 0;
 	while (!eof && counter < 50)
 	{
-		std::cout << (float(rand()) / float((RAND_MAX)) * a) << std::endl;
+		rand_num = std::to_string(float(rand()) / float((RAND_MAX)) * a);
+		kiv_os_rtl::Write_File(std_out, rand_num.c_str(), strlen(rand_num.c_str()), written);
+		kiv_os_rtl::Write_File(std_out, "\n", strlen("\n"), written);
+
 		counter++;
 	}
 
-	kiv_os_rtl::Close_Handle(stdin_thread);
+	//kiv_os_rtl::Close_Handle(stdin_thread);
 
 	return 0;
 }

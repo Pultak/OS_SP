@@ -120,5 +120,10 @@ void filesystems::parse_path(const char* abs_path, const char* rel_path, std::st
 	for (int i = 0; i < abs.size() - 1; i++) {
 		result += abs[i] + "\\";
 	}
-	result += abs[abs.size() - 1];
+	if (abs.size() == 1) {
+		result += abs[abs.size() - 1] + "\\";
+	}
+	else {
+		result += abs[abs.size() - 1];
+	}
 }

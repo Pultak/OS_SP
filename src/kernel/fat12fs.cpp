@@ -299,6 +299,15 @@ kiv_os::NOS_Error FAT::read(File* f, size_t size, size_t offset, std::vector<cha
             }
         }
         
+		if (out.size() < 256)
+		{
+			out.push_back((uint16_t)kiv_hal::NControl_Codes::ETX);
+		}
+		else
+		{
+			out.at(255) = (uint16_t)kiv_hal::NControl_Codes::ETX;
+		}
+
         return kiv_os::NOS_Error::Success;
     }
 }

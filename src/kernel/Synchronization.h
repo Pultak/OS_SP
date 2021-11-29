@@ -49,9 +49,9 @@ namespace Synchronization {
     class IntSpinlock {
 
     private:
-        std::atomic<uint8_t> lockVal = { 0 };
+        std::atomic<uint16_t> lockVal = { 0 };
     public:
-        explicit IntSpinlock(uint8_t val) {
+        explicit IntSpinlock(uint16_t val) {
             lockVal = val;
         }
 
@@ -72,7 +72,7 @@ namespace Synchronization {
                 !lockVal.exchange(true, std::memory_order_acquire);
         }
 
-        void unlock(uint8_t val) noexcept {
+        void unlock(uint16_t val) noexcept {
             lockVal.fetch_add(val, std::memory_order_release);
         }
     };

@@ -26,19 +26,12 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 
 	if (path && strlen(path))
 	{
-		if (kiv_os_rtl::Open_File(path, kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, file_handle))
+		if (kiv_os_rtl::Open_File(path, (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, file_handle))
 		{
-			std::cout << "readfrom file\n";
-			std::cout << "file handle: " << file_handle << " endoffileha\n";
-
-
 			read_from_file = true;
 		}
 		else
 		{
-			std::cout << "exit file\n";
-
-
 			kiv_os_rtl::Exit((uint16_t)kiv_os::NOS_Error::File_Not_Found);
 			return 0;
 		}
@@ -46,8 +39,6 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 	}
 	else
 	{
-		std::cout << "read from stdin\n";
-
 		file_handle = std_in;
 	}
 
@@ -56,21 +47,16 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 	{
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
-			std::cout << "buffer: " << buffer << "\n";
-
-			std::cout << "typetestread\n";
-			if (!read_from_file)
+			/*if (!read_from_file)
 			{
 				lines.push_back(line);
 				line.clear();
 				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
-			}
+			}*/
 			for (int i = 0; i < counter; i++)
 			{
 				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 5)
 				{
-					std::cout << "typetestread1\n";
-
 					lines.push_back(line);
 					line.clear();
 					flag_continue = false;
@@ -78,15 +64,11 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 				}
 				else if (buffer[i] == '\n')
 				{
-					std::cout << "typetestread2\n";
-
 					lines.push_back(line);
 					line.clear();
 				}
 				else
 				{
-					std::cout << "typetestread3\n";
-
 					line.push_back(buffer[i]);
 				}
 			}
@@ -96,8 +78,7 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 
 	for (auto& line : lines)
 	{
-		std::cout << "typetestwrite\n";
-
+		std::cout << "line: " << line << "endl\n";
 		kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
 		kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 	}

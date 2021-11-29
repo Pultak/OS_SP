@@ -23,16 +23,21 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 
 	bool flag_continue = true;
 
+	std::cout << "freq : " << std_in << ".\n";
+
 	while (flag_continue)
 	{
+		std::cout << "before read\n";
 
 		if (kiv_os_rtl::Read_File(std_in, buffer, buffer_size, counter))
 		{
+			std::cout <<"\nbuffer" << buffer;
+
 			for (int i = 0; i < counter; i++)
 			{
 				char c = buffer[i];
 
-				if (c == 'q' || c == 4)
+				if (c == 5 || c == 4 || c == 3)
 				{
 					flag_continue = false;
 					break;
@@ -48,6 +53,7 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 			break;
 		}
 	}
+	std::cout << "read fin\n";
 
 	for (int i = 0; i < 128; i++) {
 		int ch = chars.at(i);

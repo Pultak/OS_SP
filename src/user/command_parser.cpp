@@ -296,7 +296,7 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		{
 			if (program.redirection_in)
 			{
-				auto result = kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, in);
+				auto result = kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, in);
 				//if there is a pipe after the file and there is a program to pipe it into, we want to pipe the current program out
 				if (program_vector.at(index + 1).pipe_out && (program_vector.size() > index + 2))
 				{
@@ -305,7 +305,7 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 			}
 			if (program.redirection_out)
 			{
-				kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, out);
+				kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, out);
 			}
 
 			if (program.pipe_out)

@@ -96,9 +96,9 @@ IOHandle* io::getIoHandle(kiv_os::THandle handle) {
 void io::removeIoHandle(kiv_os::THandle handle) {
 	ioHandleLock->lock();
 	auto it = openedHandles.find(handle);
-	delete it->second;
 	if (it != openedHandles.end()) {
 		it->second->close();
+		delete it->second;
 		openedHandles.erase(it);
 	}
 	ioHandleLock->unlock();
@@ -294,7 +294,7 @@ void io::CloseIOHandle(kiv_hal::TRegisters& regs){
 	IOHandle* ioHandle = io::getIoHandle(handle);
 	if (ioHandle) {
 		// close and remove opened handle
-		ioHandle->close();
+		//ioHandle->close();
 		//freeing of memory is done in the function
 		io::removeIoHandle(handle);
 	}
@@ -335,12 +335,13 @@ void io::SetWorkingDirectory(kiv_hal::TRegisters& regs){
 	std::filesystem::path inputPath = path;
 	resolvePath(inputPath, path);
 	auto fs = filesystems::Filesystem_exists(inputPath);
+	printf("\npicaaaaa %s\n", inputPath.string().c_str());
 	//error if everything fails
 	kiv_os::NOS_Error errorCode = kiv_os::NOS_Error::Unknown_Error;
 	//todo handle relative path?
 	if (fs) {
 		const char* fileName = inputPath.relative_path().string().c_str();
-		if (fs->file_exist(fileName)) {
+		if (inputPath.relative_path().empty() || fs->file_exist(inputPath.relative_path().string().c_str())) {
 			auto processHandle = handles::getTHandleById(std::this_thread::get_id());
 			auto process = processHandle == kiv_os::Invalid_Handle ? nullptr : 
 				ProcessUtils::pcb->getProcess(processHandle);
@@ -349,12 +350,15 @@ void io::SetWorkingDirectory(kiv_hal::TRegisters& regs){
 				//dir set -> everything ok
 				return;
 			}else {
+				printf("process not found");
 				errorCode = kiv_os::NOS_Error::Unknown_Error;
 			}
 		}else {
+			printf("file not found");
 			errorCode = kiv_os::NOS_Error::File_Not_Found;
 		}
 	}else {
+		printf("fs not found");
 		errorCode = kiv_os::NOS_Error::Unknown_Filesystem;
 	}
 	regs.rax.r = static_cast<uint64_t>(errorCode);
@@ -451,6 +455,7 @@ void io::CreatePipe(kiv_hal::TRegisters& regs){
 
 void io::resolvePath(std::filesystem::path& resultPath, char* fileName){
 	if (resultPath.is_relative()) {
+		printf("in the beninging");
 		auto processHandle = handles::getTHandleById(std::this_thread::get_id());
 		auto process = processHandle == kiv_os::Invalid_Handle ? nullptr :
 			ProcessUtils::pcb->getProcess(processHandle);

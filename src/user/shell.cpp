@@ -18,16 +18,22 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 	size_t counter;
 	std::vector<Program> program_vector;
 	bool continue_flag = true;
+	size_t chars_written;
+
 	
 	const char* intro = "Vitejte v semestralni praci z KIV/OS.\n" \
 						"Shell zobrazuje echo zadaneho retezce. Prikaz exit ukonci shell.\n";
 	kiv_os_rtl::Write_File(std_out, intro, strlen(intro), counter);
 
+	kiv_os_rtl::Get_Working_Dir(directory, buffer_size, chars_written);
 
 	const char* prompt = "C:\\>";
-	size_t chars_written;
 	do {
-		kiv_os_rtl::Write_File(std_out, prompt, strlen(prompt), counter);
+		//kiv_os_rtl::Write_File(std_out, prompt, strlen(prompt), counter);
+		kiv_os_rtl::Write_File(std_out, directory, strlen(directory), counter);
+		kiv_os_rtl::Write_File(std_out, "\\>", 2, counter);
+
+
 
 		if (kiv_os_rtl::Read_File(std_in, buffer, buffer_size, counter)) {
 			if ((counter > 0) && (counter == buffer_size)) counter--;
@@ -71,11 +77,12 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 				{
 					if (!it->argument.empty())
 					{
+						std::cout << "arg: "<< it->argument;
 						if (kiv_os_rtl::Set_Working_Dir(it->argument.c_str()))
 						{
 							if (kiv_os_rtl::Get_Working_Dir(directory, buffer_size, chars_written))
 							{
-
+								//std::cout << "directory: " <<directory << std::endl;
 							}
 							else
 							{

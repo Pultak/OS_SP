@@ -31,7 +31,6 @@ kiv_os::NOS_Error FileHandle::seek(size_t new_pos, kiv_os::NFile_Seek position, 
 }
 
 kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& written) {
-    file->position = 13;
     if (is_read_only() || is_directory()) {
         return kiv_os::NOS_Error::Permission_Denied;
     }

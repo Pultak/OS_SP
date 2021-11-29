@@ -39,6 +39,7 @@ bool kiv_os_rtl::Set_Working_Dir(const char* dir) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Set_Working_Dir));
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(dir);
 	const bool result = kiv_os::Sys_Call(regs);
+	std::cout << regs.rax.r << std::endl;
 	return result;
 }
 
