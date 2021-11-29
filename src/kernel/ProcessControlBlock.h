@@ -39,7 +39,7 @@ public:
 	/// </summary>
 	void notifyAllListeners() const ;
 
-	void* getAllProcesses(size_t& processCount) const;
+	void* getAllProcesses(size_t& processCount);
 
 	bool isUpdated();
 

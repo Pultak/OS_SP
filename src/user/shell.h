@@ -8,4 +8,3 @@ extern "C" size_t __stdcall shell(const kiv_hal::TRegisters &regs);
 //nasledujici funkce si dejte do vlastnich souboru
 //cd nemuze byt externi program, ale vestavny prikaz shellu!
 
-extern "C" size_t __stdcall tasklist(const kiv_hal::TRegisters &regs) { return 0; }

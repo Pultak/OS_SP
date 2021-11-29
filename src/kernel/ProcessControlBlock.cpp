@@ -12,6 +12,7 @@ void ProcessControlBlock::AddNewProcess(kiv_os::THandle handle, kiv_os::THandle 
 
 	table.emplace(std::make_pair(handle, newProcess));
 	tableUpdated = true;
+	printf("Updated \n");
 	lockMaster->unlock();
 }
 
@@ -39,6 +40,7 @@ bool ProcessControlBlock::removeProcess(kiv_os::THandle handle) {
 		processRemoved = true;
 	}
 	tableUpdated = true;
+	printf("Updated \n");
 	lockMaster->unlock();
 	return processRemoved;
 }
@@ -74,9 +76,10 @@ void ProcessControlBlock::notifyAllListeners() const {
 	lockMaster->unlock();
 }
 
-void* ProcessControlBlock::getAllProcesses(size_t& processCount) const{
+void* ProcessControlBlock::getAllProcesses(size_t& processCount){
 	lockMaster->lock();
 	if (tableUpdated) {
+		printf("No longer updated \n");
 		ProcessEntry* result = new ProcessEntry[table.size()];
 		uint16_t index = 0;
 		for (const auto& rec : table) {

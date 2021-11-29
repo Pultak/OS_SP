@@ -72,7 +72,9 @@ IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File
 		if (result == kiv_os::NOS_Error::Success) {
 
 			//opening system reserved tasklist file?
-			if (strcmp(name, "C:\\tasklist") == 0) {
+			if (strcmp(name, "tasklist") == 0) {
+
+				printf("PCBFILE opened \n");
 				file = new PCBFileHandle(fs, f);
 			}
 			//opening other file
