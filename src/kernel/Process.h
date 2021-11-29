@@ -22,14 +22,14 @@ enum class ProcessState {
 
 
 
-struct PCB_Entry {
+struct ProcessEntry {
 	kiv_os::THandle handle;
 	kiv_os::THandle stdIn;
 	kiv_os::THandle stdOut;
-	ProcessState status;
+	ProcessState state;
 	kiv_os::NOS_Error exitCode;
-	char program_name[42];
-	char working_directory[256];
+	char programName[42];
+	char workingDir[256];
 };
 
 

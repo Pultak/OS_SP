@@ -70,13 +70,23 @@ IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File
 		File* f = new File();
 		auto result = fs->open(name, flags, attributes, f);
 		if (result == kiv_os::NOS_Error::Success) {
-			file = new FileHandle(fs, f);
+
+			//opening system reserved tasklist file?
+			if (strcmp(name, "C:\\tasklist") == 0) {
+				file = new PCBFileHandle(fs, f);
+			}
+			//opening other file
+			else {
+				file = new FileHandle(fs, f);
+			}
+
 		}
 		else {
+			error = kiv_os::NOS_Error::File_Not_Found;
 		}
 	}
 	else {
-		error = kiv_os::NOS_Error::File_Not_Found;
+		error = kiv_os::NOS_Error::Unknown_Filesystem;
 	}
 	return file;
 }

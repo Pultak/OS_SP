@@ -19,6 +19,7 @@
     <ClCompile Include="..\..\src\kernel\FileHandle.cpp" />
     <ClCompile Include="..\..\src\kernel\VGAHandle.cpp" />
     <ClCompile Include="..\..\src\kernel\KeyboardHandle.cpp" />
+    <ClCompile Include="..\..\src\kernel\PCBFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
@@ -42,5 +43,6 @@
     <ClInclude Include="..\..\src\kernel\VGAHandle.h" />
     <ClInclude Include="..\..\src\kernel\FileHandle.h" />
     <ClInclude Include="..\..\src\kernel\KeyboardHandle.h" />
+    <ClInclude Include="..\..\src\kernel\PCBFile.h" />
   </ItemGroup>
 </Project>
