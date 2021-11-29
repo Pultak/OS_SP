@@ -16,7 +16,7 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 	bool read_from_file = false;
 	bool flag_continue = true;
 	std::vector<std::string> lines;
-	const size_t buffer_size = 256;
+	const size_t buffer_size = 20;
 	char buffer[buffer_size];
 	size_t counter = 0;
 	std::string line = "";
@@ -47,6 +47,7 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 	{
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
+			std::cout << "\nbuffer: " << buffer << std::endl;
 			/*if (!read_from_file)
 			{
 				lines.push_back(line);
@@ -73,6 +74,10 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 				}
 			}
 
+		}
+		else
+		{
+			return 0;
 		}
 	}
 

@@ -31,7 +31,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 	do {
 		//kiv_os_rtl::Write_File(std_out, prompt, strlen(prompt), counter);
 		kiv_os_rtl::Write_File(std_out, directory, strlen(directory), counter);
-		kiv_os_rtl::Write_File(std_out, "\\>", 2, counter);
+		kiv_os_rtl::Write_File(std_out, ">", 2, counter);
 
 
 

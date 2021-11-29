@@ -1,6 +1,7 @@
 #pragma once
 #include "FileHandle.h"
 #include <algorithm>
+#include <iostream>
 
 FileHandle::FileHandle(VFS* vfs, File* file) : vfs(vfs), file(file) {}
 
@@ -44,7 +45,8 @@ kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& wri
 
 kiv_os::NOS_Error FileHandle::read(size_t size, char* buffer, size_t& read) {
     std::vector<char> out;
-    size = std::min(size, file->size - 0);
+    size = std::min(size, file->size - file->position);
+	std::cout << "size: size, fsize, fpos: " << size << " " << file->size << " " << file->position << "\n\n\n";
     if (size <= 0) {
         return kiv_os::NOS_Error::IO_Error;
     }

@@ -1,4 +1,5 @@
 #include "fat12fs.h"
+#include <iostream>
 
 std::vector<unsigned char> fat_table;
 
@@ -295,16 +296,12 @@ kiv_os::NOS_Error FAT::read(File* f, size_t size, size_t offset, std::vector<cha
                 }
             }
         }
-        
-		if (out.size() < 256)
+		std::cout << "vector\n\n";
+		for (auto out_c : out)
 		{
-			out.push_back((uint16_t)kiv_hal::NControl_Codes::ETX);
-		}
-		else
-		{
-			out.at(255) = (uint16_t)kiv_hal::NControl_Codes::ETX;
-		}
+			std::cout << out_c;
 
+		}
         return kiv_os::NOS_Error::Success;
     }
 }

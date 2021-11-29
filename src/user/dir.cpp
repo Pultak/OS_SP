@@ -61,8 +61,10 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 			{
 				if (result = kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, read))
 				{
-					std::cout << "\nbuff a read: " << buffer_size <<  " " << read ;
+					buffer[buffer_size - 1] = 0;
 
+					std::cout << "\nbuff a read: " << buffer_size <<  " " << read <<std::endl ;
+					std::cout << buffer;
 					if (buffer_size == read)
 					{
 						kiv_os::TDir_Entry* file = reinterpret_cast<kiv_os::TDir_Entry*>(buffer);
@@ -88,6 +90,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 					else
 					{
 						std::cout << "\nwrong size of TDir_Entry\n";
+						buffer[buffer_size-1] = 0;
 						read = 0;
 					}
 					read = 0;
@@ -114,6 +117,8 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 	output.append(" Dir(s)");
 
 	kiv_os_rtl::Write_File(std_out, output.data(), output.size(), written);
+
+	//delete[]buffer;
 
 	std::cout << "END";
 	return 0;
