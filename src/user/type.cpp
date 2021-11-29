@@ -47,12 +47,12 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 	{
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
-			if (!read_from_file)
+			/*if (!read_from_file)
 			{
 				lines.push_back(line);
 				line.clear();
 				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
-			}
+			}*/
 			for (int i = 0; i < counter; i++)
 			{
 				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 5)

@@ -10,7 +10,7 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 {
 	const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
 	const kiv_os::THandle std_out = static_cast<kiv_os::THandle>(regs.rbx.x);
-	char* path_c = reinterpret_cast<char*>(regs.rdi.r);
+	const char* path_c = reinterpret_cast<char*>(regs.rdi.r);
 	kiv_os::THandle file_handle = kiv_os::Invalid_Handle;
 	bool read_from_file = false;
 	bool flag_continue = true;
@@ -79,6 +79,8 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 				}
 			}
 		}
+		else
+			flag_continue = false;
 	}
 
 	std::string line = std::to_string(line_count);

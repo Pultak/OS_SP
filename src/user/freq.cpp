@@ -61,8 +61,9 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 		if (ch)
 		{
 			line_ss.str(std::string());
-			line_ss << "0x" << std::hex << (int)c << "x :" << ch;
+			line_ss << "0x" << std::hex << (int)c;
 			line = line_ss.str();
+			line.append("x : " + std::to_string(ch));
 
 			kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);
 			kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), counter);
