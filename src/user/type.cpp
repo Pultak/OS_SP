@@ -47,13 +47,12 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 	{
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
-			std::cout << "\nbuffer: " << buffer << std::endl;
-			/*if (!read_from_file)
+			if (!read_from_file)
 			{
 				lines.push_back(line);
 				line.clear();
 				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
-			}*/
+			}
 			for (int i = 0; i < counter; i++)
 			{
 				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 5)
@@ -77,13 +76,14 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 		}
 		else
 		{
-			return 0;
+			flag_continue = false;
 		}
 	}
 
+	kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
+
 	for (auto& line : lines)
 	{
-		std::cout << "line: " << line << "endl\n";
 		kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
 		kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 	}

@@ -110,6 +110,10 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 						read = 0;
 					}
 				}
+				else
+				{
+					read = 0;
+				}
 			}
 		}
 		else
