@@ -7,9 +7,11 @@
 
 bool eof = false;
 
-size_t stdin_read(const kiv_hal::TRegisters& regs)
+extern "C"  size_t __stdcall stdin_read(const kiv_hal::TRegisters& regs)
 {
 	const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
+
+	std::cout << "THREAD";
 
 	const size_t buffer_size = 256;
 	char buffer[buffer_size];
@@ -21,6 +23,7 @@ size_t stdin_read(const kiv_hal::TRegisters& regs)
 	{
 		if (kiv_os_rtl::Read_File(std_in, buffer, buffer_size, counter))
 		{
+			std::cout << "READREADASDSADASDASJDASAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 			for (int i = 0; i < counter; i++)
 			{
 				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 5)
@@ -48,21 +51,21 @@ extern "C" size_t __stdcall rgen(const kiv_hal::TRegisters& regs)
 
 	eof = false;
 	kiv_os::THandle stdin_thread;
-	//kiv_os_rtl::Create_Thread(&stdin_read, &eof, std_in, std_out, stdin_thread);
+	kiv_os_rtl::Create_Thread(stdin_read, reinterpret_cast<const char*>(eof), std_in, std_out, stdin_thread);
 
 	float a = 5.0;
 
 	int counter = 0;
-	while (!eof && counter < 50)
+	while (!eof)
 	{
 		rand_num = std::to_string(float(rand()) / float((RAND_MAX)) * a);
 		kiv_os_rtl::Write_File(std_out, rand_num.c_str(), strlen(rand_num.c_str()), written);
 		kiv_os_rtl::Write_File(std_out, "\n", strlen("\n"), written);
-
+		for (int i = 0; i++; i < 1000);
 		counter++;
 	}
 
-	//kiv_os_rtl::Close_Handle(stdin_thread);
+	kiv_os_rtl::Close_Handle(stdin_thread);
 
 	return 0;
 }
