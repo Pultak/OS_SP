@@ -32,6 +32,7 @@ kiv_os::NOS_Error FileHandle::seek(size_t new_pos, kiv_os::NFile_Seek position, 
 
 kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& written) {
     if (is_read_only() || is_directory()) {
+        printf("zapisovani do slozky nelze\n");
         return kiv_os::NOS_Error::Permission_Denied;
     }
     std::vector<char> buf(buffer, buffer + size);
@@ -44,7 +45,7 @@ kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& wri
 kiv_os::NOS_Error FileHandle::read(size_t size, char* buffer, size_t& read) {
     std::vector<char> out;
     size = std::min(size, file->size - 0);
-    if (size < 0) {
+    if (size <= 0) {
         return kiv_os::NOS_Error::IO_Error;
     }
     //printf("%s", static_cast<const char*>(file.name));
@@ -53,7 +54,7 @@ kiv_os::NOS_Error FileHandle::read(size_t size, char* buffer, size_t& read) {
         buffer[i] = out.at(i);
     }
     read = out.size();
-    //file.position += read;
+    file->position += read;
 
     if (read > 0 && result == kiv_os::NOS_Error::Success) {
         return kiv_os::NOS_Error::Success;
@@ -72,13 +73,13 @@ bool FileHandle::is_read_only() {
 	return has_attribute(kiv_os::NFile_Attributes::Read_Only);
 }
 bool FileHandle::is_system_file() {
-	return has_attribute(kiv_os::NFile_Attributes::Directory);
+	return has_attribute(kiv_os::NFile_Attributes::System_File);
 }
 bool FileHandle::is_directory() {
-	return has_attribute(kiv_os::NFile_Attributes::Hidden);
+	return has_attribute(kiv_os::NFile_Attributes::Directory);
 }
 bool FileHandle::is_hidden() {
-	return has_attribute(kiv_os::NFile_Attributes::System_File);
+	return has_attribute(kiv_os::NFile_Attributes::Hidden);
 }
 bool FileHandle::is_volume_id() {
 	return has_attribute(kiv_os::NFile_Attributes::Volume_ID);

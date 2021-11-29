@@ -205,7 +205,6 @@ void io::OpenIOHandle(kiv_hal::TRegisters& regs){
 void io::WriteIOHandle(kiv_hal::TRegisters& regs){
 	//get passed handle and its counterpart IOHandle
 	kiv_os::THandle handle = regs.rdx.x;
-	
 	IOHandle* iohandle = io::getIoHandle(handle);
 	if (iohandle != nullptr) {
 		//get the passed arguments
@@ -335,12 +334,10 @@ void io::SetWorkingDirectory(kiv_hal::TRegisters& regs){
 	std::filesystem::path inputPath = path;
 	resolvePath(inputPath, path);
 	auto fs = filesystems::Filesystem_exists(inputPath);
-	printf("\npicaaaaa %s\n", inputPath.string().c_str());
 	//error if everything fails
 	kiv_os::NOS_Error errorCode = kiv_os::NOS_Error::Unknown_Error;
 	//todo handle relative path?
 	if (fs) {
-		const char* fileName = inputPath.relative_path().string().c_str();
 		if (inputPath.relative_path().empty() || fs->file_exist(inputPath.relative_path().string().c_str())) {
 			auto processHandle = handles::getTHandleById(std::this_thread::get_id());
 			auto process = processHandle == kiv_os::Invalid_Handle ? nullptr : 
@@ -350,15 +347,12 @@ void io::SetWorkingDirectory(kiv_hal::TRegisters& regs){
 				//dir set -> everything ok
 				return;
 			}else {
-				printf("process not found");
 				errorCode = kiv_os::NOS_Error::Unknown_Error;
 			}
 		}else {
-			printf("file not found");
 			errorCode = kiv_os::NOS_Error::File_Not_Found;
 		}
 	}else {
-		printf("fs not found");
 		errorCode = kiv_os::NOS_Error::Unknown_Filesystem;
 	}
 	regs.rax.r = static_cast<uint64_t>(errorCode);
@@ -455,7 +449,6 @@ void io::CreatePipe(kiv_hal::TRegisters& regs){
 
 void io::resolvePath(std::filesystem::path& resultPath, char* fileName){
 	if (resultPath.is_relative()) {
-		printf("in the beninging");
 		auto processHandle = handles::getTHandleById(std::this_thread::get_id());
 		auto process = processHandle == kiv_os::Invalid_Handle ? nullptr :
 			ProcessUtils::pcb->getProcess(processHandle);

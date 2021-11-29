@@ -5,7 +5,7 @@
 std::vector<std::string> get_directories(const char* path){
 	std::vector<std::string> directories;
 	std::string pth = path;
-	std::string delim = "\\";
+	std::string delim = "\\"; // znak podle ktereho se parsuje vstup
 	size_t pos = 0;
 	std::string dir;
 	while ((pos = pth.find(delim)) != std::string::npos) {
@@ -13,29 +13,30 @@ std::vector<std::string> get_directories(const char* path){
 		directories.push_back(dir);
 		pth.erase(0, pos + delim.length());
 	}
-	directories.push_back(pth);
+	if (!pth.empty()) {
+		directories.push_back(pth); //pridani posledni polozky pokud neni prazdna
+	}
 	return directories;
 }
 
 std::vector<unsigned char> load_first_table() {
 	std::vector<unsigned char> fat_table_content;
-
+	// priprava struktur a registru pro cteni fat tabulky z disku
 	kiv_hal::TRegisters read_reg;
 	kiv_hal::TDisk_Address_Packet read_packet;
-	
-	auto s = malloc(512 * 9);
-	read_packet.count = 9;
+	auto s = malloc(SECTOR_SIZE * 9);
+	read_packet.count = 9; // pocet sektru k precteni
 	read_packet.sectors = (void*)s;
-	read_packet.lba_index = 1;
-
-	read_reg.rdx.l = 129;
+	read_packet.lba_index = 1; // prvni sektor fat tabulky
+	read_reg.rdx.l = 129; // cislo disku
 	read_reg.rax.h = static_cast<decltype(read_reg.rax.h)>(kiv_hal::NDisk_IO::Read_Sectors);
 	read_reg.rdi.r = reinterpret_cast<decltype(read_reg.rdi.r)>(&read_packet);
 	
 	kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::Disk_IO, read_reg);
 
+	// prevod na vektor charu
 	char* buffer = reinterpret_cast<char*>(read_packet.sectors);
-	for (int i = 0; i < (512 * 9); i++) {
+	for (int i = 0; i < (SECTOR_SIZE * 9); i++) {
 		fat_table_content.push_back(buffer[i]);
 	}
 
@@ -49,7 +50,7 @@ std::vector<unsigned char> load_second_table() {
 	kiv_hal::TRegisters read_reg;
 	kiv_hal::TDisk_Address_Packet read_packet;
 
-	auto s = malloc(512 * 9);
+	auto s = malloc(SECTOR_SIZE * 9);
 	read_packet.count = 9;
 	read_packet.sectors = (void*)s;
 	read_packet.lba_index = 10;
@@ -71,11 +72,11 @@ std::vector<unsigned char> load_second_table() {
 }
 
 void write_to_fs(int start, std::vector<char> data) {
-	
+	// priprava registru  
 	kiv_hal::TRegisters write_reg;
 	kiv_hal::TDisk_Address_Packet write_packet;
 
-	write_packet.count = data.size() / 512 + (data.size() % 512 != 0);
+	write_packet.count = data.size() / SECTOR_SIZE + (data.size() % SECTOR_SIZE != 0);
 	write_packet.lba_index = static_cast<size_t>(start) + 31;
 	
 	write_reg.rdx.l = 129;
@@ -84,9 +85,9 @@ void write_to_fs(int start, std::vector<char> data) {
 	
 	int last_sector_alloc = (start + static_cast<int>(write_packet.count)) - 1;
 	std::vector<unsigned char> last_sector_data = read_from_fs(last_sector_alloc, 1);
-	int size_to_hold = static_cast<int>(write_packet.count) * 512;
+	int size_to_hold = static_cast<int>(write_packet.count) * SECTOR_SIZE;
 
-	int last_cluster_occupied = data.size() % 512;
+	int last_cluster_occupied = data.size() % SECTOR_SIZE;
 	size_t start_pos = data.size();
 
 	int added_bytes = 0;
@@ -104,7 +105,7 @@ std::vector<unsigned char> read_from_fs(int start, int sectors_count) {
 	kiv_hal::TDisk_Address_Packet read_packet;
 	
 	read_packet.count = sectors_count;
-	auto s = malloc(512 * static_cast<size_t>(sectors_count));
+	auto s = malloc(SECTOR_SIZE * static_cast<size_t>(sectors_count));
 	read_packet.sectors = (void*)s;
 	read_packet.lba_index = static_cast<size_t>(start) + 31;
 	read_regs.rdx.l = 129;
@@ -114,7 +115,7 @@ std::vector<unsigned char> read_from_fs(int start, int sectors_count) {
 	kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::Disk_IO, read_regs);
 
 	char* buffer = reinterpret_cast<char*>(read_packet.sectors);
-	std::vector<unsigned char> content(buffer, buffer + (static_cast<size_t>(sectors_count) * 512));
+	std::vector<unsigned char> content(buffer, buffer + (static_cast<size_t>(sectors_count) * SECTOR_SIZE));
 	free(s);
 	return content;
 }
@@ -286,7 +287,7 @@ void write_folder_into_fs(int index, int upper_index) {
 	for (int i = 0; i < 4; i++) {
 		subfolder.push_back(0);
 	}
-	for (size_t i = subfolder.size(); i < 512; i++) {
+	for (size_t i = subfolder.size(); i < SECTOR_SIZE; i++) {
 		subfolder.push_back(0);
 	}
 
@@ -435,7 +436,8 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 	for (int i = 0; i < path.size(); i++) {
 		dir_item_number = -1;
 		cur_folder_items = retrieve_folders_from_folder(int_fat_table, traversed_sector_folder); 
-		
+
+		/*
 		printf("\n");
 		for (int i = 0; i < cur_folder_items.size(); i++) {
 			printf("\njmeno slozky: %s", cur_folder_items[i].filename.c_str());
@@ -450,9 +452,9 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 			printf("size: %d", (int)cur_folder_items[i].filesize);
 		}
 		printf("\n");
-		
-		int j = 0;
+		*/
 
+		int j = 0;
 		std::string item_to_check = "";  
 		while (dir_item_number == -1 && j < cur_folder_items.size()) { 
 			directory_item dir_item = cur_folder_items.at(j);
@@ -497,7 +499,7 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 std::vector<kiv_os::TDir_Entry> get_os_dir_content(size_t sectors, std::vector<unsigned char> clusters, bool is_root) {
 	std::vector<kiv_os::TDir_Entry> directory_content; 
 
-	for (int i = 0; i < 512 * sectors;) {
+	for (int i = 0; i < SECTOR_SIZE * sectors;) {
 		if (clusters[i] == 0 || clusters[i] == 246) {
 			break;
 		}
@@ -604,7 +606,7 @@ std::vector<directory_item> get_dir_items(int sectornums, std::vector<unsigned c
 	char first_clust_buff_conv[5]; 
 	char filesize_buff_conv[9]; 
 
-	for (int i = 0; i < 512 * sectornums;) {
+	for (int i = 0; i < SECTOR_SIZE * sectornums;) {
 		if (dir_content[i] == 0 || dir_content[i] == 246) {
 			break;
 		}
@@ -682,15 +684,6 @@ void save_fat(std::vector<unsigned char> fat_table) {
 	write_to_fs(10 - 31, fat_table_to_save); 
 }
 
-void clear_fat_tables(std::vector<unsigned char> fat_table) {
-	std::vector<char> clear_fat_table;
-	for (int i = 0; i < fat_table.size(); i++) {
-		clear_fat_table.push_back(30);
-	}
-	write_to_fs(1 - 31, clear_fat_table);
-	write_to_fs(10 - 31, clear_fat_table);
-}
-
 int aloc_cluster(int start, std::vector<int>& int_fat_table, std::vector<unsigned char>& fat_table) {
 	int free_index = retrieve_free_index(int_fat_table); 
 	if (free_index == -1) {
@@ -710,6 +703,17 @@ int aloc_cluster(int start, std::vector<int>& int_fat_table, std::vector<unsigne
 		return free_index;
 	}
 
+}
+
+bool folder_name_val(const char* name) {
+	std::vector<std::string> path = get_directories(name); 
+	std::string folder_name = path.at(path.size() - 1);
+	if (folder_name.size() <= 8) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 bool file_name_val(const char* name) {

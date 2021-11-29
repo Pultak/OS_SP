@@ -64,7 +64,6 @@ IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File
 	IOHandle* file = nullptr;
 	auto fs = Filesystem_exists(input_path);
 	if (fs != nullptr) {
-		printf(" fs nalezen ");
 		auto length = input_path.relative_path().string().length() + 1;
 		char* name = new char[length];
 		strcpy_s(name, length, input_path.relative_path().string().c_str());
@@ -72,10 +71,8 @@ IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File
 		auto result = fs->open(name, flags, attributes, f);
 		if (result == kiv_os::NOS_Error::Success) {
 			file = new FileHandle(fs, f);
-			printf(" pridan soubor ");
 		}
 		else {
-			printf(" pridani souboru se nepodarilo ");
 		}
 	}
 	else {
@@ -95,7 +92,9 @@ void filesystems::parse_path(const char* abs_path, const char* rel_path, std::st
 		abs.push_back(dir);
 		pth.erase(0, pos + delim.length());
 	}
-	abs.push_back(pth);
+	if (!pth.empty()) {
+		abs.push_back(pth);
+	}
 	std::vector<std::string> rel;
 	std::string pth1 = rel_path;
 	std::string delim1 = "\\";
@@ -114,6 +113,9 @@ void filesystems::parse_path(const char* abs_path, const char* rel_path, std::st
 		else if (strcmp(rel[i].c_str(), ".") == 0) {}
 		else {
 			abs.push_back(rel[i]);
+		}
+		if (abs.size() <= 0) {
+			abs.push_back("C:");
 		}
 
 	}

@@ -89,7 +89,7 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
         auto thisHandle = handles::getTHandleById(std::this_thread::get_id());
         //is actual process inside pcb?
         Process* thisProcess = pcb->getProcess(thisHandle);
-        std::filesystem::path workingDir = thisProcess ? thisProcess->workingDirectory : "C:";
+        std::filesystem::path workingDir = thisProcess ? thisProcess->workingDirectory : "C:\\";
 
         pcb->AddNewProcess(tHandle, stdIn, stdOut, programName, workingDir);
 
