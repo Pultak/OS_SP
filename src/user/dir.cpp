@@ -23,7 +23,12 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 	std::string output = "";
 	uint16_t count_files = 0;
 	uint16_t count_dirs = 0;
+	std::string whole_path = "";
+	std::string working_dir;
+	char work_dir[256];
 
+	kiv_os_rtl::Get_Working_Dir(work_dir, 256, written);
+	working_dir = work_dir;
 
 
 
@@ -54,17 +59,25 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 
 	while (!directories.empty())
 	{
-		auto it = directories.begin();
+		std::cout << "\nTEST2\n" << directories.at(0).c_str();
 		if (auto result = kiv_os_rtl::Open_File(directories.at(0).c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::Directory, file_handle))
 		{
+			if (strcmp(directories.at(0).c_str(), ".") == 0)
+			{
+				output.append("\nDirectory of " + working_dir + "\n\n");
+			}
+			else
+			{
+				output.append("\nDirectory of " + working_dir + directories.at(0).c_str() + "\n\n");
+				output.append("<DIR>\t.\n");
+				output.append("<DIR>\t..\n");
+
+			}
+			read = 1;
 			while (read)
 			{
 				if (result = kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, read))
 				{
-					buffer[buffer_size - 1] = 0;
-
-					std::cout << "\nbuff a read: " << buffer_size <<  " " << read <<std::endl ;
-					std::cout << buffer;
 					if (buffer_size == read)
 					{
 						kiv_os::TDir_Entry* file = reinterpret_cast<kiv_os::TDir_Entry*>(buffer);
@@ -72,7 +85,11 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 						{
 							if (recursive_flag)
 							{
-								directories.push_back(file->file_name);
+								whole_path.append(directories.at(0));
+								whole_path.append("\\");
+								whole_path.append(file->file_name);
+								directories.push_back(whole_path);
+								whole_path.clear();
 							}
 							output.append("<DIR>\t");
 							output.append(file->file_name);
@@ -81,7 +98,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 						}
 						else
 						{
-							output.append("\t\t");
+							output.append("\t");
 							output.append(file->file_name);
 							output.append("\n");
 							count_files++;
@@ -93,12 +110,11 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 						buffer[buffer_size-1] = 0;
 						read = 0;
 					}
-					read = 0;
 				}
 				else
 				{
 					std::cout << "\nfailed to read\n";
-					return 0;
+					read =  0;
 				}
 			}
 		}
@@ -107,20 +123,21 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 			std::cout << "\nfailed to open\n";
 		}
 
+		std::cout << "\nTEST\n";
+		auto it = directories.begin();
+
 		directories.erase(it);
 	}
 
+	output.append("\n");
 	output.append(std::to_string(count_files));
-	output.append(" File(s)");
+	output.append(" File(s)\n");
 
 	output.append(std::to_string(count_dirs));
 	output.append(" Dir(s)");
 
 	kiv_os_rtl::Write_File(std_out, output.data(), output.size(), written);
 
-	//delete[]buffer;
-
-	std::cout << "END";
 	return 0;
 }/*
 
