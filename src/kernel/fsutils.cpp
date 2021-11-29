@@ -83,13 +83,12 @@ void write_to_fs(int start, std::vector<char> data) {
 	write_reg.rax.h = static_cast<decltype(write_reg.rax.h)>(kiv_hal::NDisk_IO::Write_Sectors);
 	write_reg.rdi.r = reinterpret_cast<decltype(write_reg.rdi.r)>(&write_packet);
 	
+	// snazime se zachovat data v poslednim clusteru, prepsat jen relevantni cast.
 	int last_sector_alloc = (start + static_cast<int>(write_packet.count)) - 1;
 	std::vector<unsigned char> last_sector_data = read_from_fs(last_sector_alloc, 1);
 	int size_to_hold = static_cast<int>(write_packet.count) * SECTOR_SIZE;
-
 	int last_cluster_occupied = data.size() % SECTOR_SIZE;
 	size_t start_pos = data.size();
-
 	int added_bytes = 0;
 	for (size_t i = start_pos; i < size_to_hold; i++) {
 		data.push_back(last_sector_data.at(static_cast<size_t>(last_cluster_occupied) + static_cast<size_t>(added_bytes)));
@@ -101,13 +100,14 @@ void write_to_fs(int start, std::vector<char> data) {
 }
 
 std::vector<unsigned char> read_from_fs(int start, int sectors_count) {
+	// priprava registru pro cteni
 	kiv_hal::TRegisters read_regs;
 	kiv_hal::TDisk_Address_Packet read_packet;
 	
-	read_packet.count = sectors_count;
+	read_packet.count = sectors_count; // pocet sektoru ktere chceme precist
 	auto s = malloc(SECTOR_SIZE * static_cast<size_t>(sectors_count));
 	read_packet.sectors = (void*)s;
-	read_packet.lba_index = static_cast<size_t>(start) + 31;
+	read_packet.lba_index = static_cast<size_t>(start) + 31; // presun na datove sektory
 	read_regs.rdx.l = 129;
 	read_regs.rax.h = static_cast<decltype(read_regs.rax.h)>(kiv_hal::NDisk_IO::Read_Sectors);
 	read_regs.rdi.r = reinterpret_cast<decltype(read_regs.rdi.r)>(&read_packet);
@@ -115,37 +115,40 @@ std::vector<unsigned char> read_from_fs(int start, int sectors_count) {
 	kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::Disk_IO, read_regs);
 
 	char* buffer = reinterpret_cast<char*>(read_packet.sectors);
+	// nactene byty z disku
 	std::vector<unsigned char> content(buffer, buffer + (static_cast<size_t>(sectors_count) * SECTOR_SIZE));
 	free(s);
 	return content;
 }
 
 int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fat_table, std::vector<int>& int_fat_table) {
-	std::vector<std::string> folders_in_path = get_directories(name);
+	std::vector<std::string> folders_in_path = get_directories(name); // ziskani cesty
 	
-	std::string new_folder_name = folders_in_path.at(folders_in_path.size() - 1); 
+	std::string new_folder_name = folders_in_path.at(folders_in_path.size() - 1);  // nazev nove slozky
 	folders_in_path.pop_back(); 
+
+	// ziskani obsahu nadrazene slozky
 	int start_sector = -1;
 	std::vector<int> sectors_nums_data;
-	if (folders_in_path.size() == 0) {
+	if (folders_in_path.size() == 0) { // pokud je nadrazena slozka root
 		start_sector = 19;
 		for (int i = 19; i < 33; i++) {
 			sectors_nums_data.push_back(i);
 		}
 	}
-	else {
+	else { // pokud nadrazena slozka neni root
 		directory_item target_folder = retrieve_item(19, int_fat_table, folders_in_path);
 		sectors_nums_data = retrieve_sectors_fs(int_fat_table, target_folder.first_cluster);
 
 		start_sector = sectors_nums_data.at(0);
 	}
-	std::vector<directory_item> items_folder = retrieve_folders_from_folder(int_fat_table, start_sector); 
+	std::vector<directory_item> items_folder = retrieve_folders_from_folder(int_fat_table, start_sector); // directory_itemy nadrezene slozky
 
-	int free_index = retrieve_free_index(int_fat_table);
+	int free_index = retrieve_free_index(int_fat_table); // ziskani volneho indexu
 	if (free_index == -1) { 
 		return -1; 
 	}
-	else {
+	else { // ulozeni indexu ve fat tabulce jako obsazeny
 		std::vector<unsigned char> modified_bytes = num_to_bytes_fs(free_index, fat_table, 4095);
 		fat_table.at(static_cast<int>(static_cast<double>(free_index) * 1.5)) = modified_bytes.at(0); 
 		fat_table.at((static_cast<size_t>(static_cast<double>(free_index) * 1.5)) + 1) = modified_bytes.at(1);
@@ -155,36 +158,39 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 	
 	std::vector<unsigned char> to_write_subfolder;
 	std::vector<char> to_save;
-	//priprava entry
+	//priprava directory_itemu
 	int j = 0;
-	for (; j < new_folder_name.length(); j++) {
+	for (; j < new_folder_name.length(); j++) { // jmeno
 		to_write_subfolder.push_back(new_folder_name.at(j));
 	}
-	for (; j < 8; j++) {
+	for (; j < 8; j++) { // doplneni pri kratsi delce jmena
 		to_write_subfolder.push_back(32);
 	}
-	for (int i = 0; i < 3; i++) { 
+	for (int i = 0; i < 3; i++) { // pripona u slozky neni
 		to_write_subfolder.push_back(32);
 	}
-	to_write_subfolder.push_back(attr);
-	for (int i = 0; i < 14; i++) { 
+	to_write_subfolder.push_back(attr); // zapsani atributu
+	for (int i = 0; i < 14; i++) {  // datum vytvoreni, cas modifikace... nastavovane na 0
 		to_write_subfolder.push_back(32);
 	}
+	// zapsani prirazeneho clusteru (dva bajty)
 	std::vector<unsigned char> first_assigned_clust = dec_to_hex(free_index);
 	for (int i = 0; i < 2; i++) {
 		to_write_subfolder.push_back(first_assigned_clust.at(i));
 	}
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) { // velikost u slozky nulova
 		to_write_subfolder.push_back(0);
 	}
-	//konec pripravy
-	if (folders_in_path.size() == 0) { 
+	//konec pripravy directory_itemu
+
+	if (folders_in_path.size() == 0) { // pridani slozky do rootu
 		if ((items_folder.size() + 1 + 1) <= (sectors_nums_data.size() * 16)) { 
+			// na ktery cluster bude nova slozka zapsana
 			size_t cluster_num = (items_folder.size() + 1) / 16; 
 			size_t item_num_clust_rel = (items_folder.size() + 1) % 16;
 
+			// nactu si data clusteru kam budu ukládat a pridam nova data za
 			std::vector<unsigned char> data_clust = read_from_fs(sectors_nums_data.at(cluster_num) - 31, 1);
-
 			for (int i = 0; i < to_write_subfolder.size(); i++) {
 				data_clust.at((item_num_clust_rel * 32) + i) = to_write_subfolder.at(i);
 			}
@@ -195,6 +201,7 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 			write_to_fs(sectors_nums_data.at(cluster_num) - 31, to_save);
 		}
 		else {
+			// slozka se jiz nevejde a tak uvolnim fat tabulku
 			std::vector<unsigned char> modified_bytes = num_to_bytes_fs(free_index, fat_table, 0);
 			fat_table.at(static_cast<int>(static_cast<double>(free_index) * 1.5)) = modified_bytes.at(0); 
 			fat_table.at((static_cast<size_t>(static_cast<double>(free_index) * 1.5)) + 1) = modified_bytes.at(1);
@@ -203,12 +210,12 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 			return -1;
 		}
 	}
-	else {
+	else { // slozka mimo root
 		bool can_write = false; 
-		if ((items_folder.size() + 2 + 1) <= (sectors_nums_data.size() * 16)) {
+		if ((items_folder.size() + 2 + 1) <= (sectors_nums_data.size() * 16)) { // vejde se slozka do clusteru?
 			can_write = true;
 		}
-		else { 
+		else { // pokus o alokaci noveho clusteru
 			int aloc_res = aloc_cluster(start_sector, int_fat_table, fat_table); 
 			if (aloc_res == -1) {
 				can_write = false;
@@ -221,10 +228,9 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 
 		if (can_write) { 
 			size_t cluster_num = (items_folder.size() + 2) / 16; 
-			size_t item_num_clust_rel = (items_folder.size() + 2) % 16;
+			size_t item_num_clust_rel = (items_folder.size() + 2) % 16; // poradi polozky v ramci clusteru
 
 			std::vector<unsigned char> data_clust = read_from_fs(sectors_nums_data.at(cluster_num), 1);
-
 			for (int i = 0; i < to_write_subfolder.size(); i++) {
 				data_clust.at((item_num_clust_rel * 32) + i) = to_write_subfolder.at(i);
 			}
@@ -235,7 +241,7 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 
 			write_to_fs(sectors_nums_data.at(cluster_num), to_save);
 		}
-		else {
+		else { // nova slozka jiz nepujde vytvorit
 			std::vector<unsigned char> modified_bytes = num_to_bytes_fs(free_index, fat_table, 0);
 			fat_table.at(static_cast<int>(static_cast<double>(free_index) * 1.5)) = modified_bytes.at(0);
 			fat_table.at((static_cast<size_t>(static_cast<double>(free_index) * 1.5)) + 1) = modified_bytes.at(1);
@@ -251,6 +257,7 @@ int create_folder(const char* name, uint8_t attr, std::vector<unsigned char>& fa
 }
 
 void write_folder_into_fs(int index, int upper_index) {
+	// vytvareni .
 	std::vector<char> subfolder;
 	subfolder.push_back(46);
 	for (int i = 0; i < 10; i++) {
@@ -260,6 +267,7 @@ void write_folder_into_fs(int index, int upper_index) {
 	for (int i = 0; i < 14; i++) {
 		subfolder.push_back(32);
 	}
+	// odkaz na aktualni cluster
 	std::vector<unsigned char> first_assigned_clust = dec_to_hex(index);
 	for (int i = 0; i < 2; i++) {
 		subfolder.push_back(first_assigned_clust.at(i));
@@ -267,6 +275,9 @@ void write_folder_into_fs(int index, int upper_index) {
 	for (int i = 0; i < 4; i++) { 
 		subfolder.push_back(0);
 	}
+	// konec .
+
+	// vytvareni ..
 	subfolder.push_back(46);
 	subfolder.push_back(46);
 
@@ -280,6 +291,7 @@ void write_folder_into_fs(int index, int upper_index) {
 	if (upper_index == 19) { 
 		upper_index = 0;
 	}
+	// zapsani odkazu na nadrazeny cluster
 	std::vector<unsigned char> upper_clust = dec_to_hex(upper_index);
 	for (int i = 0; i < 2; i++) {
 		subfolder.push_back(upper_clust.at(i));
@@ -296,8 +308,8 @@ void write_folder_into_fs(int index, int upper_index) {
 
 std::vector<unsigned char> dec_to_hex(int start) {
 	std::vector<unsigned char> converted;
-	char convert_buffer[5]; 
-	snprintf(convert_buffer, sizeof(convert_buffer), "%04X", start);
+	char convert_buffer[5]; // buffer pro prevod hex na dec
+	snprintf(convert_buffer, sizeof(convert_buffer), "%04X", start); // obsahuje 16 bitu
 
 	char byte_to_save_first[3];
 	char byte_to_save_second[3];
@@ -315,6 +327,7 @@ std::vector<unsigned char> dec_to_hex(int start) {
 	first_byte = char_to_hex(byte_to_save_first);
 	second_byte = char_to_hex(byte_to_save_second);
 
+	//pri ukladani bajty prohodit
 	converted.push_back(second_byte);
 	converted.push_back(first_byte);
 
@@ -331,6 +344,7 @@ std::vector<unsigned char> dec_t_to_hex(size_t val) {
 	bytes[2] = (num >> 8) & 0xFF;
 	bytes[3] = num & 0xFF;
 
+	// vracime obracene pro ulozeni do souboru
 	std::vector<unsigned char> ret;
 	ret.push_back(bytes[3]);
 	ret.push_back(bytes[2]);
@@ -351,11 +365,11 @@ int retrieve_free_index(std::vector<int> int_fat_table) {
 
 std::vector<unsigned char> num_to_bytes_fs(int target, std::vector<unsigned char> fat_table, int num) {
 	std::vector<unsigned char> converted_bytes;
-	int first_index_hex_tab = static_cast<int>(static_cast<double>(target) * 1.5);
+	int first_index_hex_tab = static_cast<int>(static_cast<double>(target) * 1.5); // index volneho clusteru v hex
 	unsigned char free_cluster_index_first = fat_table.at(first_index_hex_tab);
 	unsigned char free_cluster_index_sec = fat_table.at(static_cast<size_t>(first_index_hex_tab) + 1);
 
-	char convert_buffer[5];
+	char convert_buffer[5]; // buffer pro prevod hex na dec
 	snprintf(convert_buffer, sizeof(convert_buffer), "%.2X%.2X", free_cluster_index_first, free_cluster_index_sec);
 	char hex_free_clust[4];
 	snprintf(hex_free_clust, sizeof(hex_free_clust), "%.3X", num);
@@ -365,13 +379,13 @@ std::vector<unsigned char> num_to_bytes_fs(int target, std::vector<unsigned char
 	unsigned char first_byte;
 	unsigned char second_byte;
 
-	if (target % 2 == 0) {
+	if (target % 2 == 0) { // sudy index
 		byte_to_save_first[0] = hex_free_clust[1]; 
 		byte_to_save_first[1] = hex_free_clust[2]; 
 		byte_to_save_second[0] = convert_buffer[2]; 
 		byte_to_save_second[1] = hex_free_clust[0]; 
 	}
-	else { 
+	else { // lichy index
 		byte_to_save_first[0] = hex_free_clust[2]; 
 		byte_to_save_first[1] = convert_buffer[1]; 
 		byte_to_save_second[0] = hex_free_clust[0]; 
@@ -390,10 +404,10 @@ std::vector<unsigned char> num_to_bytes_fs(int target, std::vector<unsigned char
 
 }
 
+
 unsigned char char_to_hex(char charar[2]) {
 	char ret[1];
 	ret[0] = static_cast<char>(strtol(charar, NULL, 16));
-
 	return ret[0];
 }
 
@@ -401,7 +415,7 @@ std::vector<int> convert_fat_to_dec(std::vector<unsigned char> fat_table) {
 	char firstbuffer[4];
 	char secondbuffer[4];
 	std::vector<int> fat_table_dec;
-	char temp_buffer[7]; 
+	char temp_buffer[7]; //buffer pro prevod hex na dec
 	int actual_number;
 
 	for (int i = 0; i < fat_table.size();) {
@@ -419,10 +433,10 @@ std::vector<int> convert_fat_to_dec(std::vector<unsigned char> fat_table) {
 }
 
 directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, std::vector<std::string> path) {
-	int traversed_sector_folder = start_cluster;
-	int dir_item_number = -1;
+	int traversed_sector_folder = start_cluster; // cislo sectoru na kterem zacina aktualni prochazena slozka
+	int dir_item_number = -1; 
 	std::vector<directory_item> cur_folder_items;
-	if (path.size() == 0) {
+	if (path.size() == 0) { // cilem je root
 		directory_item dir_item;
 		dir_item.filename = "\\";
 		dir_item.extension = "";
@@ -435,7 +449,7 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 
 	for (int i = 0; i < path.size(); i++) {
 		dir_item_number = -1;
-		cur_folder_items = retrieve_folders_from_folder(int_fat_table, traversed_sector_folder); 
+		cur_folder_items = retrieve_folders_from_folder(int_fat_table, traversed_sector_folder); // nacte directory_itemy na zadanem cisle clusteru.
 
 		/*
 		printf("\n");
@@ -455,7 +469,7 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 		*/
 
 		int j = 0;
-		std::string item_to_check = "";  
+		std::string item_to_check = "";  // nazev slozky nebo souboru
 		while (dir_item_number == -1 && j < cur_folder_items.size()) { 
 			directory_item dir_item = cur_folder_items.at(j);
 			if (!dir_item.extension.empty()) {
@@ -471,7 +485,7 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 			j++;
 		}
 
-		if (dir_item_number != -1) { 
+		if (dir_item_number != -1) { // nalezena podslozka, pokracujeme v ceste
 			directory_item dir_item = cur_folder_items.at(dir_item_number);
 			traversed_sector_folder = dir_item.first_cluster;
 			if (dir_item.first_cluster == 0) {
@@ -482,6 +496,7 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 			break;
 		}
 	}
+
 	directory_item dir_item{};
 	if (dir_item_number != -1) { 
 		dir_item = cur_folder_items.at(dir_item_number);
@@ -499,13 +514,14 @@ directory_item retrieve_item(int start_cluster, std::vector<int> int_fat_table, 
 std::vector<kiv_os::TDir_Entry> get_os_dir_content(size_t sectors, std::vector<unsigned char> clusters, bool is_root) {
 	std::vector<kiv_os::TDir_Entry> directory_content; 
 
-	for (int i = 0; i < SECTOR_SIZE * sectors;) {
-		if (clusters[i] == 0 || clusters[i] == 246) {
+	for (int i = 0; i < SECTOR_SIZE * sectors;) { // nacteni urciteho poctu clusteru
+		if (clusters[i] == 0 || clusters[i] == 246) { // polozka neni obsazena
 			break;
 		}
 
 		kiv_os::TDir_Entry dir_item; 
 
+		//ulozeni jmena
 		int j = 0;
 		bool end_encountered = false;
 		while (j < 8 && !end_encountered) { 
@@ -526,7 +542,7 @@ std::vector<kiv_os::TDir_Entry> get_os_dir_content(size_t sectors, std::vector<u
 
 		j = 0;
 		end_encountered = false;
-
+		// pridani pripony pokud je obsazena
 		while (j < 3 && !end_encountered) { 
 			if ((int)clusters[i] == 32) { 
 				end_encountered = true;
@@ -554,10 +570,10 @@ std::vector<kiv_os::TDir_Entry> get_os_dir_content(size_t sectors, std::vector<u
 		directory_content.push_back(dir_item);
 	}
 
-	if (is_root) { 
+	if (is_root) { // u rootu vynechame prvni polozku
 		directory_content.erase(directory_content.begin()); 
 	}
-	else { 
+	else { // u normalni slozky vynechame dve polozky . a ..
 		directory_content.erase(directory_content.begin()); 
 		directory_content.erase(directory_content.begin());
 	}
@@ -567,14 +583,14 @@ std::vector<kiv_os::TDir_Entry> get_os_dir_content(size_t sectors, std::vector<u
 }
 
 std::vector<directory_item> retrieve_folders_from_folder(std::vector<int> int_fat_table, int working_dir_sector) {
-	if (working_dir_sector == 19) { 
+	if (working_dir_sector == 19) {  // pokud chceme obsah root slozky
 		std::vector<unsigned char> root_dir = read_from_fs(19 - 31, 14);
 		std::vector<directory_item> directory_content = get_dir_items(14, root_dir);
 		directory_content.erase(directory_content.begin()); 
 		return directory_content;
 	}
-	else { 
-		std::vector<int> sectors_nums_data = retrieve_sectors_fs(int_fat_table, working_dir_sector); 
+	else { // ostatni slozky
+		std::vector<int> sectors_nums_data = retrieve_sectors_fs(int_fat_table, working_dir_sector); // nalezeni sektoru prohledavane slozky
 		std::vector<unsigned char> retrieved_data_clust;
 		std::vector<directory_item> all_dir_items; 
 
@@ -582,13 +598,13 @@ std::vector<directory_item> retrieve_folders_from_folder(std::vector<int> int_fa
 			retrieved_data_clust = read_from_fs(sectors_nums_data[i], 1); 
 			std::vector<directory_item> directory_content = get_dir_items(1, retrieved_data_clust); 
 			int j = 0;
-			if (i == 0) { 
+			if (i == 0) { // preskocit . a ..
 				j = 2;
 			}
 			else {
 				j = 0;
 			}
-
+			//zapis obsahu jednoitlivych slozek
 			for (; j < directory_content.size(); j++) { 
 				directory_item dir_item = directory_content.at(j);
 
@@ -613,6 +629,7 @@ std::vector<directory_item> get_dir_items(int sectornums, std::vector<unsigned c
 
 		directory_item dir_item;
 
+		// ziskani jmena
 		dir_item.filename = "";
 
 		int j = 0;
@@ -628,6 +645,7 @@ std::vector<directory_item> get_dir_items(int sectornums, std::vector<unsigned c
 			}
 		}
 
+		// ziskani pripony
 		j = 0;
 		end_encountered = false;
 		dir_item.extension = "";
@@ -660,7 +678,7 @@ std::vector<int> retrieve_sectors_fs(std::vector<int> int_fat_table, int startin
 	std::vector<int> sector_list;
 	int cluster_num = -1;
 	int traversed_sector = starting_sector;
-	while (traversed_sector < 4088 || traversed_sector > 4095) {
+	while (traversed_sector < 4088 || traversed_sector > 4095) { // dokud se nejedna o posledni cluster souboru
 		if (sector_list.size() == 0) { 
 			sector_list.push_back(traversed_sector);
 			traversed_sector = int_fat_table[traversed_sector]; 
@@ -676,6 +694,7 @@ std::vector<int> retrieve_sectors_fs(std::vector<int> int_fat_table, int startin
 
 void save_fat(std::vector<unsigned char> fat_table) {
 	std::vector<char> fat_table_to_save;
+	// nacteni obsahu aktualni fat tabulky
 	for (int i = 0; i < fat_table.size(); i++) {
 		fat_table_to_save.push_back(fat_table.at(i));
 	}
@@ -686,10 +705,10 @@ void save_fat(std::vector<unsigned char> fat_table) {
 
 int aloc_cluster(int start, std::vector<int>& int_fat_table, std::vector<unsigned char>& fat_table) {
 	int free_index = retrieve_free_index(int_fat_table); 
-	if (free_index == -1) {
+	if (free_index == -1) { // jiz neni zadny volny cluster
 		return -1;
 	}
-	else {
+	else { // zabrani clusteru ve fat tabulce
 		std::vector<int> item_clusters = retrieve_sectors_fs(int_fat_table, start);
 		std::vector<unsigned char> modified_bytes = num_to_bytes_fs(free_index, fat_table, 4095);
 		fat_table.at(static_cast<int>(static_cast<double>(free_index) * 1.5)) = modified_bytes.at(0);
@@ -708,7 +727,7 @@ int aloc_cluster(int start, std::vector<int>& int_fat_table, std::vector<unsigne
 bool folder_name_val(const char* name) {
 	std::vector<std::string> path = get_directories(name); 
 	std::string folder_name = path.at(path.size() - 1);
-	if (folder_name.size() <= 8) {
+	if (folder_name.size() <= 8) { // velikost jmena slozky nesmi presahnout 8 znaku
 		return true;
 	}
 	else {
