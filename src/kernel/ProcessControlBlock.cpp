@@ -4,12 +4,14 @@
 /// pcb
 /// </summary>
 std::map<kiv_os::THandle, Process*> table;
+bool tableUpdated = false;
 
 void ProcessControlBlock::AddNewProcess(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program, std::filesystem::path actualDir) {
 	lockMaster->lock();
 	auto newProcess = new Process(handle, stdIn, stdOut, program, actualDir);
 
 	table.emplace(std::make_pair(handle, newProcess));
+	tableUpdated = true;
 	lockMaster->unlock();
 }
 
@@ -36,11 +38,12 @@ bool ProcessControlBlock::removeProcess(kiv_os::THandle handle) {
 		delete proc;
 		processRemoved = true;
 	}
+	tableUpdated = true;
 	lockMaster->unlock();
 	return processRemoved;
 }
 
-void ProcessControlBlock::signalProcesses(kiv_os::NSignal_Id signal) {
+void ProcessControlBlock::signalProcesses(kiv_os::NSignal_Id signal) const {
 	lockMaster->lock();
 
 	auto it = table.rbegin();
@@ -59,7 +62,7 @@ void ProcessControlBlock::signalProcesses(kiv_os::NSignal_Id signal) {
 	lockMaster->unlock();
 }
 
-void ProcessControlBlock::notifyAllListeners(){
+void ProcessControlBlock::notifyAllListeners() const {
 	lockMaster->lock();
 
 	auto it = table.rbegin();
@@ -69,4 +72,41 @@ void ProcessControlBlock::notifyAllListeners(){
 		++it;
 	}
 	lockMaster->unlock();
+}
+
+void* ProcessControlBlock::getAllProcesses(size_t& processCount) const{
+	lockMaster->lock();
+	if (tableUpdated) {
+		ProcessEntry* result = new ProcessEntry[table.size()];
+		uint16_t index = 0;
+		for (const auto& rec : table) {
+			const auto& process = rec.second;
+			result[index].handle = process->handle;
+			result[index].stdIn = process->stdInput;
+			result[index].stdOut = process->stdOutput;
+			result[index].state = process->state;
+			result[index].exitCode = process->exitCode;
+
+			auto progNameL = strlen(process->programName);
+			auto pNameLength = sizeof(ProcessEntry::programName) > progNameL ? sizeof(ProcessEntry::programName) : progNameL;
+			strcpy_s(result[index].programName, pNameLength, process->programName);
+
+			auto wDirL = process->workingDirectory.string().length();
+			auto workDirLength = sizeof(ProcessEntry::workingDir) > wDirL ? sizeof(ProcessEntry::workingDir) : wDirL;
+			strcpy_s(result[index].workingDir, workDirLength, process->workingDirectory.string().c_str());
+
+			++index;
+		}
+		//we collected all -> table is no longer diff from tasklisk file
+		tableUpdated = false;
+		processCount = index;
+		lockMaster->unlock();
+		return result;
+	}else {
+		return nullptr;
+	}
+}
+
+bool ProcessControlBlock::isUpdated(){
+	return tableUpdated;
 }

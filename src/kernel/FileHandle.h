@@ -4,7 +4,7 @@
 
 class FileHandle : public IOHandle {
 public:
-	explicit FileHandle(VFS* vfs, File* file);
+	FileHandle(VFS* vfs, File* file);
 
 	kiv_os::NOS_Error write(const char* buffer, const size_t size, size_t& written) override;
 	kiv_os::NOS_Error read(size_t size, char* buffer, size_t& read) override;
@@ -16,7 +16,7 @@ public:
 		delete file;
 	}
 
-private:
+protected:
 
 	File* file;	
 	VFS* vfs;

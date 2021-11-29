@@ -7,6 +7,7 @@
 #include "vfs.h"
 #include "IOHandle.h"
 #include "FileHandle.h"
+#include "PCBFile.h"
 
 namespace filesystems {
 

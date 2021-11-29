@@ -32,12 +32,16 @@ public:
 	/// Send signal to every process in the pcb
 	/// </summary>
 	/// <param name="signal">called signal</param>
-	void signalProcesses(kiv_os::NSignal_Id signal);
+	void signalProcesses(kiv_os::NSignal_Id signal) const ;
 
 	/// <summary>
 	/// Notify listeners of every process located in pcb
 	/// </summary>
-	void notifyAllListeners();
+	void notifyAllListeners() const ;
+
+	void* getAllProcesses(size_t& processCount) const;
+
+	bool isUpdated();
 
 private:
 
