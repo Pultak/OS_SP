@@ -2,13 +2,13 @@
 #include "../api/api.h"
 #include <string>
 #include<vector>
-
+// struktura souboru obsahujici handle (u souboru a slozky cislo sektoru na kterem zacina)
 struct File {
     kiv_os::THandle handle;
     uint8_t attributes;
     size_t size;
-    size_t position;
-    char* name;
+    size_t position; // aktualni pozice
+    char* name; // jmeno souboru (relativni cesta ve filesystemu.
 };
 
 class VFS {
