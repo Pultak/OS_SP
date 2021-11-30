@@ -14,7 +14,7 @@ void filesystems::InitFilesystems() {
 		kiv_hal::TDrive_Parameters params{};
 		regs.rax.h = static_cast<uint8_t>(kiv_hal::NDisk_IO::Drive_Parameters);;
 		regs.rdi.r = reinterpret_cast<decltype(regs.rdi.r)>(&params);
-		kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::Disk_IO, regs);
+		kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::Disk_IO, regs); // ziskani parametru a cisla disku
 
 		if (!regs.flags.carry) {
 			
@@ -64,6 +64,7 @@ IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File
 	IOHandle* file = nullptr;
 	auto fs = Filesystem_exists(input_path);
 	if (fs != nullptr) {
+		// ziskani relativni cesty k souboru
 		auto length = input_path.relative_path().string().length() + 1;
 		char* name = new char[length];
 		strcpy_s(name, length, input_path.relative_path().string().c_str());
@@ -92,6 +93,7 @@ IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File
 }
 
 void filesystems::parse_path(const char* abs_path, const char* rel_path, std::string& result) {
+	// rozdeleni aktualni slozky procesu
 	std::vector<std::string> abs;
 	std::string pth = abs_path;
 	std::string delim = "\\";
@@ -105,6 +107,7 @@ void filesystems::parse_path(const char* abs_path, const char* rel_path, std::st
 	if (!pth.empty()) {
 		abs.push_back(pth);
 	}
+	// rozdeleni zadane cesty z konzole
 	std::vector<std::string> rel;
 	std::string pth1 = rel_path;
 	std::string delim1 = "\\";
@@ -116,6 +119,7 @@ void filesystems::parse_path(const char* abs_path, const char* rel_path, std::st
 		pth1.erase(0, pos1 + delim1.length());
 	}
 	rel.push_back(pth1);
+	// porovnani a slozeni dvou cest dohromady pro vytvoreni absolutni cesty
 	for (int i = 0; i < rel.size(); i++) {
 		if (strcmp(rel[i].c_str(), "..") == 0) {
 			abs.pop_back();
