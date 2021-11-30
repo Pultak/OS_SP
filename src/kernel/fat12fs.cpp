@@ -287,11 +287,11 @@ kiv_os::NOS_Error FAT::read(File* f, size_t size, size_t offset, std::vector<cha
             }
         }
 		std::cout << "vector\n\n";
-		for (auto out_c : out)
+		/*for (auto out_c : out)
 		{
 			std::cout << out_c;
 
-		}
+		}*/
         return kiv_os::NOS_Error::Success;
     }
 }

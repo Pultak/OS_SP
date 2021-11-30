@@ -65,7 +65,7 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 		}
 		kiv_os::THandle std_in = regs.rax.x;
 
-		char* shellFunction = "shell";
+		char* shellFunction = "shell\0";
 		//rax for HandleProcess switch -> not needed now 
 		regs.rbx.e = (std_in << 16) | std_out; //specify standard input output
 		regs.rcx.l = static_cast<uint8_t>(kiv_os::NClone::Create_Process); //CreateProcess switch

@@ -29,7 +29,7 @@ struct ProcessEntry {
 	ProcessState state;
 	kiv_os::NOS_Error exitCode;
 	char programName[42];
-	char workingDir[256];
+	char workingDir[128];
 };
 
 
@@ -39,12 +39,12 @@ public:
 	/// <summary>
 	/// External parameters of process
 	/// </summary>
+	char programName[42];
 	kiv_os::THandle handle;
 	kiv_os::THandle stdInput;
 	kiv_os::THandle stdOutput;
 	ProcessState state = ProcessState::Ready;
 	kiv_os::NOS_Error exitCode = kiv_os::NOS_Error::Success;
-	char* programName;
 
 	std::filesystem::path workingDirectory;
 
@@ -56,17 +56,15 @@ private:
 
 public:
 
+	//char* getProgramName();
+
 	void addNewThread(kiv_os::THandle threadHandle);
 	Thread* getThread(kiv_os::THandle threadHandle);
 	void removeThread(kiv_os::THandle threadHandle);
 	void notifyAllThreads();
 
 public:
-	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program, std::filesystem::path wd)
-		: handle(handle), stdInput(stdIn), stdOutput(stdOut), programName(program), workingDirectory(wd) {
-		tcbLock = new Synchronization::Spinlock(0);
-		//no other signals are pressent atm
-	}
+	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, const char* program, std::filesystem::path wd);
 	~Process() {
 		delete tcbLock;
 	}
