@@ -8,16 +8,6 @@ std::vector<int> int_fat_table;
 FAT::FAT(uint8_t disk_num, kiv_hal::TDrive_Parameters params) : disk(disk_num), parameters(params) {
     fat_table = load_first_table();
     int_fat_table = convert_fat_to_dec(fat_table);
-    /*
-    printf("%d", retrieve_free_index(int_fat_table));
-    for (int i = 0; i < fat_table.size(); i++) {
-        printf("hex: %c", fat_table.at(i));
-    }
-
-    for (int i = 0; i < int_fat_table.size(); i++) {
-        printf("%d: %d\n", i, int_fat_table.at(i));
-    }
-    //*/
 }
 
 kiv_os::NOS_Error FAT::rmdir(const char* pth) {
@@ -359,7 +349,7 @@ kiv_os::NOS_Error FAT::write(File* f, size_t size, size_t offset, std::vector<ch
     if (offset > f->size) {
         return kiv_os::NOS_Error::IO_Error;
     }
-    std::vector<int> file_nums = retrieve_sectors_fs(int_fat_table, f->handle);
+    std::vector<int> file_nums = retrieve_sectors_fs(int_fat_table, f->handle); // clustery nba kterych se soubor nachazi
     size_t sector;
     if (offset == 0) {
         sector = 1;
@@ -375,7 +365,7 @@ kiv_os::NOS_Error FAT::write(File* f, size_t size, size_t offset, std::vector<ch
         }
         file_nums.push_back(result);
     }
-    int sector_num = file_nums.at(sector - 1);
+    int sector_num = file_nums.at(sector - 1); //nalezeni odpovidajiciho sektoru
     int bytes_to_save_clust = offset % SECTOR_SIZE;
 
     std::vector<unsigned char> data_last_clust = read_from_fs(sector_num, 1);
@@ -394,6 +384,7 @@ kiv_os::NOS_Error FAT::write(File* f, size_t size, size_t offset, std::vector<ch
     }
 
     size_t written_bytes = 0 - static_cast<size_t>(bytes_to_save_clust);
+    //v bufferu jsou ulozena data ktera mame zapsat.
     size_t clusters_count = data_to_write.size() / SECTOR_SIZE + (data_to_write.size() % SECTOR_SIZE != 0);
 
     std::vector<char> clust_data_write;
@@ -418,6 +409,7 @@ kiv_os::NOS_Error FAT::write(File* f, size_t size, size_t offset, std::vector<ch
                 save_fat(fat_table); 
                 size_t written_size = (offset + written_bytes) - f->size;
                 if (written_size > 0) {
+             
                     update_file_size(f->name, offset, f->size, written_size, int_fat_table);
                     f->size = f->size + written_size;
                     written = written_bytes;
@@ -450,6 +442,7 @@ kiv_os::NOS_Error FAT::write(File* f, size_t size, size_t offset, std::vector<ch
     }
     save_fat(fat_table);
     size_t written_size = (offset + written_bytes) - f->size;
+    printf("%d", written_size);
     if (written_size > 0) {
         update_file_size(f->name, offset, f->size, written_size, int_fat_table);
         f->size = f->size + written_size;

@@ -783,27 +783,27 @@ bool file_name_val(const char* name) {
 }
 
 int create_file(const char* path, uint8_t attr, std::vector<unsigned char>& fat_table, std::vector<int>& int_fat_table) {
-	std::vector<std::string> items = get_directories(path); 
-	std::string file_name = items.at(items.size() - 1);
+	std::vector<std::string> items = get_directories(path); // získání cesty
+	std::string file_name = items.at(items.size() - 1); // jmenmo soubnoru
 	items.pop_back(); 
 
 	int start_sector = -1;
 	std::vector<int> upper_fol; 
-	if (items.size() == 0) {
+	if (items.size() == 0) { // vytvarime v rootu
 		start_sector = 19;
 
 		for (int i = 19; i < 33; i++) {
 			upper_fol.push_back(i);
 		}
 	}
-	else {
+	else {//vytvarime v jine slozce
 		directory_item target_folder = retrieve_item(19, int_fat_table, items);
 		upper_fol = retrieve_sectors_fs(int_fat_table, target_folder.first_cluster);
 		start_sector = upper_fol.at(0);
 	}
 	std::vector<directory_item> items_folder = retrieve_folders_from_folder(int_fat_table, start_sector); 
 	
-
+	//ziskani a ulozeni noveho sektoru ve fat tabulce.
 	int free_index = retrieve_free_index(int_fat_table);
 	if (free_index == -1) { 
 		return -1;
@@ -816,10 +816,10 @@ int create_file(const char* path, uint8_t attr, std::vector<unsigned char>& fat_
 		save_fat(fat_table); 
 	}
 	
+	// ziskani jmena a pripony
 	std::vector<char> fname;
 	std::vector<char> fextension;
 	bool extension_found = false;
-
 	char traversed_letter; 
 	int traverse_counter = 0;
 	do {
@@ -851,9 +851,9 @@ int create_file(const char* path, uint8_t attr, std::vector<unsigned char>& fat_
 		}
 	}
 	
+	// priprava directory_itemu pro vytvareny soubor
 	std::vector<unsigned char> to_write_subfolder;
 	std::vector<char> to_save; 
-
 	int x = 0;
 	for (; x < fname.size(); x++) {
 		to_write_subfolder.push_back(fname.at(x));
@@ -881,7 +881,8 @@ int create_file(const char* path, uint8_t attr, std::vector<unsigned char>& fat_
 		to_write_subfolder.push_back(0);
 	}
 
-	if (items.size() == 0) { 
+	// ulozeni directory_item struktury
+	if (items.size() == 0) { // vytvarime v rootu
 		if ((items_folder.size() + 1 + 1) <= (upper_fol.size() * 16)) { 
 			size_t cluster_num = (items_folder.size() + 1) / 16; 
 			size_t item_num_clust_rel = (items_folder.size() + 1) % 16; 
@@ -902,7 +903,7 @@ int create_file(const char* path, uint8_t attr, std::vector<unsigned char>& fat_
 			save_fat(fat_table);
 			return -1;
 		}
-	} else { 
+	} else { // vytvarime v nejake podslozce
 		bool can = false; 
 		if ((items_folder.size() + 2 + 1) <= (upper_fol.size() * 16)) {
 			can = true;
@@ -944,20 +945,20 @@ int create_file(const char* path, uint8_t attr, std::vector<unsigned char>& fat_
 }
 
 void update_file_size(const char* path, size_t offset, size_t org_size, size_t new_bytes_size, std::vector<int> int_fat_table) {
-	std::vector<std::string> folders_in_path = get_directories(path); 
+	std::vector<std::string> folders_in_path = get_directories(path); // cesta
 	std::string filename = folders_in_path.at(folders_in_path.size() - 1);
 	folders_in_path.pop_back(); 
 
 	int start_sector = -1;
 	std::vector<int> sectors_nums_data; 
-	if (folders_in_path.size() == 0) {
+	if (folders_in_path.size() == 0) { //root
 		start_sector = 19;
 
 		for (int i = 19; i < 33; i++) {
 			sectors_nums_data.push_back(i);
 		}
 	}
-	else { 
+	else { // jina slozka
 		directory_item target_folder = retrieve_item(19, int_fat_table, folders_in_path);
 		sectors_nums_data = retrieve_sectors_fs(int_fat_table, target_folder.first_cluster); 
 		start_sector = sectors_nums_data.at(0);
@@ -966,7 +967,7 @@ void update_file_size(const char* path, size_t offset, size_t org_size, size_t n
 	std::vector<directory_item> items_folder = retrieve_folders_from_folder(int_fat_table, start_sector); 
 
 	int target_index = -1; 
-
+	//jmeno a pripona
 	for (int i = 0; i < items_folder.size(); i++) { 
 		std::string item_to_check = ""; 
 		directory_item dir_item = items_folder.at(i);
@@ -991,6 +992,7 @@ void update_file_size(const char* path, size_t offset, size_t org_size, size_t n
 		target_index += 2;
 	}
 
+	// nova velikost souboru
 	std::vector<unsigned char> new_file_size_hex = dec_t_to_hex(org_size + new_bytes_size); 
 	int cluster_num = (target_index) / 16; 
 	int item_num_clust_rel = (target_index) % 16; 
