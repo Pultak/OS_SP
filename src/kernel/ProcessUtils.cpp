@@ -186,7 +186,7 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
     kiv_os::THandle thisHandle = handles::getTHandleById(std::this_thread::get_id());
     kiv_os::THandle actualHandle = kiv_os::Invalid_Handle;
 
-    auto listener = new SleepListener(thisHandle); 
+    auto listener = new Synchronization::Semaphore(thisHandle); 
     int index = 0;
     for (index = 0; index < handleCount; ++index) {
         actualHandle = handles[index];
@@ -211,7 +211,9 @@ void ProcessUtils::waitFor(kiv_hal::TRegisters& registers) {
             }
         }
     }
-    listener->lock->lock();
+    //lock myself until notified
+    listener->wait();
+
     auto notifiedHandle = listener->notifierHandle;
     removeAssignedListener(index, handles, thisHandle);
     delete listener;

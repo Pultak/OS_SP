@@ -33,7 +33,6 @@
     <ClCompile Include="..\..\src\kernel\Process.cpp" />
     <ClCompile Include="..\..\src\kernel\ProcessControlBlock.cpp" />
     <ClCompile Include="..\..\src\kernel\ProcessUtils.cpp" />
-    <ClCompile Include="..\..\src\kernel\SleepListener.cpp" />
     <ClCompile Include="..\..\src\kernel\Synchronization.cpp" />
     <ClCompile Include="..\..\src\kernel\FileHandle.cpp" />
     <ClCompile Include="..\..\src\kernel\VGAHandle.cpp" />
@@ -56,7 +55,6 @@
     <ClInclude Include="..\..\src\kernel\Process.h" />
     <ClInclude Include="..\..\src\kernel\ProcessControlBlock.h" />
     <ClInclude Include="..\..\src\kernel\ProcessUtils.h" />
-    <ClInclude Include="..\..\src\kernel\SleepListener.h" />
     <ClInclude Include="..\..\src\kernel\Synchronization.h" />
     <ClInclude Include="..\..\src\kernel\Thread.h" />
     <ClInclude Include="..\..\src\kernel\VGAHandle.h" />

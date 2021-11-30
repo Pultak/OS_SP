@@ -3,12 +3,12 @@
 
 class Blockable {
 private:
-	std::list<SleepListener*> listeners;
+	std::list<Synchronization::Semaphore*> listeners;
 
 	Synchronization::Spinlock* listenersLock = new Synchronization::Spinlock(0);
 
 public:
-	void addListener(SleepListener* newListener) {
+	void addListener(Synchronization::Semaphore* newListener) {
 		listenersLock->lock();
 		listeners.push_back(newListener);
 		listenersLock->unlock();
@@ -35,7 +35,7 @@ public:
 			if (!listener->notified) {
 				listener->notified = true;
 				listener->notifierHandle = actualHandle;
-				listener->lock->unlock();
+				listener->notify();
 				
 			}
 		}

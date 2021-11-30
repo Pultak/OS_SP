@@ -4,17 +4,21 @@
 #include "../../src/api/api.h"
 class SleepListener {
 public:
-	SleepListener(kiv_os::THandle handle) : sleeperHandle(handle) {
-		lock = std::make_unique<Synchronization::Spinlock>(true);
-	}
+	/*SleepListener(kiv_os::THandle handle) : sleeperHandle(handle) {
+		//lock = std::make_unique<std::mutex>();
+		//Inicialize lock as locked
+		lock.lock();
+	}*/
 
 
 public:
+
+
 	/// <summary>
 	/// Handle of the locked thread
 	/// </summary>
 	kiv_os::THandle sleeperHandle;
-	std::unique_ptr<Synchronization::Spinlock> lock;
+	std::condition_variable cv;
 	/// <summary>
 	/// Handle of the thread that notified the locked thread
 	/// </summary>
@@ -23,6 +27,11 @@ public:
 	/// Flag if the listener was already notified
 	/// </summary>
 	bool notified = false;
+
+
+private:
+
+	std::mutex lock;
 
 
 };
