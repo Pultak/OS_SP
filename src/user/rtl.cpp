@@ -29,7 +29,7 @@ bool kiv_os_rtl::Write_File(const kiv_os::THandle file_handle, const char *buffe
 	regs.rdx.x = static_cast<decltype(regs.rdx.x)>(file_handle);
 	regs.rdi.r = reinterpret_cast<decltype(regs.rdi.r)>(buffer);
 	regs.rcx.r = buffer_size;
-
+	written = 0;
 	const bool result = kiv_os::Sys_Call(regs);
 	written = regs.rax.r;
 	return result;
@@ -39,7 +39,6 @@ bool kiv_os_rtl::Set_Working_Dir(const char* dir) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Set_Working_Dir));
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(dir);
 	const bool result = kiv_os::Sys_Call(regs);
-	std::cout << regs.rax.r << std::endl;
 	return result;
 }
 
@@ -117,12 +116,6 @@ bool kiv_os_rtl::Create_Pipe(kiv_os::THandle *file_handles) {
 
 	const bool result = kiv_os::Sys_Call(regs);
 	return result;
-	/*
-	index++;
-	std::cout << "\ncreating pipe: " << 10 + index << " " << index+1	;
-
-	file_handles[0] = 10 +index;
-	file_handles[1] = index + 1;*/
 	return 0;
 }
 

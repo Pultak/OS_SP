@@ -3,18 +3,14 @@
 
 #include "Synchronization.h"
 #include "Process.h"
-
+#include <string.h>
 #include "../api/api.h"
 
 class ProcessControlBlock {
 public:
 
-	ProcessControlBlock() {
-		lockMaster = new Synchronization::Spinlock(0);
-	}
-	~ProcessControlBlock() {
-		delete lockMaster;
-	}
+	ProcessControlBlock();
+	~ProcessControlBlock();
 	/// <summary>
 	/// Function adds newly created process to the pcb
 	/// </summary>
@@ -39,14 +35,9 @@ public:
 	/// </summary>
 	void notifyAllListeners() const ;
 
-	void* getAllProcesses(size_t& processCount);
+	ProcessEntry* getAllProcesses(size_t& processCount);
 
 	bool isUpdated();
-
-private:
-
-	Synchronization::Spinlock* lockMaster;
-
 
 };
 

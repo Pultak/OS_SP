@@ -6,6 +6,15 @@ std::map<kiv_os::THandle, IOHandle*> openedHandles;
 const std::unique_ptr<Synchronization::Spinlock> ioHandleLock = std::make_unique<Synchronization::Spinlock>(0);
 
 
+void test() {
+	size_t pcount = 0;
+	auto a = ProcessUtils::pcb->getAllProcesses(pcount);
+	for (int i = 0; i < pcount; ++i) {
+		ProcessEntry ax = a[i];
+		std::cout << "TEST NAME: " << ax.programName << std::endl;
+		continue;
+	}
+}
 
 kiv_os::THandle io::addIoHandle(IOHandle* handle) {
 	ioHandleLock->lock();

@@ -33,12 +33,13 @@ kiv_os::NOS_Error FileHandle::seek(size_t new_pos, kiv_os::NFile_Seek position, 
 
 kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& written) {
 
-	printf("FileHandle read \n");
+	printf("FileHandle write \n");
 	if (is_read_only() || is_directory()) {
-        printf("zapisovani do slozky nelze\n");
         return kiv_os::NOS_Error::Permission_Denied;
     }
-    std::vector<char> buf(buffer, buffer + size);
+    std::vector<char> buf(buffer, buffer + size); 
+    std::cout << "write size: size, fsize, fpos: " << size << " " << file->size << " " << file->position << "\n\n\n";
+
     auto result = vfs->write(file, size, file->position, buf, written);
     file->position += written;
     file->size += written;

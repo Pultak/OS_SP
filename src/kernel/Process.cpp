@@ -3,6 +3,20 @@
 #include "handles.h"
 #include "Process.h"
 
+Process::Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, const char* program, std::filesystem::path wd)
+	: handle(handle), stdInput(stdIn), stdOutput(stdOut), workingDirectory(wd) {
+	tcbLock = new Synchronization::Spinlock(0);
+	//memcpy(programName, '\0', sizeof(programName));
+	auto length = strlen(program);
+	strcpy_s(programName, length + 1, program);
+	if (length < sizeof(programName))
+		programName[length] = 0;
+}
+
+/*char* Process::getProgramName(){
+	return programName;
+}*/
+
 void Process::addNewThread(kiv_os::THandle threadHandle){
 	tcbLock->lock();
 	Thread* newThread = new Thread(threadHandle, this->handle);

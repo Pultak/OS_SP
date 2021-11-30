@@ -4,15 +4,26 @@
 /// pcb
 /// </summary>
 std::map<kiv_os::THandle, Process*> table;
-bool tableUpdated = false;
+
+Synchronization::Spinlock* lockMaster;
+bool* tableUpdated;
+
+ProcessControlBlock::ProcessControlBlock() {
+	lockMaster = new Synchronization::Spinlock(0);
+	tableUpdated = new bool[1];
+}
+
+ProcessControlBlock::~ProcessControlBlock() {
+	delete lockMaster;
+	delete tableUpdated;
+}
 
 void ProcessControlBlock::AddNewProcess(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program, std::filesystem::path actualDir) {
 	lockMaster->lock();
 	auto newProcess = new Process(handle, stdIn, stdOut, program, actualDir);
 
 	table.emplace(std::make_pair(handle, newProcess));
-	tableUpdated = true;
-	printf("Updated \n");
+	*tableUpdated = true;
 	lockMaster->unlock();
 }
 
@@ -39,8 +50,7 @@ bool ProcessControlBlock::removeProcess(kiv_os::THandle handle) {
 		delete proc;
 		processRemoved = true;
 	}
-	tableUpdated = true;
-	printf("Updated \n");
+	*tableUpdated = true;
 	lockMaster->unlock();
 	return processRemoved;
 }
@@ -76,10 +86,9 @@ void ProcessControlBlock::notifyAllListeners() const {
 	lockMaster->unlock();
 }
 
-void* ProcessControlBlock::getAllProcesses(size_t& processCount){
+ProcessEntry* ProcessControlBlock::getAllProcesses(size_t& processCount){
 	lockMaster->lock();
-	if (tableUpdated) {
-		printf("No longer updated \n");
+	if (!table.empty()) {
 		ProcessEntry* result = new ProcessEntry[table.size()];
 		uint16_t index = 0;
 		for (const auto& rec : table) {
@@ -96,20 +105,24 @@ void* ProcessControlBlock::getAllProcesses(size_t& processCount){
 
 			auto wDirL = process->workingDirectory.string().length();
 			auto workDirLength = sizeof(ProcessEntry::workingDir) > wDirL ? sizeof(ProcessEntry::workingDir) : wDirL;
+			
 			strcpy_s(result[index].workingDir, workDirLength, process->workingDirectory.string().c_str());
+			
 
 			++index;
 		}
 		//we collected all -> table is no longer diff from tasklisk file
-		tableUpdated = false;
+		*tableUpdated = false;
 		processCount = index;
 		lockMaster->unlock();
 		return result;
 	}else {
+		lockMaster->unlock();
 		return nullptr;
 	}
 }
 
 bool ProcessControlBlock::isUpdated(){
-	return tableUpdated;
+	//printf("PCB updated? %d\n", *tableUpdated);
+	return *tableUpdated;
 }

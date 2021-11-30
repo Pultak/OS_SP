@@ -17,7 +17,7 @@ struct ProcessEntry {
 	ProcessState state;
 	kiv_os::NOS_Error exitCode;
 	char programName[42];
-	char workingDir[256];
+	char workingDir[128];
 };
 
 
