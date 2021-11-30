@@ -16,7 +16,7 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 	bool read_from_file = false;
 	bool flag_continue = true;
 	std::vector<std::string> lines;
-	const size_t buffer_size = 20;
+	const size_t buffer_size = 256;
 	char buffer[buffer_size];
 	size_t counter = 0;
 	std::string line = "";
@@ -43,8 +43,10 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 	}
 
 
+	kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 	while (flag_continue)
 	{
+		counter = 0;
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
 			/*if (!read_from_file)
@@ -73,6 +75,13 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 				}
 			}
 
+			for (auto& line : lines)
+			{
+				kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
+				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
+			}
+			lines.clear();
+
 		}
 		else
 		{
@@ -80,13 +89,7 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 		}
 	}
 
-	kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 
-	for (auto& line : lines)
-	{
-		kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
-		kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
-	}
 
 	return 0;
 }

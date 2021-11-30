@@ -22,7 +22,7 @@ namespace Synchronization {
                 if (!lockVal.exchange(true, std::memory_order_acquire)) {
                     return;
                 }
-                while (lockVal.load(std::memory_order_relaxed)) {
+                /*while (lockVal.load(std::memory_order_relaxed)) {
 #if defined(USE_mm_pause)
                     //platform specific pauses that should be faster
                     __asm__("pause;");
@@ -32,7 +32,7 @@ namespace Synchronization {
                     std::this_thread::sleep_for(std::chrono::seconds(0));
 #endif
 
-                }
+                }*/
             }
         }
 
@@ -49,7 +49,7 @@ namespace Synchronization {
 
     class IntSpinlock {
 
-    private:
+    public:
         std::atomic<uint16_t> lockVal = { 0 };
     public:
         explicit IntSpinlock(uint16_t val) {
@@ -58,13 +58,13 @@ namespace Synchronization {
 
         void lock() noexcept {
             for (;;) {
-                if (lockVal.fetch_sub(1, std::memory_order_acquire)) {
-                    //lockVal--;
+                if (lockVal.load(std::memory_order_relaxed)) {
+                    lockVal.fetch_sub(1, std::memory_order_acquire);
                     return;
                 }
-                while (lockVal.load(std::memory_order_relaxed)) {
+                /*while (lockVal.load(std::memory_order_relaxed)) {
                     std::this_thread::sleep_for(std::chrono::seconds(0));
-                }
+                }*/
             }
         }
 

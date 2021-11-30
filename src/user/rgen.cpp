@@ -59,7 +59,6 @@ extern "C" size_t __stdcall rgen(const kiv_hal::TRegisters& regs)
 		kiv_os_rtl::Write_File(std_out, rand_num.c_str(), strlen(rand_num.c_str()), written);
 		kiv_os_rtl::Write_File(std_out, "\n", strlen("\n"), written);
 	}
-
 	kiv_os_rtl::Close_Handle(stdin_thread);
 
 	return 0;

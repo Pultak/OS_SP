@@ -19,30 +19,27 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 	const size_t buffer_size = 256;
 	char buffer[buffer_size];
 	size_t counter;
-	std::array<char, 128> chars = { 0 };
+	std::array<uint32_t, 256> chars = { 0 };
 
 	bool flag_continue = true;
 
-	std::cout << "freq : " << std_in << ".\n";
-
 	while (flag_continue)
 	{
-		std::cout << "before read\n";
-
+		counter = 0;
 		if (kiv_os_rtl::Read_File(std_in, buffer, buffer_size, counter))
 		{
-			std::cout <<"\nbuffer" << buffer;
-
+			//std::cout << "Counter size after read: " << counter << std::endl;
+			std::cout << buffer << std::endl;
+			//std::cout << "a" << std::endl;
 			for (int i = 0; i < counter; i++)
 			{
 				char c = buffer[i];
-
 				if (c == 5 || c == 4 || c == 3)
 				{
 					flag_continue = false;
 					break;
 				}
-				if (c >= 0)
+				else if (c >= 0)
 				{
 					chars.at(c)++;
 				}
