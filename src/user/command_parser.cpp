@@ -265,6 +265,7 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 	kiv_os::THandle program_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle signaled_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle signal_ret;
+	size_t written;
 	Program signaled_program = Program();
 	std::vector<kiv_os::THandle> active_handles;
 
@@ -320,7 +321,20 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), in, out, program_handle);
 		if (!success)
 		{
-			std::cout << "\nInvalid argument\n";
+			std::string message = "'";
+			message.append(program.command.c_str());
+			message.append("' is not recognized as an internal command.\n");
+			kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
+			if(program.pipe_in)
+			{
+				kiv_os_rtl::Close_Handle(program.pipe_in_handle);
+			}
+			if (program.pipe_out)
+			{
+				kiv_os_rtl::Close_Handle(program.pipe_out_handle);
+				kiv_os_rtl::Close_Handle(current_pipe[0]);
+			}
+			break;
 		}
 		else
 		{
