@@ -1,7 +1,7 @@
 TODO
 ==========
 
-dir /S  - nefunguje -> zasekne se
+[x] dir /S  - nefunguje -> zasekne se, obcas?
 find /v "" /c - nic nevypisuje? / presmerovani do souboru nezapise nic
 
 
@@ -31,11 +31,11 @@ Tvorba filesystemu
 Projekt **kernel**
 ==========
 Jadro systemu:
-1. roury a presmerovani
-2. prikaz tasklist (vsechny procesy)
-3. prikaz echo (echo musi umet @echo on a off)
-4. program rgen
-5. program freq
+1. [x] roury a presmerovani
+2. [x] prikaz tasklist (vsechny procesy)
+3. [x] prikaz echo (echo musi umet @echo on a off)
+4. [x] program rgen
+5. [x] program freq
 
 
 Monoliticke jadro.
