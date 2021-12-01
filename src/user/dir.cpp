@@ -74,30 +74,35 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 			read = 1;
 			while (read)
 			{
+				memset(buffer, 0, buffer_size);
 				if (result = kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, read))
 				{
 					if (buffer_size == read)
 					{
 						kiv_os::TDir_Entry* file = reinterpret_cast<kiv_os::TDir_Entry*>(buffer);
+
+						auto fNameLen = strlen(file->file_name);
+						auto len = fNameLen < sizeof(kiv_os::TDir_Entry::file_name) ? fNameLen : sizeof(kiv_os::TDir_Entry::file_name);
+
 						if (file->file_attributes == static_cast<uint16_t>(kiv_os::NFile_Attributes::Directory))
 						{
 							if (recursive_flag)
 							{
 								whole_path.append(directories.at(0));
 								whole_path.append("\\");
-								whole_path.append(file->file_name, sizeof(kiv_os::TDir_Entry::file_name));
+								whole_path.append(file->file_name, len);
 								directories.push_back(whole_path);
 								whole_path.clear();
 							}
 							output.append("<DIR>\t");
-							output.append(file->file_name, sizeof(kiv_os::TDir_Entry::file_name));
+							output.append(file->file_name, len);
 							output.append("\n");
 							count_dirs++;
 						}
 						else
 						{
 							output.append("\t");
-							output.append(file->file_name, sizeof(kiv_os::TDir_Entry::file_name));
+							output.append(file->file_name, len);
 							output.append("\n");
 							count_files++;
 						}

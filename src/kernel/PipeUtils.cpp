@@ -2,13 +2,13 @@
 
 
 bool PipeOut::write(const char c){
-    if (pipe->writeClosed) {
+    if (pipe->writeClosed || pipe->readClosed) {
         return false;
     }
     pipe->writeLock->unlock(1);
 
     //check again -> handle could get closed in the sleeptime
-    if (pipe->writeClosed) {
+    if (pipe->writeClosed || pipe->readClosed) {
         return false;
     }
     pipe->buffer[pipe->writePtr] = c;
