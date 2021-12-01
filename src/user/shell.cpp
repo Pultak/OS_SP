@@ -119,16 +119,19 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 					}
 				}
 			}
-			if (!program_vector.empty()) {
-				Execute_Commands(program_vector, regs);
-			}
-
-			kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);
-
-			if (echo_on)
+			if (continue_flag)
 			{
-				kiv_os_rtl::Write_File(std_out, buffer, strlen(buffer), counter);	//a vypiseme ho
+				if (!program_vector.empty()) {
+					Execute_Commands(program_vector, regs);
+				}
+
 				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);
+
+				if (echo_on)
+				{
+					kiv_os_rtl::Write_File(std_out, buffer, strlen(buffer), counter);	//a vypiseme ho
+					kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);
+				}
 			}
 		}
 		else
