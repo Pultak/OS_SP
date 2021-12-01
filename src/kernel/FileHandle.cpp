@@ -33,13 +33,11 @@ kiv_os::NOS_Error FileHandle::seek(size_t new_pos, kiv_os::NFile_Seek position, 
 
 kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& written) {
 
-	printf("FileHandle write \n");
 	if (is_read_only() || is_directory()) {
         return kiv_os::NOS_Error::Permission_Denied;
     }
     std::vector<char> buf(buffer, buffer + size); 
-    std::cout << "write size: size, fsize, fpos: " << size << " " << file->size << " " << file->position << "\n\n\n";
-
+    
     auto result = vfs->write(file, size, file->position, buf, written);
     file->position += written;
     file->size += written;
@@ -47,14 +45,11 @@ kiv_os::NOS_Error FileHandle::write(const char* buffer, size_t size, size_t& wri
 }
 
 kiv_os::NOS_Error FileHandle::read(size_t size, char* buffer, size_t& read) {
-	printf("FileHandle read \n");
     std::vector<char> out;
     size = std::min(size, file->size - file->position);
-	std::cout << "size: size, fsize, fpos: " << size << " " << file->size << " " << file->position << "\n\n\n";
-    if (size <= 0) {
+	 if (size <= 0) {
         return kiv_os::NOS_Error::IO_Error;
     }
-    //printf("%s", static_cast<const char*>(file.name));
     auto result = vfs->read(file, size, file->position, out);
     for (size_t i = 0; i < out.size(); i++) {
         buffer[i] = out.at(i);

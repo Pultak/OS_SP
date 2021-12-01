@@ -85,19 +85,19 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 							{
 								whole_path.append(directories.at(0));
 								whole_path.append("\\");
-								whole_path.append(file->file_name);
+								whole_path.append(file->file_name, sizeof(kiv_os::TDir_Entry::file_name));
 								directories.push_back(whole_path);
 								whole_path.clear();
 							}
 							output.append("<DIR>\t");
-							output.append(file->file_name);
+							output.append(file->file_name, sizeof(kiv_os::TDir_Entry::file_name));
 							output.append("\n");
 							count_dirs++;
 						}
 						else
 						{
 							output.append("\t");
-							output.append(file->file_name);
+							output.append(file->file_name, sizeof(kiv_os::TDir_Entry::file_name));
 							output.append("\n");
 							count_files++;
 						}

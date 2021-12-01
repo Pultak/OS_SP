@@ -1,3 +1,11 @@
+TODO
+==========
+
+dir /S  - nefunguje -> zasekne se
+find /v "" /c - nic nevypisuje? / presmerovani do souboru nezapise nic
+
+
+
 
 Zadani
 ==========

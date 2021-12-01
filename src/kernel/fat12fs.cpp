@@ -172,7 +172,6 @@ kiv_os::NOS_Error FAT::open(const char* pth, kiv_os::NOpen_File flags, uint8_t a
             //jedna se o slozku
             if (dir_item.attribute == static_cast<uint8_t>(kiv_os::NFile_Attributes::Volume_ID) || dir_item.attribute == static_cast<uint8_t>(kiv_os::NFile_Attributes::Directory)) {
                 if (!folder_name_val(folders_in_path.at(folders_in_path.size() - 1).c_str())){
-                    printf("nevalidni jmeno slozky\n");
                     return kiv_os::NOS_Error::Invalid_Argument;
                 }
                 kiv_os::NOS_Error result = mkdir(pth, attributes);
@@ -185,7 +184,6 @@ kiv_os::NOS_Error FAT::open(const char* pth, kiv_os::NOpen_File flags, uint8_t a
             }
             else { // jedna se o soubor
                 if (!file_name_val(folders_in_path.at(folders_in_path.size() - 1).c_str())) { 
-                    printf("nevalidni jmeno souboru\n");
                     return kiv_os::NOS_Error::Invalid_Argument;
                 }
                 int result = create_file(pth, attributes, fat_table, int_fat_table);

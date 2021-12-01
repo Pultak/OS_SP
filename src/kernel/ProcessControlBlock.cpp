@@ -123,6 +123,5 @@ ProcessEntry* ProcessControlBlock::getAllProcesses(size_t& processCount){
 }
 
 bool ProcessControlBlock::isUpdated(){
-	//printf("PCB updated? %d\n", *tableUpdated);
 	return *tableUpdated;
 }

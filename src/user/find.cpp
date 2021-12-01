@@ -22,14 +22,14 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 	uint16_t line_count = 0;
 	std::string path_s = path_c;
 
-	if (strlen(path_s.c_str())>=strlen("/v \"\" /c"))
+	if (strlen(path_s.c_str()) >= strlen("/v \"\" /c"))
 	{
 		size_t pos = path_s.find("/v \"\" /c");
 
 		if (pos == 0)
 		{
 			path_c += strlen("/v \"\" /c");
-			while(*path_c == ' ')
+			while (*path_c == ' ')
 			{
 				path_c++;
 			}
@@ -49,7 +49,7 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 		}
 		else
 		{
-			kiv_os_rtl::Exit((uint16_t)kiv_os::NOS_Error::File_Not_Found);
+			return kiv_os_rtl::Exit((uint16_t)kiv_os::NOS_Error::File_Not_Found);
 		}
 	}
 	else
@@ -61,14 +61,14 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 	{
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
-			if (!read_from_file)
+			if (std_in < 2)
 			{
 				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 				line_count++;
 			}
 			for (int i = 0; i < counter; i++)
 			{
-				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 'q')
+				if (buffer[i] == 3 || buffer[i] == 4 /*|| buffer[i] == 'q'*/)
 				{
 					flag_continue = false;
 					break;
@@ -82,7 +82,7 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 		else
 			flag_continue = false;
 	}
-
+	//printf("%d", line_count);
 	std::string line = std::to_string(line_count);
 	kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
 	kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);

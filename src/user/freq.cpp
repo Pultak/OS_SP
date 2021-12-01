@@ -29,7 +29,7 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 		if (kiv_os_rtl::Read_File(std_in, buffer, buffer_size, counter))
 		{
 			//std::cout << "Counter size after read: " << counter << std::endl;
-			std::cout << buffer << std::endl;
+			//std::cout << buffer << std::endl;
 			//std::cout << "a" << std::endl;
 			for (int i = 0; i < counter; i++)
 			{
@@ -50,8 +50,6 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 			break;
 		}
 	}
-	std::cout << "read fin\n";
-
 	for (int i = 0; i < 128; i++) {
 		int ch = chars.at(i);
 		char c = i;

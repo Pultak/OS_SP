@@ -21,7 +21,7 @@ size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
 
 	size_t counter = 0;
 
-	kiv_os_rtl::Write_File(std_out, "Program name\tInput Handle\tOutput Handle\tState\tExit Code\tWorking dir\n", 69/*nice*/, counter);
+	kiv_os_rtl::Write_File(std_out, "Program name\tInput\tOutput\tState\tCode\tWorking dir\n", 49, counter);
 
 	while (read)
 	{
@@ -29,8 +29,10 @@ size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
 		if (!kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, read))break;
 		process = reinterpret_cast<ProcessEntry*>(buffer);
 		//std::cout << process->programName << std::endl;
-		kiv_os_rtl::Write_File(std_out, process->programName, strlen(process->programName), counter);
-		kiv_os_rtl::Write_File(std_out, "\t", 1, counter); 
+		auto pNameLength = strlen(process->programName);
+		kiv_os_rtl::Write_File(std_out, process->programName, pNameLength, counter);
+		for(int i = 0; i < 2 - (pNameLength / 8); ++i)
+			kiv_os_rtl::Write_File(std_out, "\t", 1, counter); 
 		auto stdInString = std::to_string(process->stdIn);
 		kiv_os_rtl::Write_File(std_out, stdInString.c_str(), stdInString.length(), counter);
 		kiv_os_rtl::Write_File(std_out, "\t", 1, counter);
@@ -47,6 +49,8 @@ size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
 		kiv_os_rtl::Write_File(std_out, exitString.c_str(), exitString.length(), counter);
 		kiv_os_rtl::Write_File(std_out, "\t", 1, counter);
 		kiv_os_rtl::Write_File(std_out, process->workingDir, strlen(process->workingDir), counter);
+
+		kiv_os_rtl::Write_File(std_out, "\n", 1, counter);
 
 	}
 
