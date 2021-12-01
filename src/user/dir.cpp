@@ -59,15 +59,16 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 
 	while (!directories.empty())
 	{
-		if (auto result = kiv_os_rtl::Open_File(directories.at(0).c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::Directory, file_handle))
+		if (auto result = kiv_os_rtl::Open_File(directories.at(0).c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::Directory, file_handle))
 		{
-			if (strcmp(directories.at(0).c_str(), ".") == 0)
+			if (strcmp(work_dir, "C:\\") == 0)
 			{
 				output.append("\nDirectory of " + working_dir + "\n\n");
 			}
 			else
 			{
-				output.append("\nDirectory of " + working_dir + directories.at(0).c_str() + "\n\n");
+				std::string temp = directories.at(0).substr(1, directories.at(0).size() - 1);
+				output.append("\nDirectory of " + working_dir + temp + "\n\n");
 				output.append("<DIR>\t.\n");
 				output.append("<DIR>\t..\n");
 			}
