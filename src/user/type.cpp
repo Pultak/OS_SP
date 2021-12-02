@@ -58,12 +58,12 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 					flag_continue = false;
 					break;
 				}
-				if (buffer[i] == '\n')
+				else if (buffer[i] == '\n')
 				{
 					lines.push_back(line);
 					line.clear();
 				}
-				else
+				else if(buffer[i]!=-51)
 				{
 					line.push_back(buffer[i]);
 				}
