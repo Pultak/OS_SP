@@ -31,6 +31,11 @@ extern "C"  size_t __stdcall stdin_read(const kiv_hal::TRegisters& regs)
 				}
 			}
 		}
+		else
+		{
+			flag_continue = false;
+			break;
+		}
 	}
 
 	continue_flag = false;

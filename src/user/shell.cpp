@@ -3,6 +3,14 @@
 #include "command_parser.h"
 #include "global.h"
 
+
+//prettify
+
+//return point from funcitons
+
+//check every write
+
+
 #include "freq.h"
 #include <iostream>
 
@@ -92,7 +100,6 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 				{
 					if (!it->argument.empty())
 					{
-						std::cout << "arg: "<< it->argument;
 						if (kiv_os_rtl::Set_Working_Dir(it->argument.c_str()))
 						{
 							if (kiv_os_rtl::Get_Working_Dir(directory, buffer_size, chars_written))
