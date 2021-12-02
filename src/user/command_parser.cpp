@@ -296,7 +296,7 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 			continue;
 		}
 		//if this is the last program, ignore redirection and pipe out
-		if (!(program_vector.size() - 1) == index )
+		if (!((program_vector.size() - 1) == index) )
 		{
 			if (program.redirection_in)
 			{				
