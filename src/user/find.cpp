@@ -22,6 +22,7 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 	uint16_t line_count = 0;
 	std::string path_s = path_c;
 	std::string parameter_check = "/c /v\"\"";
+	bool flag_invalid_line = false;
 
 	if (strlen(path_s.c_str()) >= parameter_check.size())
 	{
@@ -75,6 +76,14 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 				{
 					line_count++;
 				}
+				else if (buffer[i] == -51)
+				{
+					flag_invalid_line = true;
+				}
+			}
+			if (flag_invalid_line)
+			{
+				line_count--;
 			}
 		}
 		else

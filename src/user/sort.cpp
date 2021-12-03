@@ -49,11 +49,11 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 			{
 				files.push_back(file);
 				file.clear();
-				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
+				//kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 			}
 			for (int i = 0; i < counter; i++)
 			{
-				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 'q') 
+				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 5) 
 				{
 					files.push_back(file);
 					file.clear();
@@ -64,6 +64,10 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 				{
 					files.push_back(file);
 					file.clear();
+				}
+				else if (buffer[i] == -51)
+				{
+					continue;
 				}
 				else
 				{
