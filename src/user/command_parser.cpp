@@ -381,7 +381,7 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 
 		index = 0;
 
-		kiv_os_rtl::Wait_For(active_handles.data(), active_handles.size(), signal_ret);
+		kiv_os_rtl::Wait_For(active_handles.data(), static_cast<uint16_t>(active_handles.size()), signal_ret);
 		signaled_handle = active_handles.at(signal_ret);
 		kiv_os_rtl::Read_Exit_Code(signaled_handle, exit_code);
 

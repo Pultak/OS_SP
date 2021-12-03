@@ -23,7 +23,7 @@ namespace kiv_os_rtl{
 
 	bool Open_File(const char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle& file_handle_ret);
 
-	bool Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint16_t & position_ret);
+	bool Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint64_t & position_ret);
 	
 	bool Close_Handle(kiv_os::THandle handle);
 
@@ -31,7 +31,7 @@ namespace kiv_os_rtl{
 
 	bool Set_File_Attribute(char* file_name, kiv_os::NFile_Attributes file_attribute);
 
-	bool Get_File_Attribute(char* file_name, uint8_t& file_attribute_ret);
+	bool Get_File_Attribute(char* file_name, uint64_t& file_attribute_ret);
 
 	bool Create_Pipe(kiv_os::THandle * file_handles);
 

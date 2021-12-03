@@ -28,8 +28,8 @@ struct Program {
 		argument = "";
 	}
 	void Print() {
-		int flags = redirection_in << 3 | redirection_out << 2 | pipe_in << 1 | pipe_out;
-		std::cout << "\nProgram: " << command << ", " << argument << ", rin, rout, pin, pout: " << std::bitset<4>(flags) << "\n";
+		//int flags = redirection_in << 3 | redirection_out << 2 | pipe_in << 1 | pipe_out;
+		//std::cout << "\nProgram: " << command << ", " << argument << ", rin, rout, pin, pout: " << std::bitset<4>(flags) << "\n";
 	}
 };
 

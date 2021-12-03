@@ -15,7 +15,6 @@ size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
 	ProcessEntry* process;
 	size_t read = 1;
 	char buffer[buffer_size];
-	char writeBuffer[buffer_size];
 	kiv_os_rtl::Open_File("C:\\tasklist", (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, file_handle);
 
 

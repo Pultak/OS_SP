@@ -162,7 +162,7 @@ void io::WriteIOHandle(kiv_hal::TRegisters& regs){
 		//get the passed arguments
 		size_t size = static_cast<size_t>(regs.rcx.r);
 		char* buffer = reinterpret_cast<char*>(regs.rdi.r);
-		size_t writeCount;
+		size_t writeCount = 0;
 		auto returnCode = iohandle->write(buffer, size, writeCount);
 		
 		if (returnCode == kiv_os::NOS_Error::Success) {
@@ -314,7 +314,6 @@ void io::GetWorkingDirectory(kiv_hal::TRegisters& regs) {
 	//todo synch
 	size_t size = static_cast<size_t>(regs.rcx.r);
 	char* buffer = reinterpret_cast<char*>(regs.rdx.r);
-	size_t writeCount;
 	auto processHandle = handles::getTHandleById(std::this_thread::get_id());
 	auto process = processHandle == kiv_os::Invalid_Handle ? nullptr :
 		ProcessUtils::pcb->getProcess(processHandle);

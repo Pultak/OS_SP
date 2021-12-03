@@ -85,7 +85,8 @@ void ProcessControlBlock::notifyAllListeners() const {
 	}
 	lockMaster->unlock();
 }
-
+#pragma warning(disable:6385) // kompilator pri prekladu nezjisti velikost tabulky table a domniva se,
+#pragma warning(disable:6386) // ze by mohlo pole pretect. To se ale v behu nestane diky lockMasteru.
 ProcessEntry* ProcessControlBlock::getAllProcesses(size_t& processCount){
 	lockMaster->lock();
 	if (!table.empty()) {
