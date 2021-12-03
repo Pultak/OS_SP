@@ -38,7 +38,7 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 	}
 	else
 	{
-		kiv_os_rtl::Exit((uint16_t)kiv_os::NOS_Error::Invalid_Argument);
+		kiv_os_rtl::Exit(kiv_os::NOS_Error::Invalid_Argument);
 		return 0;
 	}
 
@@ -50,7 +50,8 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 		}
 		else
 		{
-			return kiv_os_rtl::Exit((uint16_t)kiv_os::NOS_Error::File_Not_Found);
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::File_Not_Found);
+			return 0;
 		}
 	}
 	else
@@ -86,7 +87,12 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 	std::string line = "";
 	line.append(std::to_string(line_count));
 	line.append(" ");
-	kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
+	if (!kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written))
+	{
+		kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
+		return 0;
+	}
+	
 	kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 
 	return 0;

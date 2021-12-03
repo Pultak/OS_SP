@@ -24,13 +24,15 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 	uint16_t count_files = 0;
 	uint16_t count_dirs = 0;
 	std::string whole_path = "";
-	std::string working_dir;
+	std::string working_dir = "";
 	char work_dir[256];
 
-	kiv_os_rtl::Get_Working_Dir(work_dir, 256, written);
+	if (!kiv_os_rtl::Get_Working_Dir(work_dir, 256, written))
+	{
+		kiv_os_rtl::Exit(kiv_os::NOS_Error::Unknown_Error);
+		return 0;
+	}
 	working_dir = work_dir;
-
-
 
 	if (strlen(argument_s.c_str()) >= strlen("/S"))
 	{
@@ -110,10 +112,8 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 					}
 					else
 					{
-						std::string message = "\nSize not equal to TDir\n";
-						kiv_os_rtl::Write_File(std_out, message.c_str(), message.size(), written);
-						buffer[buffer_size-1] = 0;
-						read = 0;
+						kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
+						return 0;
 					}
 				}
 				else
@@ -124,8 +124,8 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 		}
 		else
 		{
-			std::string message = "\nFailed to open directory\n";
-			kiv_os_rtl::Write_File(std_out, message.c_str(), message.size(), written);
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::File_Not_Found);
+			return 0;
 		}
 
 		auto it = directories.begin();

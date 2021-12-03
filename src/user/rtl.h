@@ -43,7 +43,7 @@ namespace kiv_os_rtl{
 				
 	bool Read_Exit_Code(kiv_os::THandle process_handle, uint16_t& exit_code_ret);
 
-	bool Exit(uint16_t exit_code);
+	bool Exit(kiv_os::NOS_Error exit_code);
 	
 	bool Shutdown();
 	

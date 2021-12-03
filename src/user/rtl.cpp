@@ -162,7 +162,7 @@ bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, uint16_t &exit_c
 	return result;
 }
 
-bool kiv_os_rtl::Exit(uint16_t exit_code) {
+bool kiv_os_rtl::Exit(kiv_os::NOS_Error exit_code) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Exit));
 	regs.rcx.r = static_cast<decltype(regs.rcx.r)>(exit_code);
 

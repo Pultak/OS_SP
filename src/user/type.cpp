@@ -32,7 +32,7 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 		}
 		else
 		{
-			kiv_os_rtl::Exit((uint16_t)kiv_os::NOS_Error::File_Not_Found);
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::File_Not_Found);
 			return 0;
 		}
 

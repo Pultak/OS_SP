@@ -18,8 +18,6 @@ extern "C"  size_t __stdcall stdin_read(const kiv_hal::TRegisters& regs)
 
 	while (flag_continue)
 	{
-		std::cout << std_in << std::endl;
-
 		if (kiv_os_rtl::Read_File(std_in, buffer, buffer_size, counter))
 		{
 			for (int i = 0; i < counter; i++)
@@ -33,6 +31,7 @@ extern "C"  size_t __stdcall stdin_read(const kiv_hal::TRegisters& regs)
 		}
 		else
 		{
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
 			flag_continue = false;
 			break;
 		}
@@ -61,9 +60,14 @@ extern "C" size_t __stdcall rgen(const kiv_hal::TRegisters& regs)
 	while (continue_flag)
 	{
 		rand_num = std::to_string(float(rand()) / float((RAND_MAX)) * a);
-		kiv_os_rtl::Write_File(std_out, rand_num.c_str(), strlen(rand_num.c_str()), written);
+		if (!kiv_os_rtl::Write_File(std_out, rand_num.c_str(), strlen(rand_num.c_str()), written))
+		{
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
+			break;
+		}
 		kiv_os_rtl::Write_File(std_out, "\n", strlen("\n"), written);
 	}
+
 	kiv_os_rtl::Close_Handle(stdin_thread);
 
 	return 0;

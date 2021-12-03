@@ -14,15 +14,10 @@ size_t __stdcall rd(const kiv_hal::TRegisters& regs)
 
 	if (file_to_delete && strlen(file_to_delete))
 	{
-		if (auto ret_code = kiv_os_rtl::Delete_File(file_to_delete))
+		if (!kiv_os_rtl::Delete_File(file_to_delete))
 		{
-			std::cout << "\nDELETED\n";
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::File_Not_Found);
 		}
-		else
-		{
-			std::cout << "\nDELETE FAILED: " << ret_code << std::endl;
-		}
-
 	}
 	return 0;
 }

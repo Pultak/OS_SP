@@ -6,9 +6,9 @@
 
 //prettify
 
-//return point from funcitons
+//redirection out/in cant open file error
 
-//check every write
+//error code read in cmd parser
 
 
 #include "freq.h"
@@ -31,29 +31,44 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 	size_t chars_written;
 
 	
-	const char* intro = "Vitejte v semestralni praci z KIV/OS.\n" \
-						"Shell zobrazuje echo zadaneho retezce. Prikaz exit ukonci shell.\n";
-	kiv_os_rtl::Write_File(std_out, intro, strlen(intro), counter);
+	const char* intro = "Vitejte v semestralni praci z KIV/OS.\n";
 
-	kiv_os_rtl::Get_Working_Dir(directory, buffer_size, chars_written);
+	if (!kiv_os_rtl::Write_File(std_out, intro, strlen(intro), counter))
+	{
+		kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
+		return 0;
+	}
+
+	if (!kiv_os_rtl::Get_Working_Dir(directory, buffer_size, chars_written))
+	{
+		kiv_os_rtl::Exit(kiv_os::NOS_Error::Unknown_Error);
+		return 0;
+	}
 
 	const char* prompt = "C:\\>";
 	do {
-		//kiv_os_rtl::Write_File(std_out, prompt, strlen(prompt), counter);
-		kiv_os_rtl::Write_File(std_out, directory, strlen(directory), counter);
-		if (strcmp(directory, "C:\\")==0)
+		if (echo_on)
 		{
-			kiv_os_rtl::Write_File(std_out, ">", 1, counter);
+			if (!kiv_os_rtl::Write_File(std_out, directory, strlen(directory), counter))
+			{
+				kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
+				return 0;
+			}
+
+			if (strcmp(directory, "C:\\") == 0)
+			{
+				kiv_os_rtl::Write_File(std_out, ">", 1, counter);
+			}
+			else
+			{
+				kiv_os_rtl::Write_File(std_out, "\\>", 2, counter);
+			}
 		}
-		else
-		{
-			kiv_os_rtl::Write_File(std_out, "\\>", 2, counter);
-		}
+
 
 
 
 		if (kiv_os_rtl::Read_File(std_in, buffer, buffer_size, counter)) {
-			//if ((counter > 0) && (counter == buffer_size)) counter--;
 			buffer[counter] = 0;	//udelame z precteneho vstup null-terminated retezec
 
 			if (buffer[counter - 1] == static_cast<uint8_t>(kiv_hal::NControl_Codes::ETX))
@@ -83,16 +98,13 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 					{
 						if (echo_on)
 						{
-							const char* print = "\nECHO is on\n";
+							const char* print = "ECHO is on.\n";
 							it->argument=print;
-							//kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 						}
 						else
 						{
-							
-							const char* print = "\nECHO is off.\n";
+							const char* print = "ECHO is off.\n";
 							it->argument = print;
-							//kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 						}
 					}
 				}
@@ -102,25 +114,21 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 					{
 						if (kiv_os_rtl::Set_Working_Dir(it->argument.c_str()))
 						{
-							if (kiv_os_rtl::Get_Working_Dir(directory, buffer_size, chars_written))
+							if (!kiv_os_rtl::Get_Working_Dir(directory, buffer_size, chars_written))
 							{
-								//std::cout << "directory: " <<directory << std::endl;
-							}
-							else
-							{
-								const char* print = "\nCouldn't read working directory\n";
+								const char* print = "\nCouldn't read working directory";
 								kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 							}
 						}
 						else
 						{
-							const char* print = "\nDirectory not found\n";
+							const char* print = "\nDirectory not found";
 							kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 						}
 					}
 					else
 					{
-						const char* print = "\nDirectory not specified\n";
+						const char* print = "\nDirectory not specified";
 						kiv_os_rtl::Write_File(std_out, print, strlen(print), counter);
 
 					}
@@ -128,24 +136,26 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 			}
 			if (continue_flag)
 			{
-				if (!program_vector.empty()) {
-					Execute_Commands(program_vector, regs);
+				if (!kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter))
+				{
+					kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
+					return 0;
 				}
 
-				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);
+				if (!program_vector.empty()) {
+					Execute_Commands(program_vector, regs);
 
-				if (echo_on)
-				{
-					kiv_os_rtl::Write_File(std_out, buffer, strlen(buffer), counter);	//a vypiseme ho
-					kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter);
+					if (!kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter))
+					{
+						kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
+						return 0;
+					}
 				}
 			}
 		}
 		else
 			break;	//EOF
 	} while (continue_flag);
-
-	
 
 	return 0;	
 }

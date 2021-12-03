@@ -274,20 +274,16 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 	for(auto program_it = program_vector.rbegin(); program_it != program_vector.rend(); program_it++)
 	{
 		Program& program = *program_it;
-	//for (auto& program : program_vector){
-		//program.Print();
+
 		in = in_reg;
 		out = out_reg;
-		//might need to transfer |
 		if (strcmp(program.command.c_str(), "cd") == 0)
 		{
-			//index--;
 			continue;
 		}
 		else if (strcmp(program.command.c_str(), "echo") == 0 && 
 				(strcmp(program.argument.c_str(), "on") == 0 || strcmp(program.argument.c_str(), "off") == 0))
 		{
-			//index--;
 			continue;
 		}
 		else if(program.file)
@@ -330,7 +326,14 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 			}
 			if (program.redirection_out)
 			{
-				kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, out);
+				if (!kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, out))
+				{
+					std::string message = "\nFailed to open: '";
+					message.append(program_vector.at(index + 1).command.c_str());
+					message.append("'\n");
+					kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
+					break;
+				}
 			}
 
 			if (program.pipe_out)
@@ -341,11 +344,15 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		}
 		if (program.pipe_in)
 		{
-			kiv_os_rtl::Create_Pipe(current_pipe);
+			if (kiv_os_rtl::Create_Pipe(current_pipe))
+			{
+				std::string message = "\nFailed to open pipe.\n";
+				kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
+				break;
+			}
 			in = current_pipe[0];
 			program.pipe_in_handle = in;
 		}
-		program.Print();
 
 		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), in, out, program_handle);
 		if (!success)
