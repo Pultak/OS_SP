@@ -65,10 +65,6 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 					files.push_back(file);
 					file.clear();
 				}
-				else if (buffer[i] == -51)
-				{
-					continue;
-				}
 				else
 				{
 					file.push_back(buffer[i]);

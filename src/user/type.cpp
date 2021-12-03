@@ -63,15 +63,15 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 					lines.push_back(line);
 					line.clear();
 				}
-				else if(buffer[i]!=-51)
+				else
 				{
 					line.push_back(buffer[i]);
 				}
 			}
 
-			for (auto& line : lines)
+			for (auto& iline : lines)
 			{
-				kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
+				kiv_os_rtl::Write_File(std_out, iline.c_str(), strlen(iline.c_str()), written);
 				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 			}
 			lines.clear();

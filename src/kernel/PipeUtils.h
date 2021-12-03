@@ -21,9 +21,9 @@ public:
 	Pipe(const size_t size) : pipeSize(size) {
 		buffer = new char[size];
 		//
-		readLock = new Synchronization::IntSpinlock(size);
+		readLock = new Synchronization::IntSpinlock(0);
 		//input can write until buffer full
-		writeLock = new Synchronization::IntSpinlock(0);
+		writeLock = new Synchronization::IntSpinlock(size);
 	}
 
 	~Pipe() {
