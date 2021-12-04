@@ -36,6 +36,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 		return 0;
 	}
 
+	// if echo on -> write current directory to output
 	const char* prompt = "C:\\>";
 	do {
 		if (echo_on)
@@ -60,7 +61,8 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 
 
 		if (kiv_os_rtl::Read_File(std_in, buffer, buffer_size, counter)) {
-			buffer[counter] = 0;	//udelame z precteneho vstup null-terminated retezec
+			//udelame z precteneho vstup null-terminated retezec
+			buffer[counter] = 0;	
 
 			if (buffer[counter - 1] == static_cast<uint8_t>(kiv_hal::NControl_Codes::ETX))
 			{
@@ -68,9 +70,13 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 				continue;
 			}
 
+			//make line into program vector
 			program_vector = ProcessLine(buffer);
+
+			//check for special cases: echo on/off, exit and cd
 			for (auto it = program_vector.begin(); it != program_vector.end(); it++)
 			{
+				//break the loop and stop shell if exit
 				if (strcmp(it->command.c_str(), "exit") == 0) {
 					continue_flag = false;
 					break;
@@ -87,6 +93,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 					}
 					if (strcmp(it->argument.c_str(), "") == 0)
 					{
+						//if there is no argument for echo, add "ECHO is on/off" as an argument, depending on current state of shell
 						if (echo_on)
 						{
 							const char* print = "ECHO is on.\n";
@@ -99,6 +106,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 						}
 					}
 				}
+				//change directory - write new directory to "directory" variable if everything is ok
 				else if (strcmp(it->command.c_str(), "cd") == 0)
 				{
 					if (!it->argument.empty())
@@ -125,6 +133,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 					}
 				}
 			}
+			//if everything was successful -> continue with program execution
 			if (continue_flag)
 			{
 				if (!kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), counter))
@@ -133,6 +142,7 @@ size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 					return 0;
 				}
 
+				//if there are commands to execute, execute them
 				if (!program_vector.empty()) {
 					Execute_Commands(program_vector, regs);
 

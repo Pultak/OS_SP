@@ -4,9 +4,6 @@
 #include <sstream>
 #include <string> 
 #include <array>
-#include <iostream>
-
-//comments missing
 
 size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 {
@@ -15,12 +12,10 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 	std::stringstream line_ss;
 	std::string line;
 	const char* new_line = "\n";
-
 	const size_t buffer_size = 256;
 	char buffer[buffer_size];
 	size_t counter;
 	std::array<uint32_t, 256> chars = { 0 };
-
 	bool flag_continue = true;
 
 	while (flag_continue)
@@ -31,22 +26,26 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 			for (int i = 0; i < counter; i++)
 			{
 				char c = buffer[i];
-				if (c == 5 || c == 4 || c == 3)
+				//stop reading if EOF/ETX
+				if (c == static_cast<char>(kiv_hal::NControl_Codes::EOT) || c == static_cast<char>(kiv_hal::NControl_Codes::ETX))
 				{
 					flag_continue = false;
 					break;
 				}
 				else if (c >= 0)
 				{
+					//add +1 to char position in array
 					chars.at(c)++;
 				}
 			}
 		}
 		else
 		{
+			//stop reading if read returns 0
 			break;
 		}
 	}
+	//print elements of char array which are >0, each element represents a char with ascii number = position
 	for (int i = 0; i < 128; i++) {
 		int ch = chars.at(i);
 		char c = i;

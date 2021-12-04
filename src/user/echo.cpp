@@ -1,5 +1,4 @@
 #include "echo.h"
-#include <iostream>
 
 size_t __stdcall echo(const kiv_hal::TRegisters& regs) {
 	const kiv_os::THandle std_out = static_cast<kiv_os::THandle>(regs.rbx.x);
@@ -8,6 +7,8 @@ size_t __stdcall echo(const kiv_hal::TRegisters& regs) {
 	const char* print = reinterpret_cast<const char*>(regs.rdi.r);
 	char etx[1];
 	etx[0] = 3;
+	
+	//write argument to output + CtrlC
 	if (!kiv_os_rtl::Write_File(std_out, print, strlen(print), counter))
 	{
 		kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);

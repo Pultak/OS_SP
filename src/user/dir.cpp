@@ -1,7 +1,6 @@
 #include "dir.h"
 #include <iostream>
 #include <vector>
-#include <sstream>
 #include <string>
 
 size_t __stdcall dir(const kiv_hal::TRegisters& regs)

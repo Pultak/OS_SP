@@ -3,7 +3,6 @@
 #include "find.h"
 #include <vector>
 #include <string>
-#include <iostream>
 #include "command_parser.h"
 
 size_t __stdcall find(const kiv_hal::TRegisters& regs)
@@ -23,6 +22,7 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 	std::string path_s = path_c;
 	std::string parameter_check = "/c /v\"\"";
 
+	//check if find is with the correct parameters
 	if (strlen(path_s.c_str()) >= parameter_check.size())
 	{
 		size_t pos = path_s.find(parameter_check);
@@ -42,6 +42,7 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 		return 0;
 	}
 
+	//open file if there is additional argument after /c /v""
 	if (path_c && strlen(path_c))
 	{
 		if (kiv_os_rtl::Open_File(path_c, kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, file_handle))
@@ -54,26 +55,30 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 			return 0;
 		}
 	}
+	//else read from in handle
 	else
 	{
 		file_handle = std_in;
 	}
 
+	//iterate through input until we read EOT/ETX or read returns 0
 	while (flag_continue)
 	{
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
+			//add line for each read
 			line_count++;
 
 			for (int i = 0; i < counter; i++)
 			{
-				if (buffer[i] == 3 || buffer[i] == 4)
+				if (buffer[i] == static_cast<char>(kiv_hal::NControl_Codes::EOT) || buffer[i] == static_cast<char>(kiv_hal::NControl_Codes::ETX))
 				{
 					flag_continue = false;
 					break;
 				}
 				else if (buffer[i] == '\n')
 				{
+					//add additional line if there is newline inside file
 					line_count++;
 				}
 			}
@@ -84,6 +89,7 @@ size_t __stdcall find(const kiv_hal::TRegisters& regs)
 		}
 	}
 
+	//write line count to output
 	std::string line = "";
 	line.append(std::to_string(line_count));
 	line.append(" ");

@@ -22,7 +22,7 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 	size_t written = 0;
 	const char* new_line = "\n";
 
-
+	//check if we should read from input or file
 	if (path && strlen(path))
 	{
 		if (kiv_os_rtl::Open_File(path, kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, file_handle))
@@ -41,11 +41,13 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 		file_handle = std_in;
 	}
 
-
+	//continue until EOT/ETX
 	while (flag_continue)
 	{
+		counter = 0;
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
+			//add chars to file, until EOT/ETX or newline or new read and then add the file to files vector
 			if (!read_from_file)
 			{
 				files.push_back(file);
@@ -53,7 +55,7 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 			}
 			for (int i = 0; i < counter; i++)
 			{
-				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 5) 
+				if (buffer[i] == static_cast<char>(kiv_hal::NControl_Codes::EOT) || buffer[i] == static_cast<char>(kiv_hal::NControl_Codes::ETX))
 				{
 					files.push_back(file);
 					file.clear();
@@ -77,8 +79,10 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 		}
 	}
 
+	//sort files
 	std::sort(files.begin(), files.end());
 
+	//write files to output
 	for (auto& line : files)
 	{
 		if (!kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written))
