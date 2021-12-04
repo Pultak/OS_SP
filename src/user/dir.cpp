@@ -29,6 +29,8 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 	std::string working_dir = "";
 	char work_dir[256];
 
+
+	//get current directory
 	if (!kiv_os_rtl::Get_Working_Dir(work_dir, 256, written))
 	{
 		kiv_os_rtl::Exit(kiv_os::NOS_Error::Unknown_Error);
@@ -36,6 +38,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 	}
 	working_dir = work_dir;
 
+	//check if dir should be recursive
 	if (strlen(argument_s.c_str()) >= strlen("/S"))
 	{
 		size_t pos = argument_s.find("/S");
@@ -51,6 +54,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 			argument_s = argument;
 		}
 	}
+	//check if we are looking only for files
 	if (strlen(argument_s.c_str()) >= strlen("\\*.*"))
 	{
 		size_t pos = argument_s.find("\\*.*");
@@ -66,6 +70,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 			argument_s = argument;
 		}
 	}
+	//check for argument - push back into directories '.' if no argument, otherwise push argument into directories
 	if (argument_s.empty())
 	{
 		directories.push_back(".");
@@ -80,6 +85,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 	{
 		if (auto result = kiv_os_rtl::Open_File(directories.at(0).c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::Directory, file_handle))
 		{
+			//print the current directory in which we are right now looking
 			if ((strcmp(work_dir, "C:\\") == 0) && first_dir && empty_arg)
 			{
 				output.append("\nDirectory of " + working_dir + "\n\n");
@@ -98,22 +104,24 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 				output.append("<DIR>\t.\n");
 				output.append("<DIR>\t..\n");
 			}
+			//read current directory
 			read = 1;
 			while (read)
 			{
 				memset(buffer, 0, buffer_size);
-				if (result = kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, read))
+				if (result = kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, read)) //read a single directory/file
 				{
-					if (buffer_size == read)
+					if (buffer_size == read) // check if we read the whole file/directory
 					{
 						kiv_os::TDir_Entry* file = reinterpret_cast<kiv_os::TDir_Entry*>(buffer);
 
 						auto fNameLen = strlen(file->file_name);
 						auto len = fNameLen < sizeof(kiv_os::TDir_Entry::file_name) ? fNameLen : sizeof(kiv_os::TDir_Entry::file_name);
 
+						//check if it's a directory
 						if (file->file_attributes == static_cast<uint16_t>(kiv_os::NFile_Attributes::Directory))
 						{
-							if (recursive_flag)
+							if (recursive_flag) //add directory to directories -> to trigger another iteration
 							{
 								whole_path.append(directories.at(0));
 								whole_path.append("\\");
@@ -121,7 +129,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 								directories.push_back(whole_path);
 								whole_path.clear();
 							}
-							if (!files_only_flag)
+							if (!files_only_flag) //add directory to output if we don't want to print only files
 							{
 								output.append("<DIR>\t");
 								output.append(file->file_name, len);
@@ -129,7 +137,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 								count_dirs++;
 							}
 						}
-						else
+						else //or if it's a file -> add to output
 						{
 							output.append("\t");
 							output.append(file->file_name, len);
@@ -137,19 +145,19 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 							count_files++;
 						}
 					}
-					else
+					else //if (buffer_size == read)
 					{
 						kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
 						return 0;
 					}
-				}
+				} // if (result = kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, read))
 				else
 				{
 					read = 0;
 				}
 			}
 		}
-		else
+		else //kiv_os_rtl::Open_File() failed
 		{
 			kiv_os_rtl::Exit(kiv_os::NOS_Error::File_Not_Found);
 			return 0;
@@ -159,6 +167,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 		directories.erase(it);
 	}
 
+	//add number of files and dirs to output
 	output.append("\n");
 	output.append(std::to_string(count_files));
 	output.append(" File(s)\n");
@@ -166,7 +175,11 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 	output.append(std::to_string(count_dirs));
 	output.append(" Dir(s)");
 
-	kiv_os_rtl::Write_File(std_out, output.data(), output.size(), written);
+	//write output to file
+	if (!kiv_os_rtl::Write_File(std_out, output.data(), output.size(), written))
+	{
+		kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
+	}
 
 	return 0;
 }

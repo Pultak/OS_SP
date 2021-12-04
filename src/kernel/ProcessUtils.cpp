@@ -243,7 +243,7 @@ void ProcessUtils::removeAssignedListener(const int alreadyDone, const kiv_os::T
 
 void ProcessUtils::exit(kiv_hal::TRegisters& registers) {
     //todoo process get handle
-    kiv_os::THandle pHandle = kiv_os::Invalid_Handle;
+	kiv_os::THandle pHandle = handles::getTHandleById(std::this_thread::get_id());
     if (pHandle != kiv_os::Invalid_Handle) {
         Process* exitingProcess = pcb->getProcess(pHandle);
         if (exitingProcess != nullptr) {

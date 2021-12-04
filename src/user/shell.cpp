@@ -2,12 +2,6 @@
 #include "rtl.h"
 #include "command_parser.h"
 #include "global.h"
-
-
-//prettify
-
-//dir *.*
-
 #include "freq.h"
 #include <iostream>
 
