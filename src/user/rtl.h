@@ -41,7 +41,7 @@ namespace kiv_os_rtl{
 	
 	bool Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_handles, kiv_os::THandle& handle_signal_ret);
 				
-	bool Read_Exit_Code(kiv_os::THandle process_handle, uint16_t& exit_code_ret);
+	bool Read_Exit_Code(kiv_os::THandle process_handle, kiv_os::NOS_Error& exit_code_ret);
 
 	bool Exit(kiv_os::NOS_Error exit_code);
 	

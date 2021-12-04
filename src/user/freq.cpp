@@ -23,8 +23,6 @@ size_t __stdcall freq(const kiv_hal::TRegisters& regs)
 
 	bool flag_continue = true;
 
-	std::cout << "handle: " <<std_in
-;
 	while (flag_continue)
 	{
 		counter = 0;

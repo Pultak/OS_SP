@@ -6,10 +6,7 @@
 
 //prettify
 
-//redirection out/in cant open file error
-
-//error code read in cmd parser
-
+//dir *.*
 
 #include "freq.h"
 #include <iostream>

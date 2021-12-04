@@ -258,7 +258,7 @@ std::vector<Program> ProcessLine(char* line)
 void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegisters& regs) {
 
 	size_t index = program_vector.size()-1;
-	uint16_t exit_code = 0;
+	kiv_os::NOS_Error exit_code = kiv_os::NOS_Error::Success;
 	kiv_os::THandle in_reg = regs.rax.x;
 	kiv_os::THandle out_reg = regs.rbx.x;
 	kiv_os::THandle in = in_reg;
@@ -400,6 +400,30 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 				break;
 			}
 			index++;
+		}
+
+		if (exit_code != kiv_os::NOS_Error::Success)
+		{
+			std::string error_message = signaled_program.command;
+			switch (exit_code)
+			{
+			case kiv_os::NOS_Error::File_Not_Found:
+				error_message.append(": File Not Found.\n");
+				kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+				break;
+			case kiv_os::NOS_Error::Invalid_Argument:
+				error_message = ": Invalid Argument.\n";
+				kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+				break;
+			case kiv_os::NOS_Error::IO_Error:
+				error_message = ": IO Error.\n";
+				kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+				break;
+			case kiv_os::NOS_Error::Unknown_Error:
+				error_message = ": Unknown Error.\n";
+				kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+				break;
+			}
 		}
 
 		if (signaled_program.pipe_in)

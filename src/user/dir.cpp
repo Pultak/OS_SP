@@ -13,11 +13,13 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 	std::vector<std::string> lines;
 	std::string line = "";
 	bool recursive_flag = false;
+	bool first_dir = true;
 	bool empty_arg = false;
+	bool files_only_flag = false;
 	kiv_os::THandle file_handle = kiv_os::Invalid_Handle;
 	const size_t buffer_size = sizeof(kiv_os::TDir_Entry);
 	char buffer[buffer_size];
-	size_t read;
+	size_t read = 0;
 	size_t written = 0;
 	const char* new_line = "\n";
 	std::string output = "";
@@ -49,6 +51,21 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 			argument_s = argument;
 		}
 	}
+	if (strlen(argument_s.c_str()) >= strlen("\\*.*"))
+	{
+		size_t pos = argument_s.find("\\*.*");
+
+		if (pos == 0)
+		{
+			files_only_flag = true;
+			argument += strlen("\\*.*");
+			while (*argument == ' ')
+			{
+				argument++;
+			}
+			argument_s = argument;
+		}
+	}
 	if (argument_s.empty())
 	{
 		directories.push_back(".");
@@ -63,14 +80,21 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 	{
 		if (auto result = kiv_os_rtl::Open_File(directories.at(0).c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::Directory, file_handle))
 		{
-			if (strcmp(work_dir, "C:\\") == 0)
+			if ((strcmp(work_dir, "C:\\") == 0) && first_dir && empty_arg)
 			{
 				output.append("\nDirectory of " + working_dir + "\n\n");
+				first_dir = false;
+			}
+			else if (empty_arg)
+			{
+				std::string temp = directories.at(0).substr(2, directories.at(0).size() - 2);
+				output.append("\nDirectory of " + working_dir + temp + "\n\n");
+				output.append("<DIR>\t.\n");
+				output.append("<DIR>\t..\n");
 			}
 			else
 			{
-				std::string temp = directories.at(0).substr(1, directories.at(0).size() - 1);
-				output.append("\nDirectory of " + working_dir + temp + "\n\n");
+				output.append("\nDirectory of " + working_dir + directories.at(0) + "\n\n");
 				output.append("<DIR>\t.\n");
 				output.append("<DIR>\t..\n");
 			}
@@ -97,10 +121,13 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 								directories.push_back(whole_path);
 								whole_path.clear();
 							}
-							output.append("<DIR>\t");
-							output.append(file->file_name, len);
-							output.append("\n");
-							count_dirs++;
+							if (!files_only_flag)
+							{
+								output.append("<DIR>\t");
+								output.append(file->file_name, len);
+								output.append("\n");
+								count_dirs++;
+							}
 						}
 						else
 						{

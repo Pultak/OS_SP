@@ -153,12 +153,12 @@ bool kiv_os_rtl::Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_hand
 	return result;
 }
 
-bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, uint16_t &exit_code_ret) {
+bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, kiv_os::NOS_Error &exit_code_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Read_Exit_Code));
 	regs.rdx.x = static_cast<decltype(regs.rdx.x)>(process_handle);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	exit_code_ret = regs.rcx.x;
+	exit_code_ret = static_cast<kiv_os::NOS_Error>(regs.rcx.x);
 	return result;
 }
 

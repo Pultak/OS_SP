@@ -26,7 +26,7 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 
 	if (path && strlen(path))
 	{
-		if (kiv_os_rtl::Open_File(path, (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, file_handle))
+		if (kiv_os_rtl::Open_File(path, kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, file_handle))
 		{
 			read_from_file = true;
 		}
