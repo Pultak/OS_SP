@@ -2,7 +2,6 @@
 
 #include "rgen.h"
 #include <ctime>
-#include <iostream>
 #include <string>
 
 bool continue_flag = false;

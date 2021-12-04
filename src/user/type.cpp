@@ -4,8 +4,6 @@
 #include "sort.h"
 #include <vector>
 #include <string>
-#include <queue>
-#include <iostream>
 
 size_t __stdcall type(const kiv_hal::TRegisters& regs)
 {

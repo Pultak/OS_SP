@@ -3,8 +3,7 @@
 #include "sort.h"
 #include <vector>
 #include <string>
-#include <queue>
-#include <iostream>
+#include <algorithm>
 
 extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 {

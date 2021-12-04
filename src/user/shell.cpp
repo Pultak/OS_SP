@@ -1,9 +1,6 @@
 #include "shell.h"
 #include "rtl.h"
 #include "command_parser.h"
-#include "global.h"
-#include "freq.h"
-#include <iostream>
 
 size_t __stdcall shell(const kiv_hal::TRegisters &regs) {
 

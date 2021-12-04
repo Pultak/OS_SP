@@ -1,7 +1,6 @@
 #pragma once
 
 #include "rd.h"
-#include <iostream>
 
 size_t __stdcall rd(const kiv_hal::TRegisters& regs)
 {

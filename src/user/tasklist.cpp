@@ -1,7 +1,6 @@
 #pragma once
 
 #include "tasklist.h"
-#include <iostream>
 #include <string>
 
 size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
