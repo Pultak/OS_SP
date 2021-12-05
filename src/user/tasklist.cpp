@@ -59,7 +59,7 @@ size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
 		kiv_os_rtl::Write_File(std_out, "\n", 1, counter);
 
 	}
-
+	kiv_os_rtl::Close_Handle(file_handle);
 	return 0;
 
 
