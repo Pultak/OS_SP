@@ -36,7 +36,7 @@ kiv_os::NOS_Error KeyboardHandle::read(const size_t size, char* buffer, size_t& 
 
 		case kiv_hal::NControl_Codes::LF:  break;	//jenom pohltime, ale necteme
 		case kiv_hal::NControl_Codes::NUL:			//chyba cteni?
-		case kiv_hal::NControl_Codes::EOT:			//konec textu
+		//case kiv_hal::NControl_Codes::EOT:			//konec textu
 		case kiv_hal::NControl_Codes::CR:  return kiv_os::NOS_Error::Success;	//docetli jsme az po Enter
 
 
@@ -47,10 +47,18 @@ kiv_os::NOS_Error KeyboardHandle::read(const size_t size, char* buffer, size_t& 
 			registers.rax.h = static_cast<decltype(registers.rax.l)>(kiv_hal::NVGA_BIOS::Write_String);
 			registers.rdx.r = reinterpret_cast<decltype(registers.rdx.r)>(&ch);
 			registers.rcx.r = 1;
-			kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::VGA_BIOS, registers);
+			if (static_cast<kiv_hal::NControl_Codes>(ch) == kiv_hal::NControl_Codes::ETX ||
+				static_cast<kiv_hal::NControl_Codes>(ch) == kiv_hal::NControl_Codes::EOT) {
+				goto cycle_end;
+			}
+			else {
+				kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::VGA_BIOS, registers);
+			}
+			//kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::VGA_BIOS, registers);
 			break;
 		}
 	}
+	cycle_end:
 	read = pos;
 	return kiv_os::NOS_Error::Success;
 }
