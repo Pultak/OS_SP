@@ -89,10 +89,12 @@ void ProcessControlBlock::notifyAllListeners() const {
 ProcessEntry* ProcessControlBlock::getAllProcesses(size_t& processCount){
 	lockMaster->lock();
 	if (!table.empty()) {
-		ProcessEntry* result = new ProcessEntry[table.size()];
-		uint16_t index = 0;
-		for (const auto& rec : table) {
-			const auto& process = rec.second;
+		auto tableSize = table.size();
+		ProcessEntry* result = new ProcessEntry[tableSize];
+		uint16_t index;
+		auto it = table.begin();
+		for (index = 0; index < tableSize; ++index) {
+			const auto& process = it->second;
 			result[index].handle = process->handle;
 			result[index].stdIn = process->stdInput;
 			result[index].stdOut = process->stdOutput;
@@ -107,9 +109,6 @@ ProcessEntry* ProcessControlBlock::getAllProcesses(size_t& processCount){
 			auto workDirLength = sizeof(ProcessEntry::workingDir) > wDirL ? sizeof(ProcessEntry::workingDir) : wDirL;
 			
 			strcpy_s(result[index].workingDir, workDirLength, process->workingDirectory.string().c_str());
-			
-
-			++index;
 		}
 		//we collected all -> table is no longer diff from tasklisk file
 		*tableUpdated = false;

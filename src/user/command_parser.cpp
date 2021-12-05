@@ -1,7 +1,7 @@
 #pragma once
 
 #include "command_parser.h"
-#include "echo.h"
+#include "rtl.h"
 
 /* Function to remove leading spaces from a command/line */
 static void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
@@ -95,14 +95,6 @@ static int CountPipes(std::vector<Program> vector)
 	return count;
 }
 
-/* Executes a command - input: char* command, char* argument */
-static void ExecuteCommand(char* command, char* arg)
-{
-	if (strcmp(command, "echo") == 0)
-	{
-	}
-}
-
 /* Finds position of the next |<> */
 static int FindPipeOrRedirect(int index, char* line)
 {
@@ -148,17 +140,18 @@ static Program ProcessCommand(char* command, char operation_left, char operation
 	//load whole command string into program if it's a file
 	if (operation_left == '>')
 	{
+		program_ret.redirection_in = true;
 		program_ret.command = command;
 		program_ret.file = true;
 		return program_ret;
 	}
 	if (operation_left == '<')
 	{
+		program_ret.redirection_in = true;
 		program_ret.command = command;
 		program_ret.file = true;
 		return program_ret;
 	}
-
 
 	int index = 0;
 	int index_arg = 0;
@@ -244,10 +237,9 @@ std::vector<Program> ProcessLine(char* line)
 		{
 			op_right = 0;
 		}
-		program_ret = ProcessCommand(command, op_left, op_right);
-		//program_ret.Print();
 
-		//std::cout << "index cmd, line, endcmd: " << index_cmd << " " << index_line << " " << index_end_cmd << "\n";
+		//process single command and put it into the programs vector
+		program_ret = ProcessCommand(command, op_left, op_right);
 		vector_program_ret.push_back(program_ret);
 	}
 	return vector_program_ret;
@@ -255,8 +247,8 @@ std::vector<Program> ProcessLine(char* line)
 
 void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegisters& regs) {
 
-	size_t index = 0;
-	uint16_t exit_code = 0;
+	size_t index = program_vector.size()-1;
+	kiv_os::NOS_Error exit_code = kiv_os::NOS_Error::Success;
 	kiv_os::THandle in_reg = regs.rax.x;
 	kiv_os::THandle out_reg = regs.rbx.x;
 	kiv_os::THandle in = in_reg;
@@ -265,14 +257,19 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 	kiv_os::THandle program_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle signaled_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle signal_ret;
+	size_t written;
 	Program signaled_program = Program();
 	std::vector<kiv_os::THandle> active_handles;
 
-	for (auto& program : program_vector)
+	//loop through programs backwards
+	for(auto program_it = program_vector.rbegin(); program_it != program_vector.rend(); program_it++)
 	{
+		Program& program = *program_it;
+
 		in = in_reg;
 		out = out_reg;
-		//might need to transfer |
+		
+		//skip the program if it's cd or echo on/off - handled in shell, or if it's a file
 		if (strcmp(program.command.c_str(), "cd") == 0)
 		{
 			continue;
@@ -284,53 +281,106 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		}
 		else if(program.file)
 		{
+			index--;
 			continue;
 		}
-		if (program.pipe_in)
-		{
-			in = current_pipe[0];
-			program.pipe_in_handle = in;
-		}
 		//if this is the last program, ignore redirection and pipe out
-		if (program_vector.size() > index + 1)
+		if (!((program_vector.size() - 1) == index) )
 		{
 			if (program.redirection_in)
-			{
+			{				
 				auto result = kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, in);
-				//if there is a pipe after the file and there is a program to pipe it into, we want to pipe the current program out
-				if (program_vector.at(index + 1).pipe_out && (program_vector.size() > index + 2))
+
+				if (result)
 				{
-					program.pipe_out = true;
+					//if there is a pipe after the file and there is a program to pipe it into, we want to pipe the current program out
+					if (program_vector.at(index + 1).pipe_out && (program_vector.size() > index + 2))
+					{
+						program.pipe_out = true;
+					}
+				}
+				//if there is a pipe after the file but failed to open the file -> close te pipe
+				else if(program_vector.at(index + 1).pipe_out && (program_vector.size() > index + 2))
+				{
+					kiv_os_rtl::Close_Handle(current_pipe[1]);
+					std::string message = "\nFailed to open: '";
+					message.append(program_vector.at(index + 1).command.c_str());
+					message.append("'\n");
+					kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
+					break;
+				}
+				//failed to open the file
+				else
+				{
+					std::string message = "\nFailed to open: '";
+					message.append(program_vector.at(index + 1).command.c_str());
+					message.append("'\n");
+					kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
+					break;
 				}
 			}
 			if (program.redirection_out)
 			{
-				kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, out);
+				//open the next program = file, if open fails print a message and break cycle
+				if (!kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, out))
+				{
+					std::string message = "\nFailed to open: '";
+					message.append(program_vector.at(index + 1).command.c_str());
+					message.append("'\n");
+					kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
+					break;
+				}
 			}
 
 			if (program.pipe_out)
 			{
-				kiv_os_rtl::Create_Pipe(current_pipe);
+				//assign pipe handle to the current program in the vector
 				out = current_pipe[1];
 				program.pipe_out_handle = out;
 			}
 		}
-		program.Print();
+		if (program.pipe_in)
+		{
+			//create pipe and assign handles to the current_pipe[] and current program
+			if (kiv_os_rtl::Create_Pipe(current_pipe))
+			{
+				std::string message = "\nFailed to open pipe.\n";
+				kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
+				break;
+			}
+			in = current_pipe[0];
+			program.pipe_in_handle = in;
+		}
 
 		auto success = kiv_os_rtl::Create_Process(program.command.c_str(), program.argument.c_str(), in, out, program_handle);
 		if (!success)
 		{
-			std::cout << "\nInvalid argument\n";
+			//write error message of failed program and close pipe handles if it has been piped
+			std::string message = "'";
+			message.append(program.command.c_str());
+			message.append("' is not recognized as an internal command.\n");
+			kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
+			if(program.pipe_in)
+			{
+				kiv_os_rtl::Close_Handle(program.pipe_in_handle);
+			}
+			if (program.pipe_out)
+			{
+				kiv_os_rtl::Close_Handle(program.pipe_out_handle);
+				kiv_os_rtl::Close_Handle(current_pipe[0]);
+			}
+			break;
 		}
 		else
 		{
+			//push handle to the active_handles vector and assign handle to the current program in the vector
 			program.handle = program_handle;
 			active_handles.push_back(program_handle);
 		}
-		index++;
+		index--;
 	}
 
-
+	//while there are active processes
 	while (active_handles.size())
 	{
 		auto it_program_vector = program_vector.begin();
@@ -338,10 +388,12 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 
 		index = 0;
 
-		kiv_os_rtl::Wait_For(active_handles.data(), active_handles.size(), signal_ret);
+		//wait for process to finish and read its exit code
+		kiv_os_rtl::Wait_For(active_handles.data(), static_cast<uint16_t>(active_handles.size()), signal_ret);
 		signaled_handle = active_handles.at(signal_ret);
 		kiv_os_rtl::Read_Exit_Code(signaled_handle, exit_code);
 
+		//find the process in the program vector by handle
 		for (auto& program : program_vector)
 		{
 			if (program.handle == signaled_handle)
@@ -352,6 +404,32 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 			index++;
 		}
 
+		//print error if ocurred
+		if (exit_code != kiv_os::NOS_Error::Success)
+		{
+			std::string error_message = signaled_program.command;
+			switch (exit_code)
+			{
+			case kiv_os::NOS_Error::File_Not_Found:
+				error_message.append(": File Not Found.\n");
+				kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+				break;
+			case kiv_os::NOS_Error::Invalid_Argument:
+				error_message = ": Invalid Argument.\n";
+				kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+				break;
+			case kiv_os::NOS_Error::IO_Error:
+				error_message = ": IO Error.\n";
+				kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+				break;
+			case kiv_os::NOS_Error::Unknown_Error:
+				error_message = ": Unknown Error.\n";
+				kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+				break;
+			}
+		}
+
+		//close pipes in case program was piped and erase it from active processes and program vector
 		if (signaled_program.pipe_in)
 		{
 			kiv_os_rtl::Close_Handle(signaled_program.pipe_in_handle);
@@ -361,7 +439,6 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 			kiv_os_rtl::Close_Handle(signaled_program.pipe_out_handle);
 		}
 		program_vector.erase(it_program_vector + index);
-
 		active_handles.erase(it_active_handles + signal_ret);
 	}
 }

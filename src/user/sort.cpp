@@ -3,8 +3,7 @@
 #include "sort.h"
 #include <vector>
 #include <string>
-#include <queue>
-#include <iostream>
+#include <algorithm>
 
 extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 {
@@ -22,7 +21,7 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 	size_t written = 0;
 	const char* new_line = "\n";
 
-
+	//check if we should read from input or file
 	if (path && strlen(path))
 	{
 		if (kiv_os_rtl::Open_File(path, kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, file_handle))
@@ -31,7 +30,8 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 		}
 		else
 		{
-			kiv_os_rtl::Exit((uint16_t)kiv_os::NOS_Error::File_Not_Found);
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::File_Not_Found);
+			return 0;
 		}
 
 	}
@@ -40,20 +40,21 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 		file_handle = std_in;
 	}
 
-
+	//continue until EOT/ETX
 	while (flag_continue)
 	{
+		counter = 0;
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
+			//add chars to file, until EOT/ETX or newline or new read and then add the file to files vector
 			if (!read_from_file)
 			{
 				files.push_back(file);
 				file.clear();
-				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 			}
 			for (int i = 0; i < counter; i++)
 			{
-				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 'q') 
+				if (buffer[i] == static_cast<char>(kiv_hal::NControl_Codes::EOT) || buffer[i] == static_cast<char>(kiv_hal::NControl_Codes::ETX))
 				{
 					files.push_back(file);
 					file.clear();
@@ -70,15 +71,24 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 					file.push_back(buffer[i]);
 				}
 			}
-
+		}
+		else
+		{
+			break;
 		}
 	}
 
+	//sort files
 	std::sort(files.begin(), files.end());
 
+	//write files to output
 	for (auto& line : files)
 	{
-		kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
+		if (!kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written))
+		{
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
+			return 0;
+		}
 		kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 	}
 

@@ -23,7 +23,7 @@ namespace kiv_os_rtl{
 
 	bool Open_File(const char* file_name, kiv_os::NOpen_File file_open, kiv_os::NFile_Attributes file_attribute, kiv_os::THandle& file_handle_ret);
 
-	bool Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint16_t & position_ret);
+	bool Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint64_t & position_ret);
 	
 	bool Close_Handle(kiv_os::THandle handle);
 
@@ -31,7 +31,7 @@ namespace kiv_os_rtl{
 
 	bool Set_File_Attribute(char* file_name, kiv_os::NFile_Attributes file_attribute);
 
-	bool Get_File_Attribute(char* file_name, uint8_t& file_attribute_ret);
+	bool Get_File_Attribute(char* file_name, uint64_t& file_attribute_ret);
 
 	bool Create_Pipe(kiv_os::THandle * file_handles);
 
@@ -41,9 +41,9 @@ namespace kiv_os_rtl{
 	
 	bool Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_handles, kiv_os::THandle& handle_signal_ret);
 				
-	bool Read_Exit_Code(kiv_os::THandle process_handle, uint16_t& exit_code_ret);
+	bool Read_Exit_Code(kiv_os::THandle process_handle, kiv_os::NOS_Error& exit_code_ret);
 
-	bool Exit(uint16_t exit_code);
+	bool Exit(kiv_os::NOS_Error exit_code);
 	
 	bool Shutdown();
 	

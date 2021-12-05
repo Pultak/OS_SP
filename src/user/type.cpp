@@ -4,8 +4,6 @@
 #include "sort.h"
 #include <vector>
 #include <string>
-#include <queue>
-#include <iostream>
 
 size_t __stdcall type(const kiv_hal::TRegisters& regs)
 {
@@ -23,16 +21,16 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 	size_t written = 0;
 	const char* new_line = "\n";
 
-
+	//check if we should read from file or from input
 	if (path && strlen(path))
 	{
-		if (kiv_os_rtl::Open_File(path, (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, file_handle))
+		if (kiv_os_rtl::Open_File(path, kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::System_File, file_handle))
 		{
 			read_from_file = true;
 		}
 		else
 		{
-			kiv_os_rtl::Exit((uint16_t)kiv_os::NOS_Error::File_Not_Found);
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::File_Not_Found);
 			return 0;
 		}
 
@@ -42,22 +40,18 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 		file_handle = std_in;
 	}
 
-
 	kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
+
+	//read until EOT/ETX or read returns 0
 	while (flag_continue)
 	{
 		counter = 0;
 		if (kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, counter))
 		{
-			/*if (!read_from_file)
-			{
-				lines.push_back(line);
-				line.clear();
-				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
-			}*/
+			//add chars to line until EOT/ETX or newline -> when we read the whole buffer write each line to output
 			for (int i = 0; i < counter; i++)
 			{
-				if (buffer[i] == 3 || buffer[i] == 4 || buffer[i] == 5)
+				if (buffer[i] == static_cast<char>(kiv_hal::NControl_Codes::EOT) || buffer[i] == static_cast<char>(kiv_hal::NControl_Codes::ETX))
 				{
 					lines.push_back(line);
 					line.clear();
@@ -75,9 +69,9 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 				}
 			}
 
-			for (auto& line : lines)
+			for (auto& iline : lines)
 			{
-				kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
+				kiv_os_rtl::Write_File(std_out, iline.c_str(), strlen(iline.c_str()), written);
 				kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 			}
 			lines.clear();
@@ -88,8 +82,6 @@ size_t __stdcall type(const kiv_hal::TRegisters& regs)
 			flag_continue = false;
 		}
 	}
-
-
 
 	return 0;
 }

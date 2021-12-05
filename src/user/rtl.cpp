@@ -59,11 +59,11 @@ bool kiv_os_rtl::Open_File(const char* file_name, kiv_os::NOpen_File file_open, 
 	regs.rdi.i = static_cast<decltype(regs.rdi.i)>(file_attribute);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	file_handle_ret = regs.rax.r;
+	file_handle_ret = static_cast<uint16_t>(regs.rax.r);
 	return result;
 }
 
-bool kiv_os_rtl::Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint16_t &position_ret){
+bool kiv_os_rtl::Seek(kiv_os::THandle file_handle, const uint16_t position, kiv_os::NFile_Seek file_seek_pos, kiv_os::NFile_Seek file_seek_op, uint64_t &position_ret){
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Seek));
 	regs.rdx.x = static_cast<decltype(regs.rdx.x)>(file_handle);
 	regs.rdi.r = static_cast<decltype(regs.rdi.r)>(position);
@@ -101,7 +101,7 @@ bool kiv_os_rtl::Set_File_Attribute(char* file_name, kiv_os::NFile_Attributes fi
 	return result;
 }
 
-bool kiv_os_rtl::Get_File_Attribute(char* file_name, uint8_t &file_attribute_ret) {
+bool kiv_os_rtl::Get_File_Attribute(char* file_name, uint64_t &file_attribute_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::File_System, static_cast<uint8_t>(kiv_os::NOS_File_System::Get_File_Attribute));
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file_name);
 
@@ -149,20 +149,20 @@ bool kiv_os_rtl::Wait_For(kiv_os::THandle* handles_to_wait, uint16_t num_of_hand
 	regs.rcx.l = static_cast<decltype(regs.rcx.l)>(num_of_handles);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	handle_signal_ret = regs.rax.l;
+	handle_signal_ret = static_cast<uint16_t>(regs.rax.l);
 	return result;
 }
 
-bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, uint16_t &exit_code_ret) {
+bool kiv_os_rtl::Read_Exit_Code(kiv_os::THandle process_handle, kiv_os::NOS_Error &exit_code_ret) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Read_Exit_Code));
 	regs.rdx.x = static_cast<decltype(regs.rdx.x)>(process_handle);
 
 	const bool result = kiv_os::Sys_Call(regs);
-	exit_code_ret = regs.rcx.x;
+	exit_code_ret = static_cast<kiv_os::NOS_Error>(regs.rcx.x);
 	return result;
 }
 
-bool kiv_os_rtl::Exit(uint16_t exit_code) {
+bool kiv_os_rtl::Exit(kiv_os::NOS_Error exit_code) {
 	kiv_hal::TRegisters regs = Prepare_SysCall_Context(kiv_os::NOS_Service_Major::Process, static_cast<uint8_t>(kiv_os::NOS_Process::Exit));
 	regs.rcx.r = static_cast<decltype(regs.rcx.r)>(exit_code);
 

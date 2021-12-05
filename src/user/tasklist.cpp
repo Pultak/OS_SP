@@ -1,7 +1,6 @@
 #pragma once
 
 #include "tasklist.h"
-#include <iostream>
 #include <string>
 
 size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
@@ -15,7 +14,6 @@ size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
 	ProcessEntry* process;
 	size_t read = 1;
 	char buffer[buffer_size];
-	char writeBuffer[buffer_size];
 	kiv_os_rtl::Open_File("C:\\tasklist", (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, file_handle);
 
 
@@ -28,9 +26,8 @@ size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
 		read = 0;
 		if (!kiv_os_rtl::Read_File(file_handle, buffer, buffer_size, read))break;
 		process = reinterpret_cast<ProcessEntry*>(buffer);
-		//std::cout << process->programName << std::endl;
 		auto pNameLength = strlen(process->programName);
-		kiv_os_rtl::Write_File(std_out, process->programName, pNameLength, counter);
+		if(!kiv_os_rtl::Write_File(std_out, process->programName, pNameLength, counter))break;
 		for(int i = 0; i < 2 - (pNameLength / 8); ++i)
 			kiv_os_rtl::Write_File(std_out, "\t", 1, counter); 
 		auto stdInString = std::to_string(process->stdIn);

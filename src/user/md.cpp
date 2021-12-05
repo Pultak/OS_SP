@@ -1,7 +1,6 @@
 #pragma once
 
 #include "md.h"
-#include <iostream>
 
 size_t __stdcall md(const kiv_hal::TRegisters& regs)
 {
@@ -16,15 +15,10 @@ size_t __stdcall md(const kiv_hal::TRegisters& regs)
 
 	if (file_to_open && strlen(file_to_open))
 	{		
-		if (auto ret_code = kiv_os_rtl::Open_File(file_to_open, open_file_flag, kiv_os::NFile_Attributes::Directory, file_handle))
+		if (!kiv_os_rtl::Open_File(file_to_open, open_file_flag, kiv_os::NFile_Attributes::Directory, file_handle))
 		{
-			std::cout << "\nOPENED\n";
-		}
-		else
-		{
-			std::cout << "\nOPEN FAILED: " << ret_code << std::endl;
-		}
-		
+			kiv_os_rtl::Exit(kiv_os::NOS_Error::Unknown_Error);
+		}		
 	}
 	return 0;
 }

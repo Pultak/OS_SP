@@ -2,11 +2,10 @@
 
 #include "rtl.h"
 
-
 enum class ProcessState {
 	Ready = 0,
 	Running = 1,
-	Waiting = 2, //can we see when the process runs out of resources?
+	Waiting = 2,
 	Terminated = 3
 };
 
@@ -19,6 +18,5 @@ struct ProcessEntry {
 	char programName[42];
 	char workingDir[128];
 };
-
 
 extern "C" size_t __stdcall tasklist(const kiv_hal::TRegisters& regs);
