@@ -92,5 +92,11 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 		kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 	}
 
+	//close file handle if we read from file
+	if (read_from_file)
+	{
+		kiv_os_rtl::Close_Handle(file_handle);
+	}
+
 	return 0;
 }
