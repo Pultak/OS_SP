@@ -93,7 +93,7 @@ ProcessEntry* ProcessControlBlock::getAllProcesses(size_t& processCount){
 		ProcessEntry* result = new ProcessEntry[tableSize];
 		uint16_t index;
 		auto it = table.begin();
-		for (index = 0; index < tableSize; ++index) {
+		for (index = 0; index < tableSize; ++index, ++it) {
 			const auto& process = it->second;
 			result[index].handle = process->handle;
 			result[index].stdIn = process->stdInput;
