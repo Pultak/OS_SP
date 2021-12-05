@@ -342,7 +342,7 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		if (program.pipe_in)
 		{
 			//create pipe and assign handles to the current_pipe[] and current program
-			if (kiv_os_rtl::Create_Pipe(current_pipe))
+			if (!kiv_os_rtl::Create_Pipe(current_pipe))
 			{
 				std::string message = "\nFailed to open pipe.\n";
 				kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
