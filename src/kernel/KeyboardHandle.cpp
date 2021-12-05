@@ -49,7 +49,8 @@ kiv_os::NOS_Error KeyboardHandle::read(const size_t size, char* buffer, size_t& 
 			registers.rcx.r = 1;
 			if (static_cast<kiv_hal::NControl_Codes>(ch) == kiv_hal::NControl_Codes::ETX ||
 				static_cast<kiv_hal::NControl_Codes>(ch) == kiv_hal::NControl_Codes::EOT) {
-				goto cycle_end;
+				read = pos;
+				return kiv_os::NOS_Error::Success;
 			}
 			else {
 				kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::VGA_BIOS, registers);
@@ -58,7 +59,6 @@ kiv_os::NOS_Error KeyboardHandle::read(const size_t size, char* buffer, size_t& 
 			break;
 		}
 	}
-	cycle_end:
 	read = pos;
 	return kiv_os::NOS_Error::Success;
 }
