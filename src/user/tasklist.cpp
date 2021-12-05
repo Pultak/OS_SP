@@ -60,12 +60,6 @@ size_t __stdcall tasklist(const kiv_hal::TRegisters& regs)
 
 	}
 
-	//close file handle
-	if (read_from_file)
-	{
-		kiv_os_rtl::Close_Handle(file_handle);
-	}
-
 	return 0;
 
 
