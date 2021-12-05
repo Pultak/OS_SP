@@ -84,10 +84,15 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 		if (auto result = kiv_os_rtl::Open_File(directories.at(0).c_str(), kiv_os::NOpen_File::fmOpen_Always, kiv_os::NFile_Attributes::Directory, file_handle))
 		{
 			//print the current directory in which we are right now looking
-			if ((strcmp(work_dir, "C:\\") == 0) && first_dir && empty_arg)
+			if (first_dir && empty_arg)
 			{
 				output.append("\nDirectory of " + working_dir + "\n\n");
 				first_dir = false;
+				if (!(strcmp(work_dir, "C:\\") == 0))
+				{
+					output.append("<DIR>\t.\n");
+					output.append("<DIR>\t..\n");
+				}
 			}
 			else if (empty_arg)
 			{
