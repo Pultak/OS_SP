@@ -1,11 +1,12 @@
 #pragma once
 
-#include "sort.h"
+//#include "sort.h"
+#include "rtl.h"
 #include <vector>
 #include <string>
 #include <algorithm>
 
-extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
+size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 {
 	const kiv_os::THandle std_in = static_cast<kiv_os::THandle>(regs.rax.x);
 	const kiv_os::THandle std_out = static_cast<kiv_os::THandle>(regs.rbx.x);
@@ -84,11 +85,8 @@ extern "C" size_t __stdcall sort(const kiv_hal::TRegisters& regs)
 	//write files to output
 	for (auto& line : files)
 	{
-		if (!kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written))
-		{
-			kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
-			return 0;
-		}
+		kiv_os_rtl::Write_File(std_out, line.c_str(), strlen(line.c_str()), written);
+
 		kiv_os_rtl::Write_File(std_out, new_line, strlen(new_line), written);
 	}
 

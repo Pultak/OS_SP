@@ -2,6 +2,7 @@
 
 #include "command_parser.h"
 #include "rtl.h"
+#include <iostream>
 
 /* Function to remove leading spaces from a command/line */
 static void RemoveLeadingWhitespace(char* line) //MAKE STATIC LATER?
@@ -253,13 +254,24 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 	kiv_os::THandle out_reg = regs.rbx.x;
 	kiv_os::THandle in = in_reg;
 	kiv_os::THandle out = out_reg;
-	kiv_os::THandle current_pipe[2] = { kiv_os::Invalid_Handle, kiv_os::Invalid_Handle };
+	kiv_os::THandle current_pipe[2] = {kiv_os::Invalid_Handle, kiv_os::Invalid_Handle};
 	kiv_os::THandle program_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle signaled_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle signal_ret;
 	size_t written;
 	Program signaled_program = Program();
 	std::vector<kiv_os::THandle> active_handles;
+	std::vector<kiv_os::THandle> pipes;
+
+	for (int i = 0; i < CountPipes(program_vector); i++)
+	{
+		kiv_os::THandle pipe_temp[2];
+		kiv_os_rtl::Create_Pipe(pipe_temp);
+		std::cout << "pipes: " << pipe_temp[1] << " " << pipe_temp[0] << "\n";
+
+		pipes.push_back(pipe_temp[1]);
+		pipes.push_back(pipe_temp[0]);
+	}
 
 	//loop through programs backwards
 	for(auto program_it = program_vector.rbegin(); program_it != program_vector.rend(); program_it++)
@@ -335,20 +347,29 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 			if (program.pipe_out)
 			{
 				//assign pipe handle to the current program in the vector
-				out = current_pipe[1];
+				//out = current_pipe[1];
+				out = pipes.at(pipes.size()-1);
+				std::cout << program.command <<" out: " << out << "\n";
+				pipes.pop_back();
 				program.pipe_out_handle = out;
 			}
 		}
 		if (program.pipe_in)
 		{
 			//create pipe and assign handles to the current_pipe[] and current program
+			/*std::cout << "current_pipe " << current_pipe[0] << " " << current_pipe[1] << std::endl;
 			if (!kiv_os_rtl::Create_Pipe(current_pipe))
 			{
 				std::string message = "\nFailed to open pipe.\n";
 				kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
 				break;
 			}
-			in = current_pipe[0];
+			in = current_pipe[0];*/
+
+			in = pipes.at(pipes.size() - 1);
+			std::cout << program.command <<" in: " << in << "\n";
+
+			pipes.pop_back();
 			program.pipe_in_handle = in;
 		}
 
@@ -399,12 +420,36 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 			if (program.handle == signaled_handle)
 			{
 				signaled_program = program;
+				//print error if ocurred
+				if (exit_code != kiv_os::NOS_Error::Success)
+				{
+					std::string error_message = signaled_program.command;
+					switch (exit_code)
+					{
+					case kiv_os::NOS_Error::File_Not_Found:
+						error_message.append(": File Not Found.\n");
+						kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+						break;
+					case kiv_os::NOS_Error::Invalid_Argument:
+						error_message.append(": Invalid Argument.\n");
+						kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+						break;
+					case kiv_os::NOS_Error::IO_Error:
+						error_message.append(": IO Error.\n");
+						kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+						break;
+					case kiv_os::NOS_Error::Unknown_Error:
+						error_message.append(": Unknown Error.\n");
+						kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
+						break;
+					}
+				}
 				break;
 			}
 			index++;
 		}
 
-		//print error if ocurred
+		/*//print error if ocurred
 		if (exit_code != kiv_os::NOS_Error::Success)
 		{
 			std::string error_message = signaled_program.command;
@@ -427,7 +472,7 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 				kiv_os_rtl::Write_File(out_reg, error_message.c_str(), error_message.size(), written);
 				break;
 			}
-		}
+		}*/
 
 		//close pipes in case program was piped and erase it from active processes and program vector
 		if (signaled_program.pipe_in)
