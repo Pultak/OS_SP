@@ -1,7 +1,7 @@
 #pragma once
 #pragma once
 
-//#include "type.h"
+#include "type.h"
 #include "rtl.h"
 #include <vector>
 #include <string>
