@@ -6,6 +6,7 @@
 #include"../api/api.h"
 #include"../api/hal.h"
 #include <string>
+#include <memory>
 
 struct directory_item {
 	std::string filename = ""; //nazev slozky/souboru

@@ -150,6 +150,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 					}
 					else //if (buffer_size == read)
 					{
+						kiv_os_rtl::Close_Handle(file_handle);
 						kiv_os_rtl::Exit(kiv_os::NOS_Error::IO_Error);
 						return 0;
 					}
@@ -159,6 +160,7 @@ size_t __stdcall dir(const kiv_hal::TRegisters& regs)
 					read = 0;
 				}
 			}
+			kiv_os_rtl::Close_Handle(file_handle);
 		}
 		else //kiv_os_rtl::Open_File() failed
 		{

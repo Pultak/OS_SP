@@ -5,6 +5,31 @@
 std::map<kiv_os::THandle, IOHandle*> openedHandles;
 const std::unique_ptr<Synchronization::Spinlock> ioHandleLock = std::make_unique<Synchronization::Spinlock>(0);
 
+const std::unique_ptr<Synchronization::Spinlock> handleOpenLock = std::make_unique<Synchronization::Spinlock>(0);
+
+void printHandles() {
+	ioHandleLock->lock();
+	printf("------------------------------------\n");
+	for (auto& h : openedHandles) {
+		printf("%d:", h.first);
+		if (FileHandle* file = dynamic_cast<FileHandle*>(h.second)) {
+			printf("FileHnadler"/*: % s\n", reinterpret_cast<FileHandle*>(h.second)->file->name*/);
+		}
+		else if (PipeIn* pipei = dynamic_cast<PipeIn*>(h.second)) {
+			printf("Pipe in\n");
+		}
+		else if (PipeOut* pipeo = dynamic_cast<PipeOut*>(h.second)) {
+			printf("Pipe out\n");
+		}
+		else {
+			printf("Standard io\n");
+		}
+	}
+	printf("------------------------------------\n");
+
+
+	ioHandleLock->unlock();
+}
 
 kiv_os::THandle io::addIoHandle(IOHandle* handle) {
 	ioHandleLock->lock();
@@ -120,7 +145,7 @@ void io::Handle_IO(kiv_hal::TRegisters &regs) {
 }
 
 void io::OpenIOHandle(kiv_hal::TRegisters& regs){
-	//todo needed synch?
+	//handleOpenLock->lock();
 	char* file_name = reinterpret_cast<char*>(regs.rdx.r);
 	
 	auto flags = static_cast<kiv_os::NOpen_File>(regs.rcx.l);
@@ -152,6 +177,8 @@ void io::OpenIOHandle(kiv_hal::TRegisters& regs){
 		regs.flags.carry = 1;
 		regs.rax.x = static_cast<uint16_t>(returnCode);
 	}
+	//printHandles();
+	//handleOpenLock->unlock();
 }
 
 void io::WriteIOHandle(kiv_hal::TRegisters& regs){
