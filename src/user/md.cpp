@@ -25,6 +25,10 @@ size_t __stdcall md(const kiv_hal::TRegisters& regs)
 			kiv_os_rtl::Exit(kiv_os::NOS_Error::Unknown_Error);
 		}		
 	}
+	else
+	{
+		kiv_os_rtl::Exit(kiv_os::NOS_Error::Invalid_Argument);
+	}
 
 	return 0;
 }

@@ -19,8 +19,6 @@ struct Program {
 	kiv_os::THandle redirection_in_handle = kiv_os::Invalid_Handle;
 	kiv_os::THandle redirection_out_handle = kiv_os::Invalid_Handle;
 
-
-
 	Program::Program() {
 		command = "";
 		argument = "";
