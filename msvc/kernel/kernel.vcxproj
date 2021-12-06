@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\api\api.cpp" />
+    <ClCompile Include="..\..\src\kernel\Blockable.cpp" />
     <ClCompile Include="..\..\src\kernel\dir.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystems.cpp" />
     <ClCompile Include="..\..\src\kernel\handles.cpp" />

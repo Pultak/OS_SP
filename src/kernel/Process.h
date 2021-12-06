@@ -52,7 +52,6 @@ public:
 
 private:
 	std::map<kiv_os::THandle, Thread*> tcb;
-	Synchronization::Spinlock* tcbLock;
 
 public:
 
@@ -66,7 +65,6 @@ public:
 public:
 	Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, const char* program, std::filesystem::path wd);
 	~Process() {
-		delete tcbLock;
 	}
 
 

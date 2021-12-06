@@ -3,9 +3,11 @@
 #include "handles.h"
 #include "Process.h"
 
+const std::unique_ptr<Synchronization::Spinlock> tcbLock = std::make_unique<Synchronization::Spinlock>(0);
+
+
 Process::Process(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, const char* program, std::filesystem::path wd)
 	: handle(handle), stdInput(stdIn), stdOutput(stdOut), workingDirectory(wd) {
-	tcbLock = new Synchronization::Spinlock(0);
 	//memcpy(programName, '\0', sizeof(programName));
 	auto length = strlen(program);
 	strcpy_s(programName, length + 1, program);

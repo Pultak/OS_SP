@@ -48,10 +48,12 @@ namespace ProcessUtils {
 	/// <param name="thisHandle">handle of the waiting process</param>
 	void removeAssignedListener(const int alreadyDone, const kiv_os::THandle* handles, const kiv_os::THandle thisHandle);
 
+
 	/// <summary>
 	/// Process control block
 	/// </summary>
 	const std::unique_ptr<ProcessControlBlock> pcb = std::make_unique<ProcessControlBlock>();
+
 
 
 };

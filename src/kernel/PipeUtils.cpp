@@ -23,12 +23,8 @@ bool PipeOut::write(const char c){
 kiv_os::NOS_Error PipeOut::write(const char* buffer, const size_t size, size_t& written){
     //write all characters from buffer
     for (written = 0; written < size && write(buffer[written]); ++written);
-    if (written > 0) {
-        return kiv_os::NOS_Error::Success;
-    }else {
-        return kiv_os::NOS_Error::IO_Error;
-    }
-
+    
+    return kiv_os::NOS_Error::Success;
 }
 
 

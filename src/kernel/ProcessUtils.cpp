@@ -83,7 +83,6 @@ void ProcessUtils::cloneProcess(kiv_hal::TRegisters& registers, HMODULE userSpac
 
         Synchronization::Spinlock* synchLock = new Synchronization::Spinlock(true);
         std::thread t1(processStartPoint, newProcessRegs, progFuncAddress, synchLock);
-
         //init the handle of the new process
         auto tHandle = handles::Convert_Native_Handle(t1.get_id(), t1.native_handle(), kiv_os::Invalid_Handle);
         auto thisHandle = handles::getTHandleById(std::this_thread::get_id());
@@ -241,6 +240,7 @@ void ProcessUtils::removeAssignedListener(const int alreadyDone, const kiv_os::T
 }
 
 
+
 void ProcessUtils::exit(kiv_hal::TRegisters& registers) {
     //todoo process get handle
 	kiv_os::THandle pHandle = handles::getTHandleById(std::this_thread::get_id());
@@ -286,9 +286,6 @@ void ProcessUtils::readExitCode(kiv_hal::TRegisters& registers) {
 void ProcessUtils::shutdown() {
 
     io::removeAllIoHandles();
-	pcb->signalProcesses(kiv_os::NSignal_Id::Terminate);
-    pcb->notifyAllListeners();
-
 }
 
 void ProcessUtils::registerSignalHandler(kiv_hal::TRegisters& registers) {

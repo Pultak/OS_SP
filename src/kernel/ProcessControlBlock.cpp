@@ -5,17 +5,14 @@
 /// </summary>
 std::map<kiv_os::THandle, Process*> table;
 
-Synchronization::Spinlock* lockMaster;
-bool* tableUpdated;
+const std::unique_ptr<Synchronization::Spinlock> lockMaster = std::make_unique<Synchronization::Spinlock>(0);
+bool tableUpdated = 0;
+
 
 ProcessControlBlock::ProcessControlBlock() {
-	lockMaster = new Synchronization::Spinlock(0);
-	tableUpdated = new bool[1];
 }
 
 ProcessControlBlock::~ProcessControlBlock() {
-	delete lockMaster;
-	delete tableUpdated;
 }
 
 void ProcessControlBlock::AddNewProcess(kiv_os::THandle handle, kiv_os::THandle stdIn, kiv_os::THandle stdOut, char* program, std::filesystem::path actualDir) {
@@ -23,7 +20,7 @@ void ProcessControlBlock::AddNewProcess(kiv_os::THandle handle, kiv_os::THandle 
 	auto newProcess = new Process(handle, stdIn, stdOut, program, actualDir);
 
 	table.emplace(std::make_pair(handle, newProcess));
-	*tableUpdated = true;
+	tableUpdated = true;
 	lockMaster->unlock();
 }
 
@@ -50,7 +47,7 @@ bool ProcessControlBlock::removeProcess(kiv_os::THandle handle) {
 		delete proc;
 		processRemoved = true;
 	}
-	*tableUpdated = true;
+	tableUpdated = true;
 	lockMaster->unlock();
 	return processRemoved;
 }
@@ -111,7 +108,7 @@ ProcessEntry* ProcessControlBlock::getAllProcesses(size_t& processCount){
 			strcpy_s(result[index].workingDir, workDirLength, process->workingDirectory.string().c_str());
 		}
 		//we collected all -> table is no longer diff from tasklisk file
-		*tableUpdated = false;
+		tableUpdated = false;
 		processCount = index;
 		lockMaster->unlock();
 		return result;
@@ -122,5 +119,5 @@ ProcessEntry* ProcessControlBlock::getAllProcesses(size_t& processCount){
 }
 
 bool ProcessControlBlock::isUpdated(){
-	return *tableUpdated;
+	return tableUpdated;
 }

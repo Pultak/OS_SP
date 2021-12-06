@@ -103,23 +103,9 @@ void __stdcall Bootstrap_Loader(kiv_hal::TRegisters &context) {
 		//close STDIN and STDOUT
 		regs.rdx.x = std_in;
 		io::CloseIOHandle(regs);
-		if (regs.flags.carry) {
-			//something failed -> copy error code
-			context.flags.carry = 1;
-			context.rax.r = regs.rax.x;
-			Shutdown_Kernel();
-			return;
-		}
 
 		regs.rdx.x = std_out;
 		io::CloseIOHandle(regs);
-		if (regs.flags.carry) {
-			//something failed -> copy error code
-			context.flags.carry = 1;
-			context.rax.r = regs.rax.x;
-			Shutdown_Kernel();
-			return;
-		}
 
 	}
 	else {

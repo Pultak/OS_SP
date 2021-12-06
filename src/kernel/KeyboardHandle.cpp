@@ -1,14 +1,25 @@
 #include "KeyboardHandle.h"
 
+
+bool readClosed = false;
+
+
 kiv_os::NOS_Error KeyboardHandle::write(const char* buffer, const size_t size, size_t& written){
 	return kiv_os::NOS_Error::IO_Error;
 }
 
 kiv_os::NOS_Error KeyboardHandle::read(const size_t size, char* buffer, size_t& read){
 	kiv_hal::TRegisters registers;
-
+	if (readClosed) {
+		if (size > 0) {
+			buffer[0] = static_cast<char>(kiv_hal::NControl_Codes::EOT);
+			read = 1;
+		}
+		kiv_os::NOS_Error::Success;
+	}
 	size_t pos = 0;
 	while (pos < size) {
+
 		//read char
 		registers.rax.h = static_cast<decltype(registers.rax.l)>(kiv_hal::NKeyboard::Read_Char);
 		kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::Keyboard, registers);
@@ -18,7 +29,6 @@ kiv_os::NOS_Error KeyboardHandle::read(const size_t size, char* buffer, size_t& 
 												//jinak zrejme doslo k chybe zarizeni
 
 		char ch = registers.rax.l;
-
 		//osetrime zname kody
 		switch (static_cast<kiv_hal::NControl_Codes>(ch)) {
 		case kiv_hal::NControl_Codes::BS: {
@@ -63,4 +73,12 @@ kiv_os::NOS_Error KeyboardHandle::read(const size_t size, char* buffer, size_t& 
 	return kiv_os::NOS_Error::Success;
 }
 
-void KeyboardHandle::close() {}
+void KeyboardHandle::close() {
+	kiv_hal::TRegisters registers;
+	registers.flags.non_zero = 0;
+	//read char
+	registers.rax.l = static_cast<uint8_t>(kiv_hal::NControl_Codes::EOT);
+	registers.rax.h = static_cast<decltype(registers.rax.l)>(kiv_hal::NKeyboard::Write_Char);
+	kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::Keyboard, registers);
+	readClosed = true;
+}

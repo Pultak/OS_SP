@@ -84,11 +84,13 @@ void io::removeIoHandle(kiv_os::THandle handle) {
 void io::removeAllIoHandles(){
 	ioHandleLock->lock();
 	auto it = openedHandles.begin();
-	
-	if (it != openedHandles.end()) {
+
+	while (it != openedHandles.end()) {
+		printf("Closing %d\n", it->first);
 		it->second->close();
 		delete it->second;
-		openedHandles.erase(it);
+		it = openedHandles.erase(it);
+		//--it;
 	}
 	ioHandleLock->unlock();
 }

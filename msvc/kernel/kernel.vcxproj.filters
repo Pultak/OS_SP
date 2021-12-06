@@ -19,6 +19,7 @@
     <ClCompile Include="..\..\src\kernel\VGAHandle.cpp" />
     <ClCompile Include="..\..\src\kernel\KeyboardHandle.cpp" />
     <ClCompile Include="..\..\src\kernel\PCBFile.cpp" />
+    <ClCompile Include="..\..\src\kernel\Blockable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
