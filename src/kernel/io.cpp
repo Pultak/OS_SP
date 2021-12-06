@@ -390,9 +390,13 @@ void io::GetFileAttribute(kiv_hal::TRegisters& regs){
 
 void io::CreatePipe(kiv_hal::TRegisters& regs){
 	Pipe* pipe = new Pipe(1024);
-
 	IOHandle* in = new PipeIn(pipe);
 	IOHandle* out = new PipeOut(pipe);
+	if (!pipe || !in || !out) {
+		regs.flags.carry = 1;
+		regs.rax.r = static_cast<uint64_t>(kiv_os::NOS_Error::Out_Of_Memory);
+		return;
+	}
 	auto* pipeHandles = reinterpret_cast<kiv_os::THandle*>(regs.rdx.r);
 	pipeHandles[0] = addIoHandle(in);
 	pipeHandles[1] = addIoHandle(out);

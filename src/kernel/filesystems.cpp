@@ -80,7 +80,7 @@ IOHandle* filesystems::Open_File(const char* input_file_name, kiv_os::NOpen_File
 			else {
 				file = new FileHandle(fs, f);
 			}
-
+			error = kiv_os::NOS_Error::Success;
 		}
 		else {
 			error = kiv_os::NOS_Error::File_Not_Found;

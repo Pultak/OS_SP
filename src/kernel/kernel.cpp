@@ -20,6 +20,7 @@ void Shutdown_Kernel() {
 }
 
 void __stdcall Sys_Call(kiv_hal::TRegisters &regs) {
+	regs.flags.carry = 0;
 
 	switch (static_cast<kiv_os::NOS_Service_Major>(regs.rax.h)) {
 		
