@@ -1,6 +1,9 @@
 #include "fsutils.h"
 #include "../api/api.h"
 #include "../api/hal.h"
+#include "Synchronization.h"
+
+const std::unique_ptr<Synchronization::Spinlock> diskLock = std::make_unique<Synchronization::Spinlock>(0);
 
 std::vector<std::string> get_directories(const char* path){
 	std::vector<std::string> directories;
@@ -86,6 +89,8 @@ void write_to_fs(int start, std::vector<char> data) {
 	// snazime se zachovat data v poslednim clusteru, prepsat jen relevantni cast.
 	int last_sector_alloc = (start + static_cast<int>(write_packet.count)) - 1;
 	std::vector<unsigned char> last_sector_data = read_from_fs(last_sector_alloc, 1);
+
+	diskLock->lock();
 	int size_to_hold = static_cast<int>(write_packet.count) * SECTOR_SIZE;
 	int last_cluster_occupied = data.size() % SECTOR_SIZE;
 	size_t start_pos = data.size();
@@ -97,9 +102,11 @@ void write_to_fs(int start, std::vector<char> data) {
 
 	write_packet.sectors = static_cast<void*>(data.data());
 	kiv_hal::Call_Interrupt_Handler(kiv_hal::NInterrupt::Disk_IO, write_reg);
+	diskLock->unlock();
 }
 
 std::vector<unsigned char> read_from_fs(int start, int sectors_count) {
+	diskLock->lock();
 	// priprava registru pro cteni
 	kiv_hal::TRegisters read_regs;
 	kiv_hal::TDisk_Address_Packet read_packet;
@@ -118,6 +125,7 @@ std::vector<unsigned char> read_from_fs(int start, int sectors_count) {
 	// nactene byty z disku
 	std::vector<unsigned char> content(buffer, buffer + (static_cast<size_t>(sectors_count) * SECTOR_SIZE));
 	free(s);
+	diskLock->unlock();
 	return content;
 }
 
