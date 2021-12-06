@@ -303,24 +303,17 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 
 				if (result)
 				{
+					program.redirection_in_handle = in;
 					//if there is a pipe after the file and there is a program to pipe it into, we want to pipe the current program out
 					if (program_vector.at(index + 1).pipe_out && (program_vector.size() > index + 2))
 					{
 						program.pipe_out = true;
 					}
 				}
-				//if there is a pipe after the file but failed to open the file -> close te pipe
-				else if(program_vector.at(index + 1).pipe_out && (program_vector.size() > index + 2))
-				{
-					std::string message = "\nFailed to open: '";
-					message.append(program_vector.at(index + 1).command.c_str());
-					message.append("'\n");
-					kiv_os_rtl::Write_File(out_reg, message.c_str(), message.size(), written);
-					break;
-				}
 				//failed to open the file
 				else
 				{
+					in = in_reg;
 					std::string message = "\nFailed to open: '";
 					message.append(program_vector.at(index + 1).command.c_str());
 					message.append("'\n");
@@ -331,8 +324,13 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 			if (program.redirection_out)
 			{
 				//open the next program = file, if open fails print a message and break cycle
-				if (!kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, out))
+				if (kiv_os_rtl::Open_File(program_vector.at(index + 1).command.c_str(), (kiv_os::NOpen_File)0, kiv_os::NFile_Attributes::System_File, out))
 				{
+					program.redirection_out_handle = out;
+				}
+				else
+				{
+					out = out_reg;
 					std::string message = "\nFailed to open: '";
 					message.append(program_vector.at(index + 1).command.c_str());
 					message.append("'\n");
@@ -440,6 +438,14 @@ void Execute_Commands(std::vector<Program>& program_vector, const kiv_hal::TRegi
 		if (signaled_program.pipe_out)
 		{
 			kiv_os_rtl::Close_Handle(signaled_program.pipe_out_handle);
+		}
+		if (signaled_program.redirection_in)
+		{
+			kiv_os_rtl::Close_Handle(signaled_program.redirection_in_handle);
+		}
+		if (signaled_program.redirection_out)
+		{
+			kiv_os_rtl::Close_Handle(signaled_program.redirection_out_handle);
 		}
 		program_vector.erase(it_program_vector + index);
 		active_handles.erase(it_active_handles + signal_ret);
