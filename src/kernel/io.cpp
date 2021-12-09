@@ -86,7 +86,6 @@ void io::removeAllIoHandles(){
 	auto it = openedHandles.begin();
 
 	while (it != openedHandles.end()) {
-		printf("Closing %d\n", it->first);
 		it->second->close();
 		delete it->second;
 		it = openedHandles.erase(it);

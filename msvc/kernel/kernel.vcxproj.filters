@@ -43,5 +43,6 @@
     <ClInclude Include="..\..\src\kernel\FileHandle.h" />
     <ClInclude Include="..\..\src\kernel\KeyboardHandle.h" />
     <ClInclude Include="..\..\src\kernel\PCBFile.h" />
+    <ClInclude Include="..\..\src\kernel\Blockable.h" />
   </ItemGroup>
 </Project>

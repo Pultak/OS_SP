@@ -61,6 +61,7 @@
     <ClInclude Include="..\..\src\kernel\VGAHandle.h" />
     <ClInclude Include="..\..\src\kernel\FileHandle.h" />
     <ClInclude Include="..\..\src\kernel\KeyboardHandle.h" />
+    <ClInclude Include="..\..\src\kernel\Blockable.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B4305463-59C5-40C3-9A1A-92976A40562D}</ProjectGuid>
